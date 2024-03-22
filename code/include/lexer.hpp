@@ -12,6 +12,7 @@
 namespace vastina{
 
 enum TOKEN{
+    UNKNOW = -1,
     INT,
     MAIN,
     NUMBER,
@@ -22,7 +23,6 @@ enum TOKEN{
     RETURN,
     SEMICOLON,  //分号
     VAR,
-    UNKNOW
 };
 
 enum STATE{
@@ -36,8 +36,9 @@ struct token_t{
     TOKEN token;
     std::string data;
 
-    token_t(TOKEN) ;
-    token_t(TOKEN, std::string_view);
+    token_t(TOKEN tk) ;
+    token_t(TOKEN tk, const std::string& sv);
+    token_t(TOKEN tk, std::string&& sv);
 } ;
 
 
@@ -51,6 +52,7 @@ private:
     STATE state;
     
     STATE ParseWhiteSpace();
+    void whatname(const std::string&, TOKEN, bool(char endsymbol), TOKEN Default, bool(char endsymbol));
 public:
     lexer() = default;
     lexer(const char* filename);

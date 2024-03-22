@@ -4,7 +4,7 @@
 
 using namespace vastina;
 int main(){
-    lexer lx = lexer("./stage_1/invalid/no_brace.c");
+    lexer lx = lexer("./stage_1/valid/newlines.c");
 
     lx.Next();
     lx.Next();

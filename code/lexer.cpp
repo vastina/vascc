@@ -6,10 +6,10 @@
 
 namespace vastina{
 
-token_t::token_t(TOKEN t): token(t) {};
+token_t::token_t(TOKEN tk): token(tk) {};
 
-token_t::token_t(TOKEN t, std::string_view sv): token(t), data(sv) {};
-
+token_t::token_t(TOKEN tk, const std::string& sv): token(tk), data(sv) {};
+token_t::token_t(TOKEN tk, std::string&& sv): token(tk), data(sv) {};
 
 
 
@@ -21,7 +21,7 @@ lexer::lexer(const char* filename):tokens(), offset(0) {
     char buf[256];
     while(!ifs.eof()){
         ifs.getline(buf, 256);
-        buffer.append(buf);
+        buffer.append(buf).append("\n");
     }
 std::cout << buffer <<'\n';
     ifs.close();
@@ -38,6 +38,27 @@ STATE lexer::ParseWhiteSpace(){
     return STATE::NORMAL;
 }
 
+void lexer::whatname(const std::string& target, TOKEN target_type, bool endjudge(char endsymbol), 
+    TOKEN Default, bool DefaultEndjudge(char endsymbol)){
+    unsigned len = target.size();
+    if(Strcmp(buffer, offset, target)&&endjudge(buffer[offset+len])){
+        tokens.push_back(std::move(token_t(target_type, target)));
+        offset += len;
+    }
+    else if(Default == UNKNOW) return;
+    else{
+        std::string temp;
+        while (DefaultEndjudge(buffer[offset])){
+            temp += buffer[offset];
+            offset++;
+        }
+        tokens.push_back(
+            std::move(token_t(Default, 
+            std::move(temp)))
+        );
+    }
+}
+
 STATE lexer::Next(){
     if(offset > buffer.size()) return STATE::END;
 
@@ -52,57 +73,63 @@ STATE lexer::Next(){
         switch (buffer[offset])
         {
         case 'i':{
-            if(Strcmp(buffer, offset, "int")
-                && (CHARTYPE::OTHER == CharType(buffer[offset+3])) ){
-                tokens.push_back(std::move(token_t(TOKEN::INT, "int")));
-                offset += 3;
-            }
-            else{
-                std::string temp = "i";
-                while (CHARTYPE::OTHER != CharType(buffer[++offset])){
-                    temp += buffer[offset];
-                }
-                tokens.push_back(
-                    std::move(token_t(TOKEN::VAR, 
-                    std::move(temp)))
-                );
-            }
+            whatname("int", TOKEN::INT, [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
+                            TOKEN::VAR, [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
+            // if(Strcmp(buffer, offset, "int")
+            //     && (CHARTYPE::OTHER == CharType(buffer[offset+3])) ){
+            //     tokens.push_back(std::move(token_t(TOKEN::INT, "int")));
+            //     offset += 3;
+            // }
+            // else{
+            //     std::string temp = "i";
+            //     while (CHARTYPE::OTHER != CharType(buffer[++offset])){
+            //         temp += buffer[offset];
+            //     }
+            //     tokens.push_back(
+            //         std::move(token_t(TOKEN::VAR, 
+            //         std::move(temp)))
+            //     );
+            // }
             break;
         }// these three need to be more generalized
         case 'm':{
-            if(Strcmp(buffer, offset, "main")
-                && (CHARTYPE::OTHER == CharType(buffer[offset+4])) ){
-                tokens.push_back(std::move(token_t(TOKEN::MAIN, "main")));
-                offset += 4;
-            }
-            else{
-                std::string temp = "m";
-                while (CHARTYPE::OTHER != CharType(buffer[++offset])){
-                    temp += buffer[offset];
-                }
-                tokens.push_back(
-                    std::move(token_t(TOKEN::VAR, 
-                    std::move(temp)))
-                );
-            }
+            whatname("main",TOKEN::MAIN, [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
+                            TOKEN::VAR,  [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
+            // if(Strcmp(buffer, offset, "main")
+            //     && (CHARTYPE::OTHER == CharType(buffer[offset+4])) ){
+            //     tokens.push_back(std::move(token_t(TOKEN::MAIN, "main")));
+            //     offset += 4;
+            // }
+            // else{
+            //     std::string temp = "m";
+            //     while (CHARTYPE::OTHER != CharType(buffer[++offset])){
+            //         temp += buffer[offset];
+            //     }
+            //     tokens.push_back(
+            //         std::move(token_t(TOKEN::VAR, 
+            //         std::move(temp)))
+            //     );
+            // }
             break;
         }
         case 'r':{
-            if(Strcmp(buffer, offset, "return")
-                && (CHARTYPE::OTHER == CharType(buffer[offset+6])) ){
-                tokens.push_back(std::move(token_t(TOKEN::RETURN, "return")));
-                offset += 6;
-            }
-            else{
-                std::string temp = "r";
-                while (CHARTYPE::OTHER != CharType(buffer[++offset])){
-                    temp += buffer[offset];
-                }
-                tokens.push_back(
-                    std::move(token_t(TOKEN::VAR, 
-                    std::move(temp)))
-                );
-            }
+            whatname("main",TOKEN::RETURN,  [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
+                            TOKEN::VAR,     [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
+            // if(Strcmp(buffer, offset, "return")
+            //     && (CHARTYPE::OTHER == CharType(buffer[offset+6])) ){
+            //     tokens.push_back(std::move(token_t(TOKEN::RETURN, "return")));
+            //     offset += 6;
+            // }
+            // else{
+            //     std::string temp = "r";
+            //     while (CHARTYPE::OTHER != CharType(buffer[++offset])){
+            //         temp += buffer[offset];
+            //     }
+            //     tokens.push_back(
+            //         std::move(token_t(TOKEN::VAR, 
+            //         std::move(temp)))
+            //     );
+            // }
             break;
         }
         default:
