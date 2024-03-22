@@ -4,33 +4,13 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <memory>
 
-#include <cstdlib>
-#include <cstring>
+#include "base/vasdef.hpp"
 
 
 namespace vastina{
 
-enum TOKEN{
-    UNKNOW = -1,
-    INT,
-    MAIN,
-    NUMBER,
-    NLBRAC,     //左小括号
-    NRBRAC,
-    OBRACE,     //左花括号，open brace
-    CBRACE,     //       close brace
-    RETURN,
-    SEMICOLON,  //分号
-    VAR,
-};
-
-enum STATE{
-    END = -1,
-    NORMAL,
-    ERROR
-    //todo
-};
 
 struct token_t{
     TOKEN token;
@@ -41,9 +21,20 @@ struct token_t{
     token_t(TOKEN tk, std::string&& sv);
 } ;
 
-
-
 class lexer{
+
+public:
+//only local use enum
+enum STATE{
+    END = -1,
+    NORMAL,
+    ERROR
+    //todo
+};
+enum RESULT{
+    SUCCESS,
+    FAIL
+};
 
 private:
     std::vector<token_t> tokens;
@@ -52,8 +43,16 @@ private:
     STATE state;
     
     STATE ParseWhiteSpace();
-    void whatname(const std::string&, TOKEN, bool(char endsymbol), TOKEN Default, bool(char endsymbol));
+    RESULT ParseKeyWord(const std::string&, TOKEN, bool(char endsymbol), TOKEN Default, bool(char endsymbol));
+    //todo: add enum
+    void ParseNumber();
+    void forSingelWord(const std::string& target, TOKEN target_type);
+    
 public:
+
+
+
+
     lexer() = default;
     lexer(const char* filename);
     ~lexer();
@@ -61,7 +60,8 @@ public:
     
     STATE Next();
 
-    const std::vector<token_t> *getTokens();
+    const std::vector<token_t>& getTokens();
+    const std::string& getBuffer();
 };
 
 

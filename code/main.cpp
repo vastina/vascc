@@ -23,7 +23,7 @@ int main(){
     lx.Next();
     lx.Next();
 
-    const std::vector<token_t> *tks = lx.getTokens();
+    auto tks = std::make_unique<std::vector<token_t>>(lx.getTokens());
     for(unsigned i=0; i < tks->size(); i++){
         std::cout << tks->at(i).token << ' ' << tks->at(i).data <<'\n';
     }

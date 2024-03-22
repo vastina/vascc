@@ -14,7 +14,7 @@ enum CHARTYPE{
 
 inline constexpr CHARTYPE CharType(char ch){
     if(ch>='0' && ch<='9') return CHARTYPE::NUM;
-    if(ch>='a' && ch<='z') return CHARTYPE::CHAR;
+    if((ch>='a' && ch<='z')||(ch=='_')||((ch>='A' && ch<='Z'))) return CHARTYPE::CHAR;
     return CHARTYPE::OTHER;
 }
 inline constexpr bool isWhiteSpace(char ch){

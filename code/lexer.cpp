@@ -29,7 +29,7 @@ std::cout << buffer <<'\n';
 
 lexer::~lexer(){tokens.clear();};
 
-STATE lexer::ParseWhiteSpace(){
+lexer::STATE lexer::ParseWhiteSpace(){
     while (isWhiteSpace(buffer[offset]))
     {
         offset++;
@@ -38,14 +38,15 @@ STATE lexer::ParseWhiteSpace(){
     return STATE::NORMAL;
 }
 
-void lexer::whatname(const std::string& target, TOKEN target_type, bool endjudge(char endsymbol), 
+lexer::RESULT lexer::ParseKeyWord(const std::string& target, TOKEN target_type, bool endjudge(char endsymbol), 
     TOKEN Default, bool DefaultEndjudge(char endsymbol)){
     unsigned len = target.size();
     if(Strcmp(buffer, offset, target)&&endjudge(buffer[offset+len])){
         tokens.push_back(std::move(token_t(target_type, target)));
         offset += len;
+        return lexer::RESULT::SUCCESS;
     }
-    else if(Default == UNKNOW) return;
+    else if(Default == TOKEN::UNKNOW) return lexer::RESULT::FAIL;
     else{
         std::string temp;
         while (DefaultEndjudge(buffer[offset])){
@@ -56,10 +57,20 @@ void lexer::whatname(const std::string& target, TOKEN target_type, bool endjudge
             std::move(token_t(Default, 
             std::move(temp)))
         );
+        return lexer::RESULT::SUCCESS;
     }
 }
 
-STATE lexer::Next(){
+void lexer::forSingelWord(const std::string& target, TOKEN target_type){
+    tokens.push_back(std::move(token_t(target_type, target)));
+            ++offset;
+}
+
+void lexer::ParseNumber(){
+    
+}
+
+lexer::STATE lexer::Next(){
     if(offset > buffer.size()) return STATE::END;
 
     state = ParseWhiteSpace();
@@ -73,64 +84,30 @@ STATE lexer::Next(){
         switch (buffer[offset])
         {
         case 'i':{
-            whatname("int", TOKEN::INT, [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
-                            TOKEN::VAR, [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
-            // if(Strcmp(buffer, offset, "int")
-            //     && (CHARTYPE::OTHER == CharType(buffer[offset+3])) ){
-            //     tokens.push_back(std::move(token_t(TOKEN::INT, "int")));
-            //     offset += 3;
-            // }
-            // else{
-            //     std::string temp = "i";
-            //     while (CHARTYPE::OTHER != CharType(buffer[++offset])){
-            //         temp += buffer[offset];
-            //     }
-            //     tokens.push_back(
-            //         std::move(token_t(TOKEN::VAR, 
-            //         std::move(temp)))
-            //     );
-            // }
+            int res = 
+            ParseKeyWord("int",     TOKEN::INT,     [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
+                                    TOKEN::UNKNOW,  [](char ch){return false;});
+            if(res == 0) break;
+            else
+            ParseKeyWord("if",      TOKEN::IF,      [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
+                                    TOKEN::VAR,     [](char ch){return (CHARTYPE::OTHER == CharType(ch));});
             break;
         }// these three need to be more generalized
         case 'm':{
-            whatname("main",TOKEN::MAIN, [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
-                            TOKEN::VAR,  [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
-            // if(Strcmp(buffer, offset, "main")
-            //     && (CHARTYPE::OTHER == CharType(buffer[offset+4])) ){
-            //     tokens.push_back(std::move(token_t(TOKEN::MAIN, "main")));
-            //     offset += 4;
-            // }
-            // else{
-            //     std::string temp = "m";
-            //     while (CHARTYPE::OTHER != CharType(buffer[++offset])){
-            //         temp += buffer[offset];
-            //     }
-            //     tokens.push_back(
-            //         std::move(token_t(TOKEN::VAR, 
-            //         std::move(temp)))
-            //     );
-            // }
+            ParseKeyWord("main",    TOKEN::MAIN,    [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
+                                    TOKEN::VAR,     [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
+
             break;
         }
         case 'r':{
-            whatname("main",TOKEN::RETURN,  [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
-                            TOKEN::VAR,     [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
-            // if(Strcmp(buffer, offset, "return")
-            //     && (CHARTYPE::OTHER == CharType(buffer[offset+6])) ){
-            //     tokens.push_back(std::move(token_t(TOKEN::RETURN, "return")));
-            //     offset += 6;
-            // }
-            // else{
-            //     std::string temp = "r";
-            //     while (CHARTYPE::OTHER != CharType(buffer[++offset])){
-            //         temp += buffer[offset];
-            //     }
-            //     tokens.push_back(
-            //         std::move(token_t(TOKEN::VAR, 
-            //         std::move(temp)))
-            //     );
-            // }
+            ParseKeyWord("return",  TOKEN::RETURN,  [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
+                                    TOKEN::VAR,     [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
+
             break;
+        }
+        case 'e':{
+            ParseKeyWord("else",    TOKEN::ELSE,    [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
+                                    TOKEN::VAR,     [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
         }
         default:
             break;
@@ -158,24 +135,28 @@ STATE lexer::Next(){
         switch (buffer[offset])
         {
         case '(':
-            tokens.push_back(std::move(token_t(NLBRAC, "(")));
-            ++offset;
+            forSingelWord("(", TOKEN::NLBRAC);
             break;
         case ')':
-            tokens.push_back(std::move(token_t(NRBRAC, ")")));
-            ++offset;
+            forSingelWord(")", TOKEN::NRBRAC);
             break;
         case '{':
-            tokens.push_back(std::move(token_t(OBRACE, "{")));
-            ++offset;
+            forSingelWord("{", TOKEN::OBRACE);
             break;
         case '}':
-            tokens.push_back(std::move(token_t(CBRACE, "}")));
-            ++offset;
+            forSingelWord("}", TOKEN::CBRACE);
             break;
         case ';':
-            tokens.push_back(std::move(token_t(SEMICOLON, ";")));
-            ++offset;
+            forSingelWord(";", TOKEN::SEMICOLON);
+            break;
+        case '=':
+            forSingelWord("=", TOKEN::ASSIGN);
+            break;
+        case '>':
+            forSingelWord(">", TOKEN::GREATER);
+            break;
+        case '<':
+            forSingelWord("<", TOKEN::LESS);
             break;
         default:
             break;
@@ -188,8 +169,12 @@ STATE lexer::Next(){
     return STATE::NORMAL;
 }
 
-const std::vector<token_t>* lexer::getTokens(){
-    return &tokens;
+const std::vector<token_t>& lexer::getTokens(){
+    return tokens;
+}
+
+const std::string& lexer::getBuffer(){
+    return buffer;
 }
 
 }
