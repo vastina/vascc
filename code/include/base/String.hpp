@@ -2,11 +2,11 @@
 #define _STRING_H_
 
 #include <string>
-#include <iostream>
+
 
 namespace vastina{
     
-enum CHARTYPE{
+enum class CHARTYPE{
     CHAR,
     NUM,
     OTHER

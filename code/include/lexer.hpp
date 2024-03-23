@@ -1,10 +1,10 @@
 #ifndef _LEXER_H_
 #define _LEXER_H_
 
-#include <iostream>
+
 #include <string>
 #include <vector>
-#include <memory>
+
 
 #include "base/vasdef.hpp"
 
@@ -15,10 +15,13 @@ namespace vastina{
 struct token_t{
     TOKEN token;
     std::string data;
+    unsigned line;
 
     token_t(TOKEN tk) ;
     token_t(TOKEN tk, const std::string& sv);
     token_t(TOKEN tk, std::string&& sv);
+    token_t(TOKEN tk, const std::string& sv, unsigned _line);
+    token_t(TOKEN tk, std::string&& sv, unsigned _line);
 } ;
 
 class lexer{
@@ -40,6 +43,7 @@ private:
     std::vector<token_t> tokens;
     std::string buffer;
     unsigned offset;
+    unsigned line;
     STATE state;
     
     STATE ParseWhiteSpace();
@@ -49,9 +53,6 @@ private:
     void forSingelWord(const std::string& target, TOKEN target_type);
     
 public:
-
-
-
 
     lexer() = default;
     lexer(const char* filename);

@@ -6,7 +6,7 @@ project(${project_name})
 set(CMAKE_CXX_COMPILER "/usr/bin/g++")
 set(CMAKE_GENERATOR "Unix Makefiles")
 
-add_compile_options(-Wall -g)
+add_compile_options("-Wall" "-g")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE Debug)
 
