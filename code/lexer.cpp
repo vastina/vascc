@@ -1,6 +1,7 @@
 #include "lexer.hpp"
 
 #include "base/String.hpp"
+#include "base/vasdef.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -19,7 +20,7 @@ token_t::token_t(TOKEN tk, std::string&& sv, unsigned _line): token(tk), data(sv
 lexer::lexer(const char* filename):tokens(), offset(0), line(1) {
     std::ifstream ifs = std::ifstream();
     ifs.open(filename);
-    if(!ifs.is_open()) throw "can't open file";
+    //if(!ifs.is_open()) throw "can't open file";
     char buf[256];
     while(!ifs.eof()){
         ifs.getline(buf, 256);
@@ -153,7 +154,7 @@ lexer::STATE lexer::Next(){
             temp.push_back(buffer[offset]);
             offset++;
         }
-        if((buffer[offset]==';')||(buffer[offset]==')')||isWhiteSpace(buffer[offset])){
+        if(CHARTYPE::OTHER == CharType(buffer[offset])){
             tokens.push_back(
                 token_t(TOKEN::NUMBER, std::move(temp), line)
             );
@@ -202,7 +203,7 @@ lexer::STATE lexer::Next(){
         case '&':{
             RESULT res = 
             ParseKeyWord("&&",      TOKEN::LOGAND,  [](char ch){return true;},
-                                    TOKEN::UNKNOW,  [](char ch){return true;});
+                                    TOKEN::UNKNOW,  [](char ch){return false;});
             if(res == RESULT::SUCCESS) break;
             else
                 forSingelWord("&", TOKEN::AND);
@@ -211,7 +212,7 @@ lexer::STATE lexer::Next(){
         case '|':{
             RESULT res = 
             ParseKeyWord("||",      TOKEN::LOGOR,   [](char ch){return true;},
-                                    TOKEN::UNKNOW,  [](char ch){return true;});
+                                    TOKEN::UNKNOW,  [](char ch){return false;});
             if(res == RESULT::SUCCESS) break;
             else
                 forSingelWord("|", TOKEN::OR);
