@@ -44,6 +44,7 @@ private:
     std::string buffer;
     unsigned offset;
     unsigned line;
+    unsigned lineoffset;//to do
     STATE state;
     
     STATE ParseWhiteSpace();

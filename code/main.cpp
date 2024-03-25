@@ -1,4 +1,5 @@
 #include "base/vasdef.hpp"
+#include "base/Tree.hpp"
 #include "lexer.hpp"
 
 #include <iostream>
@@ -11,26 +12,20 @@ using std::make_unique;
 using std::shared_ptr;
 using std::make_shared;
 
-typedef struct node{
-    token_t data;
+typedef struct _node{
+    token_t tk;
     unsigned level = 0;
-    shared_ptr<struct node> left;
-    shared_ptr<struct node> right;
-    shared_ptr<struct node> parent;
 
-    node(): data(TOKEN::UNKNOW), left(nullptr), right(nullptr), parent(nullptr){};
-    node(token_t tk): data(tk), left(nullptr), right(nullptr), parent(nullptr){};
-} node;
-    
-// enum STATE{
-//     INSIDE, //open  bracket more than close bracket
-//     OUTSIDE,//close bracket equal to  open bracket
-//     ERROR   //close bracket more than open bracket
-// };
-typedef struct State{
+    _node(): tk(TOKEN::UNKNOW){};
+    _node(token_t _tk): tk(_tk){};
+} _node;
+
+typedef TreeNode<_node> node;
+
+typedef struct BracketCount{
     unsigned open = 0;
     unsigned close = 0;
-} State;
+} BracketCount;
 
 enum class _M_type{
     OPERATOR,
@@ -78,97 +73,63 @@ constexpr unsigned Level(TOKEN tk){
     }
 }
 
-void walk(const shared_ptr<node>& root){
-    if(root->left != nullptr){
-        std::cout << "left ";
-        walk(root->left);
-    }
-    std::cout << root->data.data << '\n';
-    if(root->right != nullptr){
-        std::cout << "right ";
-        walk(root->right);
-    }
-    
-}
 
-shared_ptr<node> parser(const unique_ptr<std::vector<vastina::token_t>>& tks, unsigned& offset){
+node::nodeptr parser(const unique_ptr<std::vector<vastina::token_t>>& tks, unsigned& offset){
     
-    static State state;
+    static BracketCount state;
 
     auto root = make_shared<node>(tks->at(offset));
-    root->level = Level(root->data.token);
+    root->data.level = Level(root->data.tk.token);
     if(offset+1 >= tks->size()) return root;
     
-
     while(true){
         auto current = make_shared<node>(tks->at(offset));
-        //_M_type type = _token_type(root->data.token);
-        switch (_token_type(current->data.token)){
+        //_M_type type = _token_type(root->data.tk.token);
+        offset++;
+        switch (_token_type(current->data.tk.token)){
             case _M_type::BRAC:{
-                if(current->data.token == TOKEN::NRBRAC){
-                    offset++;
-                    if(++state.close > state.open){
-                        std::cout << state.open <<' ' << state.close <<'\n';
+                if(current->data.tk.token == TOKEN::NRBRAC){    
+                    if(++state.close > state.open) 
                         return nullptr;
-                    }
-                    root->level = 0;
+                    root->data.level = 0;
                     return root;
                 }else {
                     ++state.open;
-                    ++offset;
-                    if(_M_type::BRAC == _token_type(root->data.token)) root = parser(tks, offset);
+                    if(_M_type::BRAC == _token_type(root->data.tk.token)) root = parser(tks, offset);
                     else current = parser(tks, offset);
                 }
                 break;
             }
             case _M_type::NUM:{
-                if(root->data.token == TOKEN::NUMBER){
-                    offset++;
-                    break;
-                }
-
+                if(root->data.tk.token == TOKEN::NUMBER) break;
                 auto temp = root;
-                if(root->right != nullptr)
-                    temp = root->right;
-
                 while(temp->right != nullptr) temp = temp->right;
+                //auto temp = root->FindChildR([](node::nodeptr _node){return _node->right == nullptr;});
 
-                if(_M_type::OPERATOR != _token_type(temp->data.token)) return nullptr;
+                if(_M_type::OPERATOR != _token_type(temp->data.tk.token)) return nullptr;
                 
                 temp->right = current;
                 current->parent = temp;
 
-                offset++;
                 break;
             }
             case _M_type::OPERATOR:{
-                current->level = Level(current->data.token); 
-                if(current->level >= root->level){
-                    current->left = root;
-                    root->parent = current;
+                current->data.level = Level(current->data.tk.token); 
+                if(current->data.level >= root->data.level){
+                    root->ReplaceByLL(current);
                     root = current;
                 }
                 else{
                     auto temp = root;
-                    while(temp->level > current->level){
+                    while(temp->data.level > current->data.level){
                         if(temp->right == nullptr) break;
                         temp = temp->right;
                     }
-                    if(temp != root){
-                        temp->parent->right = current;
-                        current->parent = temp->parent;
-                        temp->parent = current;
-                        current->left = temp;
-                        //current取代现在的node
-                    }
-                    else{
-                        temp->right = current;
-                        current->parent = temp;
-                    }
-                    
+                    if(temp != root)//current取代原node，原node成为current的left
+                        temp->ReplaceByRL(current);
+                    else
+                        temp->InsertRight(current);
                 }
-
-                offset++;
 
                 break;
             }
@@ -184,7 +145,35 @@ shared_ptr<node> parser(const unique_ptr<std::vector<vastina::token_t>>& tks, un
     return root;
 }
 
-
+int cal(const shared_ptr<node>& root){
+    switch (root->data.tk.token)
+    {
+    case TOKEN::ADD:
+        return cal(root->left) + cal(root->right);
+        break;
+    case TOKEN::NEG:
+        return cal(root->left) - cal(root->right);
+        break;
+    case TOKEN::MULTI:
+        return cal(root->left) * cal(root->right);
+        break;
+    case TOKEN::DIV:
+        return cal(root->left) / cal(root->right);
+        break;
+    case TOKEN::NUMBER:
+        return std::stoi(root->data.tk.data);
+        break;
+    case TOKEN::AND:
+        return cal(root->left) & cal(root->right);
+        break;
+    case TOKEN::OR:
+        return cal(root->left) | cal(root->right);
+        break;
+    default:
+        return 0;
+        break;
+    }
+}
 
 int main(int argc, char* argv[]){
     // if(argc != 2){
@@ -211,7 +200,11 @@ int main(int argc, char* argv[]){
     }
 
     std::cout << '\n';
-    walk(root);
+    root->Walk(walk_order::PREORDER, [](const _node& data_){
+        std::cout  << data_.tk.data << '\n';
+    });
+
+    std::cout << cal(root) << '\n';
 
     return 0;
 }

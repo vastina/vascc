@@ -17,7 +17,7 @@ token_t::token_t(TOKEN tk, std::string&& sv, unsigned _line): token(tk), data(sv
 
 
 //just read file into buffer
-lexer::lexer(const char* filename):tokens(), offset(0), line(1) {
+lexer::lexer(const char* filename):tokens(), offset(0), line(1), lineoffset(0){
     std::ifstream ifs = std::ifstream();
     ifs.open(filename);
     //if(!ifs.is_open()) throw "can't open file";

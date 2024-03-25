@@ -6,3 +6,4 @@ build/
 test/
 todo/
 .cache/
+code/test.cpp
