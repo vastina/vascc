@@ -7,3 +7,10 @@ test/
 todo/
 .cache/
 code/test.cpp
+**/*.ll
+**/*.bc
+**/*.s
+**/*o
+**/*.out
+**/*.yy.c
+**/*.yy.cc

@@ -9,8 +9,7 @@ using namespace vastina;
 
 using std::unique_ptr;
 using std::make_unique;
-using std::shared_ptr;
-using std::make_shared;
+
 
 typedef struct _node{
     token_t tk;
@@ -74,37 +73,42 @@ constexpr unsigned Level(TOKEN tk){
 }
 
 
-node::nodeptr parser(const unique_ptr<std::vector<vastina::token_t>>& tks, unsigned& offset){
-    
-    static BracketCount state;
+node::pointer parser_if(const unique_ptr<std::vector<vastina::token_t>>& tks, unsigned& offset){
+    return nullptr;
+}
 
-    auto root = make_shared<node>(tks->at(offset));
+node::pointer parser_cal(const unique_ptr<std::vector<vastina::token_t>>& tks, unsigned& offset){
+    
+    static BracketCount bc;
+
+    auto root = new node(tks->at(offset));
     root->data.level = Level(root->data.tk.token);
     if(offset+1 >= tks->size()) return root;
     
     while(true){
-        auto current = make_shared<node>(tks->at(offset));
+        auto current = new node(tks->at(offset));
         //_M_type type = _token_type(root->data.tk.token);
         offset++;
         switch (_token_type(current->data.tk.token)){
             case _M_type::BRAC:{
                 if(current->data.tk.token == TOKEN::NRBRAC){    
-                    if(++state.close > state.open) 
+                    if(++bc.close > bc.open) 
                         return nullptr;
                     root->data.level = 0;
                     return root;
                 }else {
-                    ++state.open;
-                    if(_M_type::BRAC == _token_type(root->data.tk.token)) root = parser(tks, offset);
-                    else current = parser(tks, offset);
+                    ++bc.open;
+                    if(_M_type::BRAC == _token_type(root->data.tk.token)) root = parser_cal(tks, offset);
+                    else current = parser_cal(tks, offset);
                 }
                 break;
             }
             case _M_type::NUM:{
                 if(root->data.tk.token == TOKEN::NUMBER) break;
-                auto temp = root;
-                while(temp->right != nullptr) temp = temp->right;
-                //auto temp = root->FindChildR([](node::nodeptr _node){return _node->right == nullptr;});
+
+                auto temp = root->FindChildR(
+                    [](const node::pointer _node) {return (_node->right == nullptr);}
+                );
 
                 if(_M_type::OPERATOR != _token_type(temp->data.tk.token)) return nullptr;
                 
@@ -116,7 +120,7 @@ node::nodeptr parser(const unique_ptr<std::vector<vastina::token_t>>& tks, unsig
             case _M_type::OPERATOR:{
                 current->data.level = Level(current->data.tk.token); 
                 if(current->data.level >= root->data.level){
-                    root->ReplaceByLL(current);
+                    root->ReplaceByL(current);
                     root = current;
                 }
                 else{
@@ -126,7 +130,7 @@ node::nodeptr parser(const unique_ptr<std::vector<vastina::token_t>>& tks, unsig
                         temp = temp->right;
                     }
                     if(temp != root)//current取代原node，原node成为current的left
-                        temp->ReplaceByRL(current);
+                        temp->ReplaceByL(current);
                     else
                         temp->InsertRight(current);
                 }
@@ -145,7 +149,7 @@ node::nodeptr parser(const unique_ptr<std::vector<vastina::token_t>>& tks, unsig
     return root;
 }
 
-int cal(const shared_ptr<node>& root){
+int cal(const node::pointer root){
     switch (root->data.tk.token)
     {
     case TOKEN::ADD:
@@ -193,7 +197,7 @@ int main(int argc, char* argv[]){
     }
 
     unsigned offset = 0;
-    auto root = parser(tks, offset);
+    auto root = parser_cal(tks, offset);
     if(root == nullptr){
         std::cout << "Error\n";
         return 1;
