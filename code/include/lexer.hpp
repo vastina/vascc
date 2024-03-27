@@ -17,11 +17,15 @@ struct token_t{
     std::string data;
     unsigned line;
 
+//some were here just because I am lazy to delete them
     token_t(TOKEN tk) ;
     token_t(TOKEN tk, const std::string& sv);
     token_t(TOKEN tk, std::string&& sv);
     token_t(TOKEN tk, const std::string& sv, unsigned _line);
     token_t(TOKEN tk, std::string&& sv, unsigned _line);
+
+    token_t(const token_t& tk);
+    token_t(token_t&& tk);
 } ;
 
 class lexer{

@@ -30,7 +30,8 @@ public:
     pointer parent;
 
     TreeNode(): data(), left(nullptr), right(nullptr), parent(nullptr){};
-    TreeNode(ty tk): data(tk), left(nullptr), right(nullptr), parent(nullptr){};
+    TreeNode(const ty& tk): data(tk), left(nullptr), right(nullptr), parent(nullptr){};
+    TreeNode(ty&& tk): data(tk), left(nullptr), right(nullptr), parent(nullptr){};
 
 private:
     inline void InOrder(void visit(const ty& data_), pointer root){
@@ -97,7 +98,13 @@ public:
         }   
         return root;
     }
-
+    inline pointer FindChildL(std::function<bool(const pointer _node)> judge){
+        auto root = this;
+        while(!judge(root)) {
+            root = root->left;
+        }   
+        return root;
+    }
     inline void ReplaceByL(pointer target){
         if(this->parent == nullptr){
             this->parent = target;
@@ -126,12 +133,20 @@ public:
         this->parent = target;
         target->right = this;
     }
-};
+};// This one should be modified after the completion of <ty, lty, rty>
 
-template <typename ty>
-class Tree{
+// template <typename ty, //root type
+//         typename lty,  //left type
+//         typename rty>  //righttype
+// class TreeNode{
+// public:
+//     using node = TreeNode<ty, lty, rty>;
+//     using Lpointer = ;
+
+// public:
 
 
-};
+// };
+
 
 #endif
