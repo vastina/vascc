@@ -33,46 +33,46 @@ public:
     TreeNode(ty tk): data(tk), left(nullptr), right(nullptr), parent(nullptr){};
 
 private:
-    inline void InOrder(void show(const ty& data_), pointer root){
+    inline void InOrder(void visit(const ty& data_), pointer root){
         if(root->left != nullptr){
-            InOrder(show, root->left);
+            InOrder(visit, root->left);
         }
-        show(root->data);
+        visit(root->data);
         if(root->right != nullptr){
-            InOrder(show, root->right);
+            InOrder(visit, root->right);
         }
     }
-    inline void PreOrder(void show(const ty& data_), pointer root){
-        show(root->data);
+    inline void PreOrder(void visit(const ty& data_), pointer root){
+        visit(root->data);
         if(root->left != nullptr){            
-            PreOrder(show, root->left);
+            PreOrder(visit, root->left);
         }
         if(root->right != nullptr){
-            PreOrder(show, root->right);
+            PreOrder(visit, root->right);
         }
     }
-    inline void PostOrder(void show(const ty& data_), pointer root){
+    inline void PostOrder(void visit(const ty& data_), pointer root){
         if(root->left != nullptr){
-            PostOrder(show, root->left);
+            PostOrder(visit, root->left);
         }
         if(root->right != nullptr){
-            PostOrder(show, root->right);
+            PostOrder(visit, root->right);
         }
-        show(root->data);
+        visit(root->data);
     }
 
 public:
 //just walk from itself
-    inline void Walk(walk_order order, void show(const ty& data_)){
+    inline void Walk(walk_order order, void visit(const ty& data_)){
         switch (order){
             case PREORDER:
-                PreOrder(show, this);
+                PreOrder(visit, this);
                 break;
             case INORDER:
-                InOrder(show, this);
+                InOrder(visit, this);
                 break;
             case POSTORDER:
-                PostOrder(show, this);
+                PostOrder(visit, this);
                 break;
             default:
                 break;
@@ -90,7 +90,7 @@ public:
     }
 
 //This function can cause crash if the judge function is not correct
-    inline pointer FindChildR(bool judge(const pointer _node)){
+    inline pointer FindChildR(std::function<bool(const pointer _node)> judge){
         auto root = this;
         while(!judge(root)) {
             root = root->right;

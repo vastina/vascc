@@ -1,1 +1,1 @@
-This folder contains some code and thought when I learn the LLVM
+This folder contains some code when I learn the LLVM

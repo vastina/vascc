@@ -9,7 +9,8 @@ todo/
 code/test.cpp
 **/*.ll
 **/*.bc
-**/*.s
+**/*.asm
+**/*.S
 **/*o
 **/*.out
 **/*.yy.c

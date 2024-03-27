@@ -1,15 +1,18 @@
 #include "base/vasdef.hpp"
 #include "base/Tree.hpp"
 #include "lexer.hpp"
+#include "ast.hpp"
 
 #include <iostream>
 #include <memory>
+
 
 using namespace vastina;
 
 using std::unique_ptr;
 using std::make_unique;
 
+before_main_t before_main = before_main_t();
 
 typedef struct _node{
     token_t tk;
@@ -112,8 +115,7 @@ node::pointer parser_cal(const unique_ptr<std::vector<vastina::token_t>>& tks, u
 
                 if(_M_type::OPERATOR != _token_type(temp->data.tk.token)) return nullptr;
                 
-                temp->right = current;
-                current->parent = temp;
+                temp->InsertRight(current);
 
                 break;
             }
@@ -124,11 +126,10 @@ node::pointer parser_cal(const unique_ptr<std::vector<vastina::token_t>>& tks, u
                     root = current;
                 }
                 else{
-                    auto temp = root;
-                    while(temp->data.level > current->data.level){
-                        if(temp->right == nullptr) break;
-                        temp = temp->right;
-                    }
+                    auto temp = root->FindChildR(
+                        [&current](const node::pointer _node)->bool {
+                            return (_node->right == nullptr)||(_node->data.level <= current->data.level);
+                    });
                     if(temp != root)//current取代原node，原node成为current的left
                         temp->ReplaceByL(current);
                     else
@@ -187,7 +188,7 @@ int main(int argc, char* argv[]){
     // lexer lx = lexer(argv[1]);
 
     lexer lx = lexer("./test/test");
-    // (2+8)|5+3*7/4
+    // (2+8)|5 + 3*7/ 4 -9 & 6
 
     while (lexer::STATE::END != lx.Next()) ;
 
