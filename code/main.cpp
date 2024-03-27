@@ -12,7 +12,7 @@ using namespace vastina;
 using std::unique_ptr;
 using std::make_unique;
 
-before_main_t before_main = before_main_t();
+const static before_main_t before_main = before_main_t();
 
 typedef struct _node{
     token_t tk;

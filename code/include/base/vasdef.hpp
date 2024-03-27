@@ -58,7 +58,22 @@ enum FSM{//finite state machine
 };
 
 inline constexpr FSM token_type(TOKEN tk){
-    return FSM::END;
+    switch (tk)
+    {
+    case TOKEN::IF:
+    case TOKEN::ELSE:
+    case TOKEN::FOR:
+    case TOKEN::WHILE:
+    case TOKEN::DO:
+    case TOKEN::SWITCH:
+    case TOKEN::CASE:
+        return FSM::GOTO;
+        break;
+    
+    default:
+        return FSM::END;
+        break;
+    }
 }
 
 

@@ -2,6 +2,7 @@
 #define _AST_H_
 
 #include "base/vasdef.hpp"
+#include "base/Tree.hpp"
 #include "lexer.hpp"
 
 #include <unordered_map>
@@ -80,6 +81,7 @@ private:
     std::vector<token_t>& tokens;
     unsigned offset;
 
+private:
     std::vector<Block> blocks;
 
     FSM current_state;
