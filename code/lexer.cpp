@@ -80,9 +80,7 @@ lexer::STATE lexer::Next(){
     state = ParseWhiteSpace();
     if(state == STATE::END) return state;
 
-
-    CHARTYPE chartype = CharType(buffer[offset]);
-    switch (chartype)
+    switch (CharType(buffer[offset]))
     {
     case CHARTYPE::CHAR:{
         switch (buffer[offset])
@@ -119,7 +117,11 @@ lexer::STATE lexer::Next(){
             if(res == RESULT::SUCCESS) break;
             else res = 
             ParseKeyWord("float",   TOKEN::FLOAT,   [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
-                                    TOKEN::SYMBOL,     [](char ch){return true;});
+                                    TOKEN::UNKNOW,     [](char ch){return true;});
+            if(res == RESULT::SUCCESS) break;
+            else res =
+            ParseKeyWord("func", TOKEN::FUNC, [](char ch){return (CHARTYPE::OTHER == CharType(ch));}, 
+                                    TOKEN::SYMBOL, [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
             break;
         }
         case 'i':{
@@ -131,7 +133,12 @@ lexer::STATE lexer::Next(){
             ParseKeyWord("if",      TOKEN::IF,      [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
                                     TOKEN::SYMBOL,     [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
             break;
-        }// these three need to be more generalized
+        }
+        case 'l':{
+            ParseKeyWord("let",    TOKEN::LET,    [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
+                                    TOKEN::SYMBOL,     [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
+            break;
+        }
         case 'm':{
             ParseKeyWord("main",    TOKEN::MAIN,    [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
                                     TOKEN::SYMBOL,     [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
@@ -142,6 +149,11 @@ lexer::STATE lexer::Next(){
             ParseKeyWord("return",  TOKEN::RETURN,  [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
                                     TOKEN::SYMBOL,     [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
 
+            break;
+        }
+        case 'v':{
+            ParseKeyWord("var",    TOKEN::VAR,    [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
+                                    TOKEN::SYMBOL,     [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
             break;
         }
         default:

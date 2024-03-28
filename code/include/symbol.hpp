@@ -6,12 +6,12 @@
 namespace vastina{
 
 template<typename ty>
-class Value{//compile time values like "Hello World",123,3.14
-public:
-    ty value;
+class Literal{//compile time values like "Hello World",123,3.14
 private:
-    Value(ty v): value(v){};
-    Value(): value(){};
+    ty value;
+public:
+    Literal() = default;
+    ~Literal() = default;
 };
 
 template<typename ty>

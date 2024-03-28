@@ -1,89 +1,35 @@
 #include "main.hpp"
 #include "ast.hpp"
+#include "base/Tree.hpp"
 #include "base/vasdef.hpp"
 
 #include <iostream>
 
 const static before_main_t before_main = before_main_t();
 
-enum class assign_type{
-    OPERATOR,
-    EXPRSSION,
-    VARIABLE
-};//primary tokens are processed
+enum class if_type{
+    _0
+};
 
-typedef struct _assign_node{
-    int val; //this is really bad, I need to learn template programming
-    token_t tk;
-//    unsigned level = 0;
+typedef struct _if_node{
 
-    _assign_node(): tk(TOKEN::UNKNOW){};
-    _assign_node(const token_t& _tk): val(0), tk(_tk){};
-    _assign_node(TOKEN _tk, int _val): val(_val), tk(_tk){};
-} _assign_node;
+} _if_node;
 
-typedef TreeNode<_assign_node> assign_node;
+typedef TreeNode<_if_node> if_node;
 
-
-constexpr assign_type assign_token_type(TOKEN tk){
+constexpr if_type if_token_type(TOKEN tk){
     switch (tk){
-        case TOKEN::ASSIGN:
-            return assign_type::OPERATOR;
-        case TOKEN::SYMBOL:
-            return assign_type::VARIABLE;
         default:
-            return assign_type::EXPRSSION;
-    }
-}
-
-void update_val(assign_node::pointer root, int val){
-    if(root == nullptr) return;
-        root->data.val = val;
-    update_val(root->left, val);
-    update_val(root->right, val);
-}
-
-assign_node::pointer parser_assign(const unique_ptr<std::vector<vastina::token_t>>& tks, unsigned& offset, unsigned size = 0){
-
-    static unsigned MaxSize = size ? size:tks->size();
-    //static unsigned Base = offset;
-
-    auto root = new assign_node(tks->at(offset));
-    if(offset+1 >= MaxSize) return root;
-
-    while(true){
-        auto current = new assign_node(tks->at(offset));
-        if(assign_token_type(current->data.tk.token) == assign_type::VARIABLE){
-            if(tks->at(offset+1).token == TOKEN::ASSIGN){
-                auto temp = new assign_node(tks->at(offset+1));
-                if(assign_type::OPERATOR == assign_token_type(root->data.tk.token))
-                    temp->InsertLeft(root);
-                temp->InsertRight(current);
-                root = temp;
-                offset += 2;
-            }
-            else return nullptr;
-        }
-        else if(assign_token_type(current->data.tk.token) == assign_type::EXPRSSION){
-            unsigned maxsize = offset;
-            while(tks->at(++maxsize).token != TOKEN::SEMICOLON)
-                if(maxsize+1 >= MaxSize) return nullptr;
-            auto temp = parser_cal(tks, offset, maxsize);
-            if(temp == nullptr) return nullptr;
-
-            auto tempnode = root->FindChildL([](const assign_node::pointer _node){
-                return (_node->left == nullptr);
-            });
-            int val = cal(temp);
-            tempnode->InsertLeft(new assign_node(_assign_node(TOKEN::NUMBER, val)));
-            update_val(root, val);
-            
+            return if_type::_0;
             break;
-        }
     }
+}
 
+if_node::pointer parser_if(std::unique_ptr<std::vector<token_t>>& tks, unsigned& offset){
+    if_node::pointer root = nullptr;
     return root;
 }
+
 
 int main(int argc, char* argv[]){
     // if(argc != 2){

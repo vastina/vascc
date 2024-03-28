@@ -12,7 +12,9 @@ namespace vastina{
 //finite state machine, aka FSM
 //https://zh.cppreference.com/w/cpp/language/operator_precedence
 typedef struct Expression{
-
+    std::vector<token_t>& tokens;
+    unsigned start;
+    unsigned end;
 } Expression;
 
 typedef struct Statement{

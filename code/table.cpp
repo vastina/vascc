@@ -9,7 +9,11 @@ before_main_t::before_main_t(){
     mt.RegisteCase(TOKEN::INT, TOKEN::MAIN, FSM::DECL);
     // more todo
 
-    mt.RegisteCase(TOKEN::INT, TOKEN::VAR, FSM::DECL);
+    mt.RegisteCase(TOKEN::INT, TOKEN::SYMBOL, FSM::DECL);
+    
+    mt.RegisteCase(TOKEN::VAR, TOKEN::SYMBOL, FSM::DECL);
+    mt.RegisteCase(TOKEN::LET, TOKEN::SYMBOL, FSM::DECL);
+    mt.RegisteCase(TOKEN::FUNC, TOKEN::SYMBOL, FSM::DECL);
 }
 
 

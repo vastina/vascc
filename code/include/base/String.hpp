@@ -21,7 +21,7 @@ inline constexpr bool isWhiteSpace(char ch){
     return (ch==' '||ch=='\t'||ch=='\n'||ch=='\r');
 }
 
-inline bool Strcmp(const std::string& buffer, unsigned offset, const std::string& temp){
+inline constexpr bool Strcmp(const std::string& buffer, unsigned offset, const std::string& temp){
     unsigned len = temp.size();
     for(unsigned i=0; i<len; i++){
         if(buffer.at(i+offset) != temp.at(i))
