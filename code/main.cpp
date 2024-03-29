@@ -41,7 +41,7 @@ int main(int argc, char* argv[]){
     // }
     // lexer lx = lexer(argv[1]);
 
-    lexer lx = lexer("./test/test");
+    lexer lx = lexer("./testcase/test.txt");
     // ans =abcdefg = ((2+8)|5 + 3*7/ 4 -9 & 6) -5;
 
     while (lexer::STATE::END != lx.Next()) ;
