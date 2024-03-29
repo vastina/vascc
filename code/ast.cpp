@@ -1,4 +1,5 @@
 #include "ast.hpp"
+#include "base/vasdef.hpp"
 
 #include <iostream>
 
@@ -110,5 +111,158 @@ void Parser::Stmt(Statement& stmt){
 }
 
 /*----------------------------------parser----------------------------------------------*/
+
+template<typename ty>
+void baseExpression<ty>::Walk(walk_order)const{}
+
+template<typename ty>
+void baseExpression<ty>::Parse(){}
+
+template<typename ty>
+const ty baseExpression<ty>::getValue(){
+    return value_;
+}
+
+template<typename ty>
+void baseExpression<ty>::setValue(const ty& v){
+    value_ = v;
+}
+
+template<typename ty>
+void baseExpression<ty>::setValue(ty&& v){
+    value_ = std::move(v);
+}
+
+
+
+ExpressionUnit::ExpressionUnit(TokenPtr tks, unsigned s, unsigned e): tokens(tks), start(s), end(e){};
+
+template<typename ty>
+CalExpression<ty>::CalExpression(ExpressionUnit&& e):food_(std::move(e)), root_(nullptr){};
+
+template<typename ty>
+void CalExpression<ty>::Walk(walk_order wo) const{
+    root_->Walk(wo, [](const _cal_node& data_){
+        std::cout  << data_.tk.data  << '\n';
+    });
+}
+
+template<typename ty>
+void CalExpression<ty>::Parse(){
+    unsigned offset = food_.start;
+    root_ = Parse_(offset);
+}
+
+template<typename ty>
+typename CalExpression<ty>::cal_node::pointer CalExpression<ty>::Parse_(unsigned &offset){
+
+    static BracketCount bc;
+
+    auto root = new cal_node(food_.tokens->at(offset));
+    root->data.level = Level(root->data.tk.token);
+    if(offset >= food_.end) return root;
+    
+    while(true){
+        auto current = new cal_node(food_.tokens->at(offset));
+        offset++;
+        switch (cal_token_type(current->data.tk.token)){
+            case cal_type::BRAC:{
+                if(current->data.tk.token == TOKEN::NRBRAC){    
+                    if(++bc.close > bc.open) 
+                        return nullptr;
+                    root->data.level = 0;
+                    return root;
+                }else {
+                    ++bc.open;
+                    if(cal_type::BRAC == cal_token_type(root->data.tk.token)) root = Parse_(offset);
+                    else current = Parse_(offset);
+                }
+                break;
+            }
+            case cal_type::VALUE:{
+                if(root->data.tk.token == TOKEN::NUMBER) break;
+
+                auto temp = root->FindChildR(
+                    [](const typename cal_node::pointer _node) {return (_node->right == nullptr);}
+                );
+
+                if(cal_type::OPERATOR != cal_token_type(temp->data.tk.token)) return nullptr;
+                
+                temp->InsertRight(current);
+
+                break;
+            }
+            case cal_type::OPERATOR:{
+                current->data.level = Level(current->data.tk.token); 
+                if(current->data.level >= root->data.level){
+                    root->ReplaceByL(current);
+                    root = current;
+                }
+                else{
+                    auto temp = root->FindChildR(
+                        [&current](const typename cal_node::pointer _node)->bool {
+                            return (_node->right == nullptr)||(_node->data.level <= current->data.level);
+                    });
+                    if(temp != root)//current取代原node，原node成为current的left
+                        temp->ReplaceByL(current);
+                    else
+                        temp->InsertRight(current);
+                }
+
+                break;
+            }
+
+            default:
+                return nullptr;
+        }
+        
+        if(offset >= food_.end) break;
+
+    }
+
+    return root;
+
+}
+
+template<typename ty>
+void CalExpression<ty>::Calculate(){
+    value_ = Calculate_(root_);
+    return;
+}
+
+template<>
+int CalExpression<int>::Calculate_(const typename cal_node::pointer root){
+    switch (root->data.tk.token) {
+        case TOKEN::ADD:
+            return Calculate_(root->left) + Calculate_(root->right);
+            break;
+        case TOKEN::NEG:
+            return Calculate_(root->left) - Calculate_(root->right);
+            break;
+        case TOKEN::MULTI:
+            return Calculate_(root->left) * Calculate_(root->right);
+            break;
+        case TOKEN::DIV:
+            return Calculate_(root->left) / Calculate_(root->right);
+            break;
+        case TOKEN::NUMBER:
+            return std::stoi(root->data.tk.data);;
+            break;
+        case TOKEN::AND:
+            return Calculate_(root->left) & Calculate_(root->right);
+            break;
+        case TOKEN::OR:
+            return Calculate_(root->left) | Calculate_(root->right);
+            break;
+        default:
+            return 0;
+            break;
+    }
+}
+
+
+//除了显式实例化导出模板，还有更优雅一点的方法吗。。。
+template class baseExpression<int>;
+template class CalExpression<int>;
 
 } //namespace vastina

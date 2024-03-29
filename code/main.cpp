@@ -5,6 +5,9 @@
 
 #include <iostream>
 
+//primary tokens need to be processed
+
+
 const static before_main_t before_main = before_main_t();
 
 enum class if_type{
@@ -61,5 +64,11 @@ int main(int argc, char* argv[]){
         std::cout  << data_.tk.data << ' ' << data_.val << '\n';
     });
 
+
+    // CalExpression<int> test = CalExpression<int>( ExpressionUnit(std::make_shared<std::vector<token_t>>(lx.getTokens()), 0, 0) );
+    // auto a = test.getValue();
+    // std::cout << a <<'\n';
+
     return 0;
+    
 }

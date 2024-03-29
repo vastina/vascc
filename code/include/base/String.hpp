@@ -31,6 +31,9 @@ inline bool Strcmp(const std::string& buffer, unsigned offset, const std::string
 }
 
 
+template<typename ty>
+std::string_view ToString(const ty& t);
+
 } // namespace vastina
 
 

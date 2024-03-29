@@ -5,17 +5,24 @@
 #include "base/Tree.hpp"
 #include "lexer.hpp"
 
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
 namespace vastina{
 //finite state machine, aka FSM
 //https://zh.cppreference.com/w/cpp/language/operator_precedence
-typedef struct Expression{
-    std::vector<token_t>& tokens;
+using TokenPtr = //std::shared_ptr<std::vector<token_t>>;
+    std::vector<token_t>*;//todo: use shared_ptr
+
+typedef struct ExpressionUnit{
+    TokenPtr tokens;
     unsigned start;
     unsigned end;
-} Expression;
+
+    ExpressionUnit() = delete;
+    ExpressionUnit(TokenPtr tks, unsigned s, unsigned e);
+} ExpressionUnit;
 
 typedef struct Statement{
 
@@ -102,26 +109,88 @@ public:
 
 };
 
+//-----------------------------------------------------------------------------------------------------------------------
 template<typename ty>
 class baseExpression{
 private:
-    ty value;
+    ty value_;
 
 public:
     baseExpression() = default;
-    virtual ~baseExpression();
-    virtual void Walk() = 0;
-    virtual void Parse() = 0;
-//  virtual std::string ToString() = 0;
+    virtual ~baseExpression() = default;
+    virtual void Walk(walk_order) const =0;
+    virtual void Parse() =0;
+    virtual void Calculate() =0;
 
 public:
-    const ty& getValue();
+    const ty getValue();
     void setValue(const ty&);
     void setValue(ty&&);
+    
+    //friend std::string_view ToString<ty>(const ty& t);
 };
 
 template<typename ty>
 class CalExpression: public baseExpression<ty>{
+
+public:
+    typedef struct _cal_node{
+        token_t tk;
+        unsigned level = 0;
+
+        _cal_node(): tk(TOKEN::UNKNOW){};
+        _cal_node(const token_t& _tk): tk(_tk){};
+    } _cal_node;
+
+    typedef TreeNode<_cal_node> cal_node;
+
+    enum class cal_type{
+        OPERATOR,
+        VALUE,
+        BRAC
+    };
+
+    constexpr cal_type cal_token_type(TOKEN tk){
+        switch (tk)
+        {
+        case TOKEN::ADD:
+        case TOKEN::NEG:
+        case TOKEN::MULTI:
+        case TOKEN::DIV:
+        case TOKEN::LOGAND:
+        case TOKEN::LOGNOT:
+        case TOKEN::LOGOR :
+            return cal_type::OPERATOR;
+        case TOKEN::NUMBER:
+            return cal_type::VALUE;
+        case TOKEN::NLBRAC:
+        case TOKEN::NRBRAC:
+            return cal_type::BRAC;
+        default:
+            return cal_type::OPERATOR;
+        }
+    }
+
+private:
+    ExpressionUnit food_; //because it is to be eaten
+    typename cal_node::pointer root_;
+    ty value_;
+public:
+    inline const ty getValue() const{
+        return value_;
+    }
+    using baseExpression<ty>::setValue;
+public:
+    //CalExpression() = delete;
+    CalExpression(ExpressionUnit&& e);
+
+    void Walk(walk_order) const override;
+    void Parse() override;
+    void Calculate() override;
+
+private:
+    typename cal_node::pointer Parse_(unsigned &offset);
+    ty Calculate_(const typename cal_node::pointer);
 
 };
 
@@ -139,6 +208,11 @@ template<typename ty>
 class AddrExpression: public baseExpression<ty>{
 
 };
+
+typedef struct BracketCount{
+    unsigned open = 0;
+    unsigned close = 0;
+} BracketCount;
 
 }//namespace vastina
 

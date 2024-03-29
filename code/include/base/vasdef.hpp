@@ -71,7 +71,27 @@ enum class STMT{
     CALL
 };
 
-
+inline constexpr unsigned Level(TOKEN tk){
+    switch (tk){
+        case TOKEN::ASSIGN:
+            return 4;
+        case TOKEN::ADD:
+        case TOKEN::NEG:
+            return 3;
+        case TOKEN::AND:
+        case TOKEN::NOT:
+        case TOKEN::OR :
+            return 2;
+        case TOKEN::MULTI:
+        case TOKEN::DIV:
+            return 1;
+        case TOKEN::SYMBOL:
+        case TOKEN::NUMBER:
+            return 0;
+        default:
+            return 1<<31;
+    }
+}
 
 }//namespace vastina
 
