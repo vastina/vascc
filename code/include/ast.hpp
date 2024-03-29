@@ -102,6 +102,43 @@ public:
 
 };
 
+template<typename ty>
+class baseExpression{
+private:
+    ty value;
+
+public:
+    baseExpression() = default;
+    virtual ~baseExpression();
+    virtual void Walk() = 0;
+    virtual void Parse() = 0;
+//  virtual std::string ToString() = 0;
+
+public:
+    const ty& getValue();
+    void setValue(const ty&);
+    void setValue(ty&&);
+};
+
+template<typename ty>
+class CalExpression: public baseExpression<ty>{
+
+};
+
+template<typename ty>
+class AssignExpression: public baseExpression<ty>{
+
+};
+
+template<typename ty>
+class DeclExpression: public baseExpression<ty>{
+
+};
+
+template<typename ty>
+class AddrExpression: public baseExpression<ty>{
+
+};
 
 }//namespace vastina
 

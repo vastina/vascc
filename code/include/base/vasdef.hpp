@@ -43,7 +43,7 @@ enum FSM{//finite state machine
     ASSI,//assign operation
     CAL,// calculate something
     GOTO,// condition jump, including if else, for, while, do while, switch case  
-
+//should not be here
     EXPR, EXPR1, EXPR2, EXPR3, EXPR4, EXPR5, EXPR6, EXPR7, EXPR8, EXPR9, EXPR10, 
     EXPR11, EXPR12, EXPR13, EXPR14, EXPR15, EXPR16, EXPR17, EXPR18, EXPR19, EXPR20, 
     EXPR21, EXPR22, EXPR23, EXPR24, EXPR25, EXPR26, EXPR27, EXPR28, EXPR29, EXPR30, 
@@ -57,24 +57,20 @@ enum FSM{//finite state machine
 //I don't know why copilot need so many states, just keep it here
 };
 
-inline constexpr FSM token_type(TOKEN tk){
-    switch (tk)
-    {
-    case TOKEN::IF:
-    case TOKEN::ELSE:
-    case TOKEN::FOR:
-    case TOKEN::WHILE:
-    case TOKEN::DO:
-    case TOKEN::SWITCH:
-    case TOKEN::CASE:
-        return FSM::GOTO;
-        break;
-    
-    default:
-        return FSM::END;
-        break;
-    }
-}
+enum class EXPR{
+    CAL,
+    ASSIGN,
+    //CONDITION,//it is a type of calculate expression
+    DECL,
+    ADDR//address, something like a[0],&a
+};
+
+enum class STMT{
+    IF,
+    GOTO,
+    CALL
+};
+
 
 
 }//namespace vastina
