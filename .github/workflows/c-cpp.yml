@@ -13,9 +13,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: configure
-      run: cmake ./
+    - name: cmake_configure
+      run: cmake -Bbuild .
     - name: build
-      run: cmake --build .
+      run: cmake --build ./build
     - name: run
       run: ./cc testcase/test.txt
+    - name: xmake_build
+      run: xmake build
+    - name: xmake_run
+      run: xmake run cc testcase/test.txt
