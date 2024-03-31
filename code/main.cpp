@@ -35,14 +35,11 @@ if_node::pointer parser_if(std::unique_ptr<std::vector<token_t>>& tks, unsigned&
 
 
 int main(int argc, char* argv[]){
-    // if(argc != 2){
-    //     std::cout << "Usage: " << argv[0] << " <filename>\n";
-    //     return 1;
-    // }
-    // lexer lx = lexer(argv[1]);
-
-    lexer lx = lexer("./testcase/test.txt");
-    // ans =abcdefg = ((2+8)|5 + 3*7/ 4 -9 & 6) -5;
+    if(argc != 2){
+        std::cout << "Usage: " << argv[0] << " <filename>\n";
+        return 1;
+    }
+    lexer lx = lexer(argv[1]);
 
     while (lexer::STATE::END != lx.Next()) ;
 
@@ -63,11 +60,6 @@ int main(int argc, char* argv[]){
     root->Walk(walk_order::PREORDER, [](const _assign_node& data_){
         std::cout  << data_.tk.data << ' ' << data_.val << '\n';
     });
-
-
-    // CalExpression<int> test = CalExpression<int>( ExpressionUnit(std::make_shared<std::vector<token_t>>(lx.getTokens()), 0, 0) );
-    // auto a = test.getValue();
-    // std::cout << a <<'\n';
 
     return 0;
     

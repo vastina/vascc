@@ -112,11 +112,6 @@ void Parser::Stmt(Statement& stmt){
 
 /*----------------------------------parser----------------------------------------------*/
 
-template<typename ty>
-void baseExpression<ty>::Walk(walk_order)const{}
-
-template<typename ty>
-void baseExpression<ty>::Parse(){}
 
 template<typename ty>
 const ty baseExpression<ty>::getValue(){
@@ -136,6 +131,11 @@ void baseExpression<ty>::setValue(ty&& v){
 
 
 ExpressionUnit::ExpressionUnit(TokenPtr tks, unsigned s, unsigned e): tokens(tks), start(s), end(e){};
+ExpressionUnit::~ExpressionUnit(){
+    if(nullptr != tokens) 
+        tokens = nullptr;
+}
+
 
 template<typename ty>
 CalExpression<ty>::CalExpression(ExpressionUnit&& e):food_(std::move(e)), root_(nullptr){};

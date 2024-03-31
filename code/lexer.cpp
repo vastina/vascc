@@ -3,7 +3,6 @@
 #include "base/String.hpp"
 #include "base/vasdef.hpp"
 
-#include <iostream>
 #include <fstream>
 
 namespace vastina{
@@ -27,7 +26,7 @@ lexer::lexer(const char* filename):tokens(), offset(0), line(1), lineoffset(0){
         ifs.getline(buf, 256);
         buffer.append(buf).append("\n");
     }
-std::cout << buffer <<'\n';
+//std::cout << buffer <<'\n';
     ifs.close();
 }
 

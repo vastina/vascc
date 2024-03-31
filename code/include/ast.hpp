@@ -22,6 +22,7 @@ typedef struct ExpressionUnit{
 
     ExpressionUnit() = delete;
     ExpressionUnit(TokenPtr tks, unsigned s, unsigned e);
+    ~ExpressionUnit();
 } ExpressionUnit;
 
 typedef struct Statement{
@@ -133,7 +134,7 @@ public:
 template<typename ty>
 class CalExpression: public baseExpression<ty>{
 
-public:
+public://they will not be created every time when a instance of CalExpression is created
     typedef struct _cal_node{
         token_t tk;
         unsigned level = 0;
@@ -175,6 +176,7 @@ private:
     ExpressionUnit food_; //because it is to be eaten
     typename cal_node::pointer root_;
     ty value_;
+    bool isConstexpr;
 public:
     inline const ty getValue() const{
         return value_;

@@ -44,6 +44,7 @@ enum FSM{//finite state machine
     CAL,// calculate something
     GOTO,// condition jump, including if else, for, while, do while, switch case  
 //should not be here
+//历史垃圾
     EXPR, EXPR1, EXPR2, EXPR3, EXPR4, EXPR5, EXPR6, EXPR7, EXPR8, EXPR9, EXPR10, 
     EXPR11, EXPR12, EXPR13, EXPR14, EXPR15, EXPR16, EXPR17, EXPR18, EXPR19, EXPR20, 
     EXPR21, EXPR22, EXPR23, EXPR24, EXPR25, EXPR26, EXPR27, EXPR28, EXPR29, EXPR30, 
@@ -62,17 +63,20 @@ enum class EXPR{
     ASSIGN,
     //CONDITION,//it is a type of calculate expression
     DECL,
-    ADDR//address, something like a[0],&a
+    ADDR,//address, something like a[0],&a
 };
 
 enum class STMT{
     IF,
     GOTO,
-    CALL
+    CALL,
+    RET,
 };
 
 inline constexpr unsigned Level(TOKEN tk){
     switch (tk){
+        case TOKEN::EQUAL:
+            return 5;
         case TOKEN::ASSIGN:
             return 4;
         case TOKEN::ADD:
