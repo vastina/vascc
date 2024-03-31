@@ -260,6 +260,11 @@ int CalExpression<int>::Calculate_(const typename cal_node::pointer root){
     }
 }
 
+template<>
+float CalExpression<float>::Calculate_(const typename cal_node::pointer root) {
+    return {};
+}
+
 
 //除了显式实例化导出模板，还有更优雅一点的方法吗。。。
 template class baseExpression<int>;

@@ -20,7 +20,7 @@ class TreeNode : public std::enable_shared_from_this<TreeNode<ty>>{
 
 public:
     using node = TreeNode<ty>;
-    using pointer = TreeNode<ty>*;
+    using pointer = TreeNode<ty> *;
     using nodeptr = shared_ptr<TreeNode<ty>>;
 
 public:

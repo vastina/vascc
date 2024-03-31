@@ -1,12 +1,18 @@
+# ignored in project dir
 *.out
 cc
 vcc
 .vscode/
 build/
+.xmake/
 test/
 todo/
 .cache/
+
+# temp main sometimes
 code/test.cpp
+
+# ignored in llvm/ and gcc/ dir
 **/*.ll
 **/*.bc
 **/*.asm
