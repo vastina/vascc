@@ -8,7 +8,7 @@
 //primary tokens need to be processed
 
 
-const static before_main_t before_main = before_main_t();
+//const static before_main_t before_main = before_main_t();
 
 enum class if_type{
     _0

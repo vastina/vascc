@@ -1,6 +1,7 @@
 #ifndef _SYMBOL_H_
 #define _SYMBOL_H_
 
+#include "base/vasdef.hpp"
 #include "lexer.hpp"
 
 #include <string_view>
@@ -29,13 +30,18 @@ public:
 
 private:
     std::vector<token_t>& primary_tokens;
-    std::vector<p_token_t> results;
     unsigned offset;
+    
+    std::vector<p_token_t> results;
+    unsigned id = 0;
 public:
     Preprocess(std::vector<token_t>& tks): primary_tokens(tks){};
     ~Preprocess() = default;
-
-    int Process();
+private:
+    inline TOKEN Current();
+    inline TOKEN Peek();
+    void Next();
+    int Except(TOKEN excepted, bool last);
 private:
     int ProcessCalType(std::function<bool()> EndJudge);
     int ProcessAssignType(std::function<bool()> EndJudge);
@@ -47,6 +53,7 @@ private:
     int ProcessRetType(std::function<bool()> EndJudge);
 //return a code to indicate the result
 public:
+    int Process();
     const p_token_t& getNext();
     const unsigned getSize() const;
 };

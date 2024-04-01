@@ -7,8 +7,8 @@ enum TOKEN{
     UNKNOW = -1,
     UNSIGNED, SIGNED, INT, FLOAT, DOUBLE, BOOL, CHAR, VOID,
 //  unsigned  signed  int  float  double  bool  char  void
-    VAR, LET, FUNC, SYMBOL,
-//  var  let  func
+    VAR, LET, SYMBOL, FUNC, SYMBOLF,
+//  var  let          func
 //类型后置确实有它的好处，let就先当作const var吧
     STRUCT, ENUM, 
 //  struct  enum
@@ -69,7 +69,7 @@ enum class EXPR{
 enum class STMT{
     IF,
     GOTO,
-    CALL,
+    CALL,//可以为Calculate中的函数调用构造临时匿名变量？
     RET,
 };
 

@@ -17,6 +17,7 @@ code/test.cpp
 **/*.bc
 **/*.asm
 **/*.S
+**/*.s
 **/*o
 **/*.out
 **/*.yy.c

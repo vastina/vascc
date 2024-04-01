@@ -36,79 +36,79 @@ typedef struct Block{
 
 
 
-class MatchTable{
+// class MatchTable{
 
-public:
-    struct MatchUnit{
-        TOKEN tk_type;
-        FSM current_state;
+// public:
+//     struct MatchUnit{
+//         TOKEN tk_type;
+//         FSM current_state;
 
-        MatchUnit(TOKEN tk, FSM state):tk_type(tk), current_state(state){};
-        bool operator==(const MatchUnit& m) const;
-        bool operator!=(const MatchUnit& m) const;
-    };
+//         MatchUnit(TOKEN tk, FSM state):tk_type(tk), current_state(state){};
+//         bool operator==(const MatchUnit& m) const;
+//         bool operator!=(const MatchUnit& m) const;
+//     };
 
-    struct Matcher{
-        std::vector<MatchUnit> units;
-        //maybe set is better?
-        unsigned offset;
-    };
+//     struct Matcher{
+//         std::vector<MatchUnit> units;
+//         //maybe set is better?
+//         unsigned offset;
+//     };
 
-private:
-    MatchTable();
-    std::unordered_map<TOKEN, Matcher> matchTable;
+// private:
+//     MatchTable();
+//     std::unordered_map<TOKEN, Matcher> matchTable;
 
-public:
-    MatchTable(const MatchTable& m) = delete;
-    MatchTable& operator=(const MatchTable& m) = delete;
-    MatchTable(MatchTable&& m) = delete;
-    MatchTable& operator=(MatchTable&& m) = delete;
-    ~MatchTable();
+// public:
+//     MatchTable(const MatchTable& m) = delete;
+//     MatchTable& operator=(const MatchTable& m) = delete;
+//     MatchTable(MatchTable&& m) = delete;
+//     MatchTable& operator=(MatchTable&& m) = delete;
+//     ~MatchTable();
 
-    static MatchTable& getInstance(){
-        static MatchTable instance;
-        return instance;
-    }
+//     // static MatchTable& getInstance(){
+//     //     static MatchTable instance;
+//     //     return instance;
+//     // }
 
-    void RegisteCase(TOKEN current_token, TOKEN except_token, FSM state);
-    void UnregisteCase(TOKEN current_token, TOKEN except_token, FSM state);
+//     void RegisteCase(TOKEN current_token, TOKEN except_token, FSM state);
+//     void UnregisteCase(TOKEN current_token, TOKEN except_token, FSM state);
 
-    void Error(const char*);
-    void Warn(const char*);
+//     void Error(const char*);
+//     void Warn(const char*);
 
-    const std::vector<MatchUnit>& getMatchList(TOKEN);
-    TOKEN getNextMarch(TOKEN);
-};
+//     const std::vector<MatchUnit>& getMatchList(TOKEN);
+//     TOKEN getNextMarch(TOKEN);
+// };
 
-typedef struct before_main_t{
-    before_main_t();
-    ~before_main_t();
-} before_main_t;
+// typedef struct before_main_t{
+//     before_main_t();
+//     ~before_main_t();
+// } before_main_t;
 
-class Parser{
+// class Parser{
 
-private:
-    std::vector<token_t>& tokens;
-    unsigned offset;
+// private:
+//     std::vector<token_t>& tokens;
+//     unsigned offset;
 
-private:
-    std::vector<Block> blocks;
+// private:
+//     std::vector<Block> blocks;
 
-    FSM current_state;
+//     FSM current_state;
 
-public:
-    Parser(std::vector<token_t>& tks);
-    ~Parser(){};
+// public:
+//     Parser(std::vector<token_t>& tks);
+//     ~Parser(){};
 
-    token_t& Peek();
-    void Eat();
-    //these two should not be void? so todo
-    void Except(const token_t& excepted);
-    void TryEat(const token_t& excepted);
+//     token_t& Peek();
+//     void Eat();
+//     //these two should not be void? so todo
+//     void Except(const token_t& excepted);
+//     void TryEat(const token_t& excepted);
 
-    void Stmt(Statement& stmt);
+//     void Stmt(Statement& stmt);
 
-};
+// };
 
 //-----------------------------------------------------------------------------------------------------------------------
 template<typename ty>
@@ -131,11 +131,7 @@ public:
     //friend std::string_view ToString<ty>(const ty& t);
 };
 
-template<typename ty>
-class CalExpression: public baseExpression<ty>{
-
-public://they will not be created every time when a instance of CalExpression is created
-    typedef struct _cal_node{
+typedef struct _cal_node{
         token_t tk;
         unsigned level = 0;
 
@@ -171,6 +167,12 @@ public://they will not be created every time when a instance of CalExpression is
             return cal_type::OPERATOR;
         }
     }
+
+template<typename ty>
+class CalExpression: public baseExpression<ty>{
+
+public://they will not be created every time when a instance of CalExpression is created
+    
 
 private:
     ExpressionUnit food_; //because it is to be eaten
