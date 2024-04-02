@@ -2,6 +2,7 @@
 #include "ast.hpp"
 #include "base/Tree.hpp"
 #include "base/vasdef.hpp"
+#include "symbol.hpp"
 
 #include <iostream>
 
@@ -39,6 +40,7 @@ int main(int argc, char* argv[]){
         std::cout << "Usage: " << argv[0] << " <filename>\n";
         return 1;
     }
+std::cout <<"--------------------------lexer--------------------------------\n";
     lexer lx = lexer(argv[1]);
 
     while (lexer::STATE::END != lx.Next()) ;
@@ -47,19 +49,32 @@ int main(int argc, char* argv[]){
     for(unsigned i=0; i < tks->size(); i++){
         std::cout << tks->at(i).token << ' ' << tks->at(i).data <<' '<< tks->at(i).line << '\n';
     }
+std::cout <<"--------------------------lexer--------------------------------\n";
 
-    unsigned offset = 0;
-    auto root = parser_assign(tks, offset);
-    if(root == nullptr){
-        std::cout << "Error\n";
-        return 1;
+std::cout <<"--------------------------preprocess--------------------------------\n";
+    Preprocess *pp = new Preprocess(*tks);
+    pp->Process();
+    for(unsigned i=0; i<pp->getSize(); i++){
+        auto& next = pp->getNext();
+        std::cout << next.tk <<' ';
+        for(unsigned j=next.start; j<next.end; j++){
+            std::cout << tks->at(j).data << ' ';
+        }
+        std::cout << '\n';
     }
+std::cout <<"--------------------------preprocess--------------------------------\n";
+    // unsigned offset = 0;
+    // auto root = parser_assign(tks, offset);
+    // if(root == nullptr){
+    //     std::cout << "Error\n";
+    //     return 1;
+    // }
     
 
-    std::cout << '\n';
-    root->Walk(walk_order::PREORDER, [](const _assign_node& data_){
-        std::cout  << data_.tk.data << ' ' << data_.val << '\n';
-    });
+    // std::cout << '\n';
+    // root->Walk(walk_order::PREORDER, [](const _assign_node& data_){
+    //     std::cout  << data_.tk.data << ' ' << data_.val << '\n';
+    // });
 
     return 0;
     

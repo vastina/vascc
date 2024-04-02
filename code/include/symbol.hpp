@@ -26,6 +26,7 @@ public:
         unsigned start;
         unsigned end;
     } p_token_t;
+    //[start, end)
     //这个是后来写的，在expression后面加进来的，也许以后会把expr class里面的food_改成和这个更匹配
 
 private:

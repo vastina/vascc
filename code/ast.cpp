@@ -156,8 +156,6 @@ void CalExpression<ty>::Parse(){
 template<typename ty>
 typename cal_node::pointer CalExpression<ty>::Parse_(unsigned &offset){
 
-    static BracketCount bc;
-
     auto root = new cal_node(food_.tokens->at(offset));
     root->data.level = Level(root->data.tk.token);
     if(offset >= food_.end) return root;
@@ -171,20 +169,15 @@ typename cal_node::pointer CalExpression<ty>::Parse_(unsigned &offset){
                     root->data.level = 0;
                     return root;
                 }else {
-                    ++bc.open;
                     if(cal_type::BRAC == cal_token_type(root->data.tk.token)) root = Parse_(offset);
                     else current = Parse_(offset);
                 }
                 break;
             }
             case cal_type::VALUE:{
-                if(cal_token_type(root->data.tk.token) == cal_type::VALUE) break;
-
                 auto temp = root->FindChildR(
                     [](const typename cal_node::pointer _node) {return (_node->right == nullptr);}
                 );
-
-                if(cal_type::OPERATOR != cal_token_type(temp->data.tk.token)) return nullptr;
                 
                 temp->InsertRight(current);
 

@@ -19,8 +19,10 @@ jobs:
       run: cmake --build ./build
     - name: run
       run: ./cc testcase/test.txt
-    - name: install_curl
-      run: sudo apt install -y curl
+    #- name: install_curl
+    #  run: sudo apt install -y curl
+    - name: remove_cc
+      run: rm -f cc
     - name: install_xmake
       run:  curl -fsSL https://xmake.io/shget.text | bash
     - name: xmake_build

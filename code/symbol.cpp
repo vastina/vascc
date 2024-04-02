@@ -30,19 +30,21 @@ void Preprocess::Next(){
 int Preprocess::Except(TOKEN excepted, bool last){
     if((Peek() != excepted)){
         if(last){
-            std::cerr << __FILE__ <<' '<<__LINE__;
-            exit(1);
+            std::cerr << __FILE__ <<' '<<__LINE__ <<'\n';
+            //exit(1);
         }
         else return -1;
     }
     return 0;
 }
 
-
+//temporarily use ca;_type here
 int Preprocess::Process(){
-    while (true) {
+    unsigned size =  primary_tokens.size();
+    while (offset <= size) {
         switch (Current()) {
             case TOKEN::IF:
+                results.push_back({P_TOKEN::IF, offset, offset+1});
                 (void)Except(TOKEN::NLBRAC, true);
                 Next();
                 ProcessCalType([this](){ return Current() == TOKEN::OBRACE; });
@@ -50,74 +52,94 @@ int Preprocess::Process(){
             case TOKEN::SYMBOL:{
                 int res = Except(TOKEN::ASSIGN, false);
                 if(res == 0){
-                    ProcessAssignType([this](){ return true;});
+                    ProcessAssignType([](){ return false;});
                     break;
                 }
                 else res = Except(TOKEN::SIGNED, true);
+                break;
             }
-            default:
-                return -1;
+            default:{
+                switch (cal_token_type(Current())) {
+                    case cal_type::TYPE:{
+                        (void)Except(TOKEN::SYMBOL, true);
+                        ProcessDeclType([this](){ return Current() == TOKEN::SEMICOLON;});
+                        break;
+                    }
+
+
+                    default: 
+                        std::cerr << __FILE__ <<' '<<__LINE__ <<'\n';
+                        return -1;
+                }
+            }
         }
     }
+    return 0;
 }
 
 //then I will make no check on the Parser of calculate because it is checked here
 int Preprocess::ProcessCalType(std::function<bool()> EndJudge){
 
     BracketCount bc;
+    unsigned last_offset = offset;
 
     while (true) {
-        switch (Current()) {
-// I need marhtable now
-            case TOKEN::NLBRAC:{
-                bc.open++;
-                int  res = Except(TOKEN::NLBRAC, false);
-                if(res == 0){
-                    bc.open++; 
-                    break;
-                }
-                else res = Except(TOKEN::SYMBOL, true);
-            }
-            case TOKEN::NRBRAC:{
-                if(++bc.close > bc.open) return -1;
-                auto next_token_type = cal_token_type(Peek());
-                if(next_token_type == cal_type::OPERATOR){
-                    break;
-                }
-                int  res = Except(TOKEN::NRBRAC, false);
-                if(res == 0){
+        switch (cal_token_type(Current())) {
+            case cal_type::BRAC:{
+                if(Current() == TOKEN::NRBRAC){
                     if(++bc.close > bc.open) return -1;
-                    break;
                 }
-                else res = Except(TOKEN::OBRACE, false);
-                if(res == 0){
-                    break;
+                else{
+                    ++bc.open;
                 }
-                else res = Except(TOKEN::SEMICOLON, true);
+                break;
             }
-            case TOKEN::SYMBOL:{
-                auto next_token_type = cal_token_type(Peek());
-                if(next_token_type == cal_type::OPERATOR){
-                    break;
+            case cal_type::VALUE:{
+                if(cal_token_type(Peek()) == cal_type::VALUE){
+                    std::cerr << __FILE__ <<' '<<__LINE__ <<'\n';
+                    return -1;
                 }
-                else return -1;
-                int  res = Except(TOKEN::NRBRAC, false);
-                if(res == 0){
-                    break;
+                break;
+            }
+            case cal_type::OPERATOR:{
+                auto peek = Peek();
+                if(cal_token_type(peek) == cal_type::OPERATOR){
+                    if(peek!=TOKEN::NEG && peek!=TOKEN::ADD && peek!=TOKEN::OPS && peek!=TOKEN::LOGNOT){
+                        std::cerr << __FILE__ <<' '<<__LINE__ <<'\n';
+                        return -1;
+                    }
                 }
-                else res = Except(TOKEN::SEMICOLON, true);
+                break;
             }
             default:
+                std::cerr << __FILE__ <<' '<<__LINE__ <<'\n';
                 return -1;
         }
-
         Next();
+        if(EndJudge()) break;
     }
-    return {};
+
+    results.push_back({P_TOKEN::CAL, last_offset, offset});
+    return 0;
 }
 
 int Preprocess::ProcessAssignType(std::function<bool()> EndJudge){
-    return {};
+
+    unsigned last_offset = offset;
+
+    while(true){
+        if(Current()==TOKEN::SYMBOL && Peek()==TOKEN::ASSIGN){
+            Next(); Next();
+        }
+        else{
+            results.push_back({P_TOKEN::ASSIGN, last_offset, offset});
+            (void)ProcessCalType([this](){return Current()==TOKEN::SEMICOLON || Current()==TOKEN::EQUAL;});
+            break;
+        }
+        if(EndJudge()) break;
+    }
+
+    return 0;
 }
 
 int Preprocess::ProcessDeclType(std::function<bool()> EndJudge){
@@ -146,7 +168,7 @@ int Preprocess::ProcessRetType(std::function<bool()> EndJudge){
 
 
 const Preprocess::p_token_t& Preprocess::getNext(){
-    if(offset >= results.size()){
+    if(id >= results.size()){
         //todo: log it
         exit(1);
     }

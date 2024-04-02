@@ -4,6 +4,7 @@
 #include "base/vasdef.hpp"
 
 #include <fstream>
+#include <iostream>
 
 namespace vastina{
 
@@ -26,7 +27,7 @@ lexer::lexer(const char* filename):tokens(), offset(0), line(1), lineoffset(0){
         ifs.getline(buf, 256);
         buffer.append(buf).append("\n");
     }
-//std::cout << buffer <<'\n';
+std::cout << buffer <<'\n';
     ifs.close();
 }
 
@@ -194,6 +195,9 @@ lexer::STATE lexer::Next(){
         case ';':
             forSingelWord(";", TOKEN::SEMICOLON);
             break;
+        case ',':
+            forSingelWord(",", TOKEN::COMMA);
+            break;
         case '=':{
             RESULT res = 
             ParseKeyWord("==",      TOKEN::EQUAL,   [](char ch){return true;},
@@ -241,6 +245,9 @@ lexer::STATE lexer::Next(){
             break;
         case '/':
             forSingelWord("/", TOKEN::DIV);
+            break;
+        case '~':
+            forSingelWord("~", TOKEN::OPS);
             break;
         default:
             break;

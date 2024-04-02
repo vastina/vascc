@@ -144,7 +144,8 @@ typedef struct _cal_node{
     enum class cal_type{
         OPERATOR,
         VALUE,
-        BRAC
+        BRAC,
+        TYPE
     };
 
     constexpr cal_type cal_token_type(TOKEN tk){
@@ -155,14 +156,23 @@ typedef struct _cal_node{
         case TOKEN::MULTI:
         case TOKEN::DIV:
         case TOKEN::LOGAND:
+        case TOKEN::AND:
         case TOKEN::LOGNOT:
         case TOKEN::LOGOR :
+        case TOKEN::OR:
             return cal_type::OPERATOR;
+        case TOKEN::SYMBOL:
         case TOKEN::NUMBER:
             return cal_type::VALUE;
         case TOKEN::NLBRAC:
         case TOKEN::NRBRAC:
             return cal_type::BRAC;
+        case TOKEN::INT:
+        case TOKEN::FLOAT:
+        case TOKEN::DOUBLE:
+        case TOKEN::BOOL:
+        case TOKEN::CHAR:
+            return cal_type::TYPE;
         default:
             return cal_type::OPERATOR;
         }

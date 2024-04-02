@@ -16,12 +16,12 @@ enum TOKEN{
 //  const  static
     NUMBER, STRING,
 //  number  string
-    NLBRAC, NRBRAC, OBRACE, CBRACE, SEMICOLON,//分号
-//  (           )   {           }       ;
+    NLBRAC, NRBRAC, OBRACE, CBRACE, SEMICOLON, COMMA,
+//  (           )   {           }       ;         ,
     MAIN, RETURN,
 //  main  return
-    GREATER, LESS, NOT, LOGNOT, AND, LOGAND, OR, LOGOR,
-// what is NOT since there is LOGNOT?
+    GREATER, LESS, NOT, LOGNOT, AND, LOGAND, OR, LOGOR, OPS,
+// what is NOT since there is LOGNOT?                    ~
     NEG, ADD, MULTI, DIV, 
 //   -    +     *     /
     IF, ELSE, FOR, WHILE, DO, SWITCH, CASE, BREAK, CONTINUE, DEFAULT,
