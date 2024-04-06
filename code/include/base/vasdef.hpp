@@ -97,6 +97,11 @@ inline constexpr unsigned Level(TOKEN tk){
     }
 }
 
-}//namespace vastina
 
+#define RETURN_ERROR std::cerr << __FILE__ <<' '<<__LINE__ <<'\n'; \
+                        return -1;
+
+#define EXIT_ERROR std::cerr << __FILE__ <<' '<<__LINE__ <<'\n'; \
+                        exit(-1);
+}
 #endif

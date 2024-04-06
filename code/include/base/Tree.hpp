@@ -31,7 +31,7 @@ public:
 
     TreeNode(): data(), left(nullptr), right(nullptr), parent(nullptr){};
     TreeNode(const ty& tk): data(tk), left(nullptr), right(nullptr), parent(nullptr){};
-    TreeNode(ty&& tk): data(tk), left(nullptr), right(nullptr), parent(nullptr){};
+    TreeNode(ty&& tk): data(std::move(tk)), left(nullptr), right(nullptr), parent(nullptr){};
 
 private:
     inline void InOrder(void visit(const ty& data_), pointer root){
@@ -90,6 +90,28 @@ public:
         right->parent = this;
     }
 
+    inline void InsertByCompare(pointer new_node, std::function<bool(const ty& a, const ty& b)> compare = [](const ty& a, const ty& b){return a < b;}){
+        auto root = this;
+        while(true){
+            if(compare(new_node->data, root->data)){
+                if(root->left == nullptr){
+                    root->InsertLeft(new_node);
+                    return;
+                }
+                root = root->left;
+            }else{
+                if(root->right == nullptr){
+                    root->InsertRight(new_node);
+                    return;
+                }
+                root = root->right;
+            }
+        }
+    }
+    inline void InsertByCompare(const ty& data_, std::function<bool(const ty& a, const ty& b)> compare = [](const ty& a, const ty& b){return a < b;}){
+        auto new_node = new node(data_);
+        InsertByCompare(new_node, compare);
+    }
 //This function can cause crash if the judge function is not correct
     inline pointer FindChildR(std::function<bool(const pointer _node)> judge){
         auto root = this;

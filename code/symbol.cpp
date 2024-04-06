@@ -1,5 +1,5 @@
 #include "symbol.hpp"
-#include "ast.hpp"
+#include "expr.hpp"
 #include "base/vasdef.hpp"
 #include <iostream>
 
@@ -19,8 +19,13 @@ inline TOKEN Preprocess::Current(){
    return primary_tokens[offset].token;
 }
 
-inline TOKEN Preprocess::Peek(){
-    return primary_tokens[offset+1].token;
+inline TOKEN Preprocess::Peek(unsigned _offset=1){
+    return primary_tokens[offset+_offset].token;
+}
+
+inline TOKEN Preprocess::PreToken(unsigned _offset=1){
+    if(_offset>offset) return TOKEN::UNKNOW;
+    return primary_tokens[offset-_offset].token;
 }
 
 void Preprocess::Next(){
@@ -30,8 +35,8 @@ void Preprocess::Next(){
 int Preprocess::Except(TOKEN excepted, bool last){
     if((Peek() != excepted)){
         if(last){
+            //EXIT_ERROR
             std::cerr << __FILE__ <<' '<<__LINE__ <<'\n';
-            //exit(1);
         }
         else return -1;
     }
@@ -41,13 +46,17 @@ int Preprocess::Except(TOKEN excepted, bool last){
 //temporarily use ca;_type here
 int Preprocess::Process(){
     unsigned size =  primary_tokens.size();
-    while (offset <= size) {
+    while (offset < size) {
         switch (Current()) {
-            case TOKEN::IF:
-                results.push_back({P_TOKEN::IF, offset, offset+1});
-                (void)Except(TOKEN::NLBRAC, true);
+            case TOKEN::SEMICOLON:
                 Next();
-                ProcessCalType([this](){ return Current() == TOKEN::OBRACE; });
+                break;
+            case TOKEN::CBRACE:
+            //this is a scope end, do something
+                Next();
+                break;
+            case TOKEN::IF:
+                ProcessIfType();
                 break;
             case TOKEN::SYMBOL:{
                 int res = Except(TOKEN::ASSIGN, false);
@@ -58,6 +67,17 @@ int Preprocess::Process(){
                 else res = Except(TOKEN::SIGNED, true);
                 break;
             }
+            case TOKEN::WHILE:
+            case TOKEN::FOR:
+            case TOKEN::DO:
+                ProcessGotoType([]{return false;});
+                break;
+            case TOKEN::SYMBOLF:
+                ProcessCallType([]{return false;});
+                break;
+            case TOKEN::RETURN:
+                ProcessRetType([]{return false;});
+                break;
             default:{
                 switch (cal_token_type(Current())) {
                     case cal_type::TYPE:{
@@ -68,8 +88,8 @@ int Preprocess::Process(){
 
 
                     default: 
-                        std::cerr << __FILE__ <<' '<<__LINE__ <<'\n';
-                        return -1;
+                        std::cout << Current() <<'\n';
+                        {RETURN_ERROR}
                 }
             }
         }
@@ -96,8 +116,7 @@ int Preprocess::ProcessCalType(std::function<bool()> EndJudge){
             }
             case cal_type::VALUE:{
                 if(cal_token_type(Peek()) == cal_type::VALUE){
-                    std::cerr << __FILE__ <<' '<<__LINE__ <<'\n';
-                    return -1;
+                    {RETURN_ERROR}
                 }
                 break;
             }
@@ -105,15 +124,13 @@ int Preprocess::ProcessCalType(std::function<bool()> EndJudge){
                 auto peek = Peek();
                 if(cal_token_type(peek) == cal_type::OPERATOR){
                     if(peek!=TOKEN::NEG && peek!=TOKEN::ADD && peek!=TOKEN::OPS && peek!=TOKEN::LOGNOT){
-                        std::cerr << __FILE__ <<' '<<__LINE__ <<'\n';
-                        return -1;
+                        {RETURN_ERROR}
                     }
                 }
                 break;
             }
             default:
-                std::cerr << __FILE__ <<' '<<__LINE__ <<'\n';
-                return -1;
+                {RETURN_ERROR}
         }
         Next();
         if(EndJudge()) break;
@@ -143,15 +160,59 @@ int Preprocess::ProcessAssignType(std::function<bool()> EndJudge){
 }
 
 int Preprocess::ProcessDeclType(std::function<bool()> EndJudge){
-    return {};
+
+    switch (Current()) {
+        case TOKEN::INT:
+            
+            break;
+        case TOKEN::FLOAT:
+
+            break;
+        default:
+            return -1;
+    }
+    Next();
+
+    unsigned last_offset = offset;
+    while(true){
+        if(Current()==TOKEN::SYMBOL){
+            //add something to symbol table
+            Next();
+        }
+        else if(Current()==TOKEN::ASSIGN){
+            results.push_back({P_TOKEN::ASSIGN, last_offset, offset+1});
+            last_offset = offset+1;
+            Next();
+            (void)ProcessCalType([this](){return Current()==TOKEN::SEMICOLON || Current()==TOKEN::COMMA;});
+        }
+        else if(Current()==TOKEN::COMMA){
+            results.push_back({P_TOKEN::ASSIGN, last_offset, offset});
+            last_offset = offset+1;
+            Next();
+        }
+        else if(EndJudge()) break;
+    }
+
+    return 0;
 }
 
 int Preprocess::ProcessAddrType(std::function<bool()> EndJudge){
     return {};
 }
 
-int Preprocess::ProcessIfType(std::function<bool()> EndJudge){
-    return {};
+int Preprocess::ProcessIfType(){
+    results.push_back({P_TOKEN::IF, offset, offset+1});
+    (void)Except(TOKEN::NLBRAC, true);  Next();
+    int res = ProcessCalType([this](){ return Current() == TOKEN::OBRACE; });//暂时不支持不带{}的if
+    if(0 == res) Next();
+    else {RETURN_ERROR}
+    
+    // notify some class there is a scope, 
+    // variables declared in this scope should be added to the symbol table
+    // and all can know the scope of variables declared here
+
+    //(void)Except(TOKEN::CBRACE, true); Next();
+    return 0;
 }
 
 int Preprocess::ProcessGotoType(std::function<bool()> EndJudge){
