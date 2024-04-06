@@ -4,6 +4,7 @@
 #include "base/vasdef.hpp"
 #include "base/Tree.hpp"
 #include "lexer.hpp"
+#include "symbol.hpp"
 
 #include <memory>
 #include <string>
@@ -40,6 +41,7 @@ typedef struct Block{
 
 
 
+/*
 // class MatchTable{
 
 // public:
@@ -89,61 +91,30 @@ typedef struct Block{
 //     ~before_main_t();
 // } before_main_t;
 
-// class Parser{
+*/
 
-// private:
-//     std::vector<token_t>& tokens;
-//     unsigned offset;
-
-// private:
-//     std::vector<Block> blocks;
-
-//     FSM current_state;
-
-// public:
-//     Parser(std::vector<token_t>& tks);
-//     ~Parser(){};
-
-//     token_t& Peek();
-//     void Eat();
-//     //these two should not be void? so todo
-//     void Except(const token_t& excepted);
-//     void TryEat(const token_t& excepted);
-
-//     void Stmt(Statement& stmt);
-
-// };
-
-//-----------------------------------------------------------------------------------------------------------------------
-template<typename ty>
-class baseExpression{
+class Expression{
 protected:
-    ty value_;
     ExpressionUnit food_; //because it is to be eaten
 public:
-    baseExpression(const ExpressionUnit& e): value_(), food_(e){};
-    baseExpression(ExpressionUnit&& e): value_(), food_(std::move(e)){};
-    virtual ~baseExpression() = default;
+    Expression(const ExpressionUnit& e): food_(e){};
+    Expression(ExpressionUnit&& e): food_(std::move(e)){};
+    virtual ~Expression() = default;
     virtual void Walk(walk_order) const =0;
     virtual void Parse() =0;
     virtual void Calculate() =0;
-
-public:
-    inline const ty& getValue(){
-        return value_;
-    }
-    inline void setValue(const ty& v){
-        value_ = v;
-    }
-    void setValue(ty&& v){
-        value_ = std::move(v);
-    }
     
     //friend std::string_view ToString<ty>(const ty& t);
 };
 
-typedef struct _cal_node{
-        token_t tk;
+
+
+template<typename ty>
+class CalExpression: public Expression{
+
+public://they will not be created every time when a instance of CalExpression is created
+    typedef struct _cal_node{
+        token_t tk;//should use ref instead of copy
         unsigned level = 0;
 
         _cal_node(): tk(TOKEN::UNKNOW){};
@@ -152,62 +123,21 @@ typedef struct _cal_node{
 
     typedef TreeNode<_cal_node> cal_node;
 
-    enum class cal_type{
-        OPERATOR,
-        VALUE,
-        BRAC,
-        TYPE
-    };
-
-    constexpr cal_type cal_token_type(TOKEN tk){
-        switch (tk)
-        {
-        case TOKEN::ADD:
-        case TOKEN::NEG:
-        case TOKEN::MULTI:
-        case TOKEN::DIV:
-        case TOKEN::LOGAND:
-        case TOKEN::AND:
-        case TOKEN::LOGNOT:
-        case TOKEN::LOGOR :
-        case TOKEN::OR:
-            return cal_type::OPERATOR;
-        case TOKEN::SYMBOL:
-        case TOKEN::NUMBER:
-            return cal_type::VALUE;
-        case TOKEN::NLBRAC:
-        case TOKEN::NRBRAC:
-            return cal_type::BRAC;
-        case TOKEN::INT:
-        case TOKEN::FLOAT:
-        case TOKEN::DOUBLE:
-        case TOKEN::BOOL:
-        case TOKEN::CHAR:
-            return cal_type::TYPE;
-        default:
-            return cal_type::OPERATOR;
-        }
-    }
-
-template<typename ty>
-class CalExpression: public baseExpression<ty>{
-
-public://they will not be created every time when a instance of CalExpression is created
-    ;
-
 private:
+    ty value_;
     typename cal_node::pointer root_;
-    bool isConstexpr;
+    bool isConstexpr;//todo
 public:
-    using baseExpression<ty>::value_;
-    using baseExpression<ty>::food_;
-    using baseExpression<ty>::baseExpression;
-    using baseExpression<ty>::getValue;
-    using baseExpression<ty>::setValue;
+    using Expression::food_;
+    using Expression::Expression;
+    inline const ty& getValue_ref(){ return value_;}
+    inline const ty getValue_copy(){ return value_;}
+    inline void setValue(const ty& v){ value_ = v;}
+    inline void setValue(ty&& v){ value_ = std::move(v);}
 public:
-    //CalExpression() = delete;
-    CalExpression(const ExpressionUnit& e): baseExpression<ty>(e), root_(nullptr), isConstexpr(){};
-    CalExpression(ExpressionUnit&& e): baseExpression<ty>(std::move(e)), root_(nullptr), isConstexpr(){};
+    CalExpression() = delete;
+    CalExpression(const ExpressionUnit& e): Expression(e), root_(nullptr), isConstexpr(){};
+    CalExpression(ExpressionUnit&& e): Expression(std::move(e)), root_(nullptr), isConstexpr(){};
 
     inline void Walk(walk_order wo) const override{
         root_->Walk(wo, [](const _cal_node& data_){
@@ -218,12 +148,19 @@ public:
         unsigned offset = food_.start;
         root_ = Parse_(offset);
     }
-    void Calculate() override{
+    inline void Calculate() override{
         value_ = Calculate_(root_);
         return;
     }
 
 private:
+
+    //for example 3.14+42, 3.14+(float)42 or (int)3.14+42
+    inline void fallback(){
+        
+
+    };
+
     inline typename cal_node::pointer Parse_(unsigned &offset){
         auto root = new cal_node(food_.tokens->at(offset));
         root->data.level = Level(root->data.tk.token);
@@ -232,18 +169,18 @@ private:
         while(true){
             auto current = new cal_node(food_.tokens->at(offset));
             offset++;
-            switch (cal_token_type(current->data.tk.token)){
-                case cal_type::BRAC:{
+            switch (token_type(current->data.tk.token)){
+                case TOKEN_TYPE::BRAC:{
                     if(current->data.tk.token == TOKEN::NRBRAC){
                         root->data.level = 0;
                         return root;
                     }else {
-                        if(cal_type::BRAC == cal_token_type(root->data.tk.token)) root = Parse_(offset);
+                        if(TOKEN_TYPE::BRAC == token_type(root->data.tk.token)) root = Parse_(offset);
                         else current = Parse_(offset);
                     }
                     break;
                 }
-                case cal_type::VALUE:{
+                case TOKEN_TYPE::VALUE:{
                     auto temp = root->FindChildR(
                         [](const typename cal_node::pointer _node) {return (_node->right == nullptr);}
                     );
@@ -252,7 +189,7 @@ private:
 
                     break;
                 }
-                case cal_type::OPERATOR:{
+                case TOKEN_TYPE::OPERATOR:{
                     current->data.level = Level(current->data.tk.token); 
                     if(current->data.level >= root->data.level){
                         root->ReplaceByL(current);
@@ -342,17 +279,59 @@ inline const float CalExpression<float>::Calculate_(const typename cal_node::poi
 
 
 template<typename ty>
-class AssignExpression: public baseExpression<ty>{
+class AssignExpression: public Expression{
+public:
+    typedef struct _assign_node{
+        // ty val;
+        // const token_t& tk;
+        // _assign_node() =delete;
+        // _assign_node(const token_t& _tk): val(), tk(_tk){};
+        // _assign_node(const token_t& _tk, const ty& _val): val(_val), tk(_tk) {};
+    } _assign_node;
+
+    typedef TreeNode<_assign_node> assign_node;
+private:
+    ty value_;
+    typename assign_node::pointer root_;
+public:
+    using Expression::food_;
+    using Expression::Expression;
+    inline const ty& getValue_ref(){ return value_;}
+    inline const ty getValue_copy(){ return value_;}
+    inline void setValue(const ty& v){ value_ = v;}
+    inline void setValue(ty&& v){ value_ = std::move(v);}
+public:
+    AssignExpression()=delete;
+    AssignExpression(const ExpressionUnit& e): Expression(e), root_(nullptr){};
+    AssignExpression(ExpressionUnit&& e): Expression(std::move(e)), root_(nullptr){};
+
+    inline void Walk(walk_order wo) const override{
+        root_->Walk(wo, [](const _assign_node& data_){
+            std::cout  << data_.tk.data  << '\n';
+        });
+    }
+    inline void Parse() override{
+        unsigned offset = food_.start;
+        root_ = Parse_(offset);
+    }
+    inline void Calculate() override{
+        value_ = Calculate_(root_);
+        return;
+    }
+private:
+    inline typename assign_node::pointer Parse_(unsigned &offset){
+
+    }
 
 };
 
 template<typename ty>
-class DeclExpression: public baseExpression<ty>{
+class DeclExpression: public Expression{
 
 };
 
 template<typename ty>
-class AddrExpression: public baseExpression<ty>{
+class AddrExpression: public Expression{
 
 };
 

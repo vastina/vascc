@@ -5,15 +5,6 @@
 
 namespace vastina{
 
-template<typename  ty>
-bool Variable<ty>::isSameName(std::string_view name){
-    return this->name == name;
-}
-
-template<typename ty>
-const ty& Variable<ty>::getValue(){
-    return value;
-}
 
 inline TOKEN Preprocess::Current(){
    return primary_tokens[offset].token;
@@ -61,10 +52,10 @@ int Preprocess::Process(){
             case TOKEN::SYMBOL:{
                 int res = Except(TOKEN::ASSIGN, false);
                 if(res == 0){
-                    ProcessAssignType([](){ return false;});
+                    ProcessAssignType([this](){ return Current()==TOKEN::SEMICOLON || Current()==TOKEN::COMMA;});
                     break;
                 }
-                else res = Except(TOKEN::SIGNED, true);
+                else res = Except(TOKEN::SEMICOLON, true);
                 break;
             }
             case TOKEN::WHILE:
@@ -79,8 +70,8 @@ int Preprocess::Process(){
                 ProcessRetType([]{return false;});
                 break;
             default:{
-                switch (cal_token_type(Current())) {
-                    case cal_type::TYPE:{
+                switch (token_type(Current())) {
+                    case TOKEN_TYPE::TYPE:{
                         (void)Except(TOKEN::SYMBOL, true);
                         ProcessDeclType([this](){ return Current() == TOKEN::SEMICOLON;});
                         break;
@@ -104,8 +95,8 @@ int Preprocess::ProcessCalType(std::function<bool()> EndJudge){
     unsigned last_offset = offset;
 
     while (true) {
-        switch (cal_token_type(Current())) {
-            case cal_type::BRAC:{
+        switch (token_type(Current())) {
+            case TOKEN_TYPE::BRAC:{
                 if(Current() == TOKEN::NRBRAC){
                     if(++bc.close > bc.open) return -1;
                 }
@@ -114,15 +105,15 @@ int Preprocess::ProcessCalType(std::function<bool()> EndJudge){
                 }
                 break;
             }
-            case cal_type::VALUE:{
-                if(cal_token_type(Peek()) == cal_type::VALUE){
+            case TOKEN_TYPE::VALUE:{
+                if(token_type(Peek()) == TOKEN_TYPE::VALUE){
                     {RETURN_ERROR}
                 }
                 break;
             }
-            case cal_type::OPERATOR:{
+            case TOKEN_TYPE::OPERATOR:{
                 auto peek = Peek();
-                if(cal_token_type(peek) == cal_type::OPERATOR){
+                if(token_type(peek) == TOKEN_TYPE::OPERATOR){
                     if(peek!=TOKEN::NEG && peek!=TOKEN::ADD && peek!=TOKEN::OPS && peek!=TOKEN::LOGNOT){
                         {RETURN_ERROR}
                     }
@@ -150,7 +141,7 @@ int Preprocess::ProcessAssignType(std::function<bool()> EndJudge){
         }
         else{
             results.push_back({P_TOKEN::ASSIGN, last_offset, offset});
-            (void)ProcessCalType([this](){return Current()==TOKEN::SEMICOLON || Current()==TOKEN::EQUAL;});
+            (void)ProcessCalType([this](){return Current()==TOKEN::SEMICOLON;});
             break;
         }
         if(EndJudge()) break;

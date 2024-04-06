@@ -58,6 +58,49 @@ enum FSM{//finite state machine
 //I don't know why copilot need so many states, just keep it here
 };
 
+enum class TOKEN_TYPE{
+    OPERATOR,
+    VALUE,
+    BRAC,
+    TYPE,
+    SEPERATOR //seperator, like comma, semicolon
+};
+
+constexpr TOKEN_TYPE token_type(TOKEN tk){
+    switch (tk)
+    {
+    case TOKEN::ADD:
+    case TOKEN::NEG:
+    case TOKEN::MULTI:
+    case TOKEN::DIV:
+    case TOKEN::LOGAND:
+    case TOKEN::AND:
+    case TOKEN::LOGNOT:
+    case TOKEN::LOGOR :
+    case TOKEN::OR:
+        return TOKEN_TYPE::OPERATOR;
+    case TOKEN::SYMBOL:
+    case TOKEN::NUMBER:
+        return TOKEN_TYPE::VALUE;
+    case TOKEN::NLBRAC:
+    case TOKEN::NRBRAC:
+    case TOKEN::OBRACE:
+    case TOKEN::CBRACE:
+        return TOKEN_TYPE::BRAC;
+    case TOKEN::INT:
+    case TOKEN::FLOAT:
+    case TOKEN::DOUBLE:
+    case TOKEN::BOOL:
+    case TOKEN::CHAR:
+        return TOKEN_TYPE::TYPE;
+    case TOKEN::COMMA:
+    case TOKEN::SEMICOLON:
+        return TOKEN_TYPE::SEPERATOR;
+    default:
+        return TOKEN_TYPE::SEPERATOR;
+    }
+};
+
 enum class EXPR{
     CAL,
     ASSIGN,
