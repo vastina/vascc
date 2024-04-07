@@ -1,6 +1,9 @@
 #ifndef _VASTINA_GLOBAL_DEFINE_
 #define _VASTINA_GLOBAL_DEFINE_
 
+#include <string_view>
+#include <typeinfo>
+
 namespace vastina{
 
 enum TOKEN{
@@ -36,27 +39,6 @@ enum TOKEN{
 };
 
 
-enum FSM{//finite state machine
-    END = -1, START,
-    ENTRY,//entry, maybe main, you can tell the compiler to start from other place
-    DECL, //declaration
-    ASSI,//assign operation
-    CAL,// calculate something
-    GOTO,// condition jump, including if else, for, while, do while, switch case  
-//should not be here
-//历史垃圾
-    EXPR, EXPR1, EXPR2, EXPR3, EXPR4, EXPR5, EXPR6, EXPR7, EXPR8, EXPR9, EXPR10, 
-    EXPR11, EXPR12, EXPR13, EXPR14, EXPR15, EXPR16, EXPR17, EXPR18, EXPR19, EXPR20, 
-    EXPR21, EXPR22, EXPR23, EXPR24, EXPR25, EXPR26, EXPR27, EXPR28, EXPR29, EXPR30, 
-    EXPR31, EXPR32, EXPR33, EXPR34, EXPR35, EXPR36, EXPR37, EXPR38, EXPR39, EXPR40, 
-    EXPR41, EXPR42, EXPR43, EXPR44, EXPR45, EXPR46, EXPR47, EXPR48, EXPR49, EXPR50, 
-    EXPR51, EXPR52, EXPR53, EXPR54, EXPR55, EXPR56, EXPR57, EXPR58, EXPR59, EXPR60, 
-    EXPR61, EXPR62, EXPR63, EXPR64, EXPR65, EXPR66, EXPR67, EXPR68, EXPR69, EXPR70, 
-    EXPR71, EXPR72, EXPR73, EXPR74, EXPR75, EXPR76, EXPR77, EXPR78, EXPR79, EXPR80, 
-    EXPR81, EXPR82, EXPR83, EXPR84, EXPR85, EXPR86, EXPR87, EXPR88, EXPR89, EXPR90, 
-    EXPR91, EXPR92, EXPR93, EXPR94, EXPR95, EXPR96, EXPR97, EXPR98, EXPR99, EXPR100
-//I don't know why copilot need so many states, just keep it here
-};
 
 enum class TOKEN_TYPE{
     OPERATOR,
@@ -140,6 +122,26 @@ inline constexpr unsigned Level(TOKEN tk){
     }
 }
 
+constexpr std::string_view _TypeName(std::string_view sv){
+    if(sv.size()==0) return "";
+
+    switch (sv[0]) {
+        case 'i': return "int";
+        case 'j': return "unsigned";
+        case 'd': return "double";
+        case 'c': return "char";
+        case 'b': return "bool";
+        case 'l': return "long";
+        case 'v': return "void";
+        
+        default:  return "";
+    }
+}
+
+template<typename ty>
+constexpr std::string_view TypeName(const ty&){
+    return _TypeName(typeid(ty).name());
+}
 
 #define RETURN_ERROR std::cerr << __FILE__ <<' '<<__LINE__ <<'\n'; \
                         return -1;

@@ -4,6 +4,3 @@ func main :int{
     { ans =abcdefg = ((2+8)|5 + 3*7/ 4 -9 & 6) -5;}
   return (ans-abcdefg);
 }
-
-
-  

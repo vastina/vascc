@@ -47,6 +47,19 @@ public:
     inline void setValue(ty&& v){ value_ = std::move(v);}
 };
 
+class Function{
+protected:
+    ;
+public:
+    ~Function() = default;
+};
+
+template<typename ty>
+class func :public Function{
+
+};
+
+
 //so this is global, sington is for java
 //std::unordered_map<std::string_view, Variable> Global_Variable;
 //ok, I won't use this, I will use a class to manage this

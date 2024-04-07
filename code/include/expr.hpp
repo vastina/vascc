@@ -239,7 +239,7 @@ inline const int CalExpression<int>::Calculate_(const typename cal_node::pointer
             return Calculate_(root->left) / Calculate_(root->right);
             break;
         case TOKEN::NUMBER:
-            return std::stoi(root->data.tk.data);;
+            return std::stoi(root->data.tk.data.data());
             break;
         case TOKEN::AND:
             return Calculate_(root->left) & Calculate_(root->right);
@@ -269,7 +269,7 @@ inline const float CalExpression<float>::Calculate_(const typename cal_node::poi
             return Calculate_(root->left) / Calculate_(root->right);
             break;
         case TOKEN::NUMBER:
-            return std::stof(root->data.tk.data);;
+            return std::stof(root->data.tk.data.data());
             break;
         default:
             return 0;

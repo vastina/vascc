@@ -1,5 +1,5 @@
-#ifndef _STRING_H_
-#define _STRING_H_
+#ifndef _BASE_STRING_H_
+#define _BASE_STRING_H_
 
 #include <string>
 
@@ -21,7 +21,7 @@ inline constexpr bool isWhiteSpace(char ch){
     return (ch==' '||ch=='\t'||ch=='\n'||ch=='\r');
 }
 
-inline bool Strcmp(const std::string& buffer, unsigned offset, const std::string& temp){
+inline bool Strcmp(const std::string& buffer, unsigned offset, const std::string_view& temp){
     unsigned len = temp.size();
     for(unsigned i=0; i<len; i++){
         if(buffer.at(i+offset) != temp.at(i))

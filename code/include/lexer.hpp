@@ -14,15 +14,15 @@ namespace vastina{
 
 struct token_t{
     TOKEN token;
-    std::string data;
+    std::string_view data;
     unsigned line;
 
 //some were here just because I am lazy to delete them
     token_t(TOKEN tk) ;
-    token_t(TOKEN tk, const std::string& sv);
-    token_t(TOKEN tk, std::string&& sv);
-    token_t(TOKEN tk, const std::string& sv, unsigned _line);
-    token_t(TOKEN tk, std::string&& sv, unsigned _line);
+    token_t(TOKEN tk, const std::string_view& sv);
+    token_t(TOKEN tk, std::string_view&& sv);
+    token_t(TOKEN tk, const std::string_view& sv, unsigned _line);
+    token_t(TOKEN tk, std::string_view&& sv, unsigned _line);
 
     token_t(const token_t& tk);
     token_t(token_t&& tk);
@@ -52,10 +52,10 @@ private:
     STATE state;
     
     STATE ParseWhiteSpace();
-    RESULT ParseKeyWord(const std::string&, TOKEN, std::function<bool(char)>, TOKEN Default, std::function<bool(char)>);
-    //todo: add enum
+    RESULT ParseKeyWord(const std::string_view&, TOKEN, std::function<bool(char)>, TOKEN Default, std::function<bool(char)>);
+    //todo: parse number
     void ParseNumber();
-    void forSingelWord(const std::string& target, TOKEN target_type);
+    void forSingelWord(const std::string_view& target, TOKEN target_type);
     
 public:
 
@@ -67,7 +67,7 @@ public:
     STATE Next();
 
     const std::vector<token_t>& getTokens();
-    const std::string& getBuffer();
+    const std::string_view getBuffer();
 };
 
 

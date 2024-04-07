@@ -10,10 +10,10 @@
 namespace vastina{
 
 token_t::token_t(TOKEN tk): token(tk) {};
-token_t::token_t(TOKEN tk, const std::string& sv): token(tk), data(sv) {};
-token_t::token_t(TOKEN tk, std::string&& sv): token(tk), data(sv) {};
-token_t::token_t(TOKEN tk, const std::string& sv, unsigned _line): token(tk), data(sv), line(_line) {}
-token_t::token_t(TOKEN tk, std::string&& sv, unsigned _line): token(tk), data(sv), line(_line) {}
+token_t::token_t(TOKEN tk, const std::string_view& sv): token(tk), data(sv) {};
+token_t::token_t(TOKEN tk, std::string_view&& sv): token(tk), data(sv) {};
+token_t::token_t(TOKEN tk, const std::string_view& sv, unsigned _line): token(tk), data(sv), line(_line) {}
+token_t::token_t(TOKEN tk, std::string_view&& sv, unsigned _line): token(tk), data(sv), line(_line) {}
 
 token_t::token_t(const token_t& tk): token(tk.token), data(tk.data), line(tk.line) {};
 token_t::token_t(token_t&& tk): token(tk.token), data(std::move(tk.data)), line(tk.line) {};
@@ -44,7 +44,7 @@ lexer::STATE lexer::ParseWhiteSpace(){
     return STATE::NORMAL;
 }
 
-lexer::RESULT lexer::ParseKeyWord(const std::string& target, TOKEN target_type, std::function<bool(char)> endjudge, 
+lexer::RESULT lexer::ParseKeyWord(const std::string_view& target, TOKEN target_type, std::function<bool(char)> endjudge, 
     TOKEN Default, std::function<bool(char)> DefaultEndjudge){
     unsigned len = target.size();
     if(Strcmp(buffer, offset, target)&&endjudge(buffer[offset+len])){
@@ -54,19 +54,20 @@ lexer::RESULT lexer::ParseKeyWord(const std::string& target, TOKEN target_type, 
     }
     else if(Default == TOKEN::UNKNOW) return lexer::RESULT::FAIL;
     else{
-        std::string temp;
+        //std::string temp;
+        unsigned last_offset = offset;
         while (DefaultEndjudge(buffer[offset])){
-            temp += buffer[offset];
+            //temp += buffer[offset];
             offset++;
         }
         tokens.push_back(
-            token_t(Default, std::move(temp), line)
+            token_t(Default, {buffer.data()+last_offset, offset-last_offset}, line)
         );
         return lexer::RESULT::SUCCESS;
     }
 }
 
-void lexer::forSingelWord(const std::string& target, TOKEN target_type){
+void lexer::forSingelWord(const std::string_view& target, TOKEN target_type){
     tokens.push_back(token_t(target_type, target, line));
             ++offset;
 }
@@ -285,8 +286,8 @@ const std::vector<token_t>& lexer::getTokens(){
     return tokens;
 }
 
-const std::string& lexer::getBuffer(){
-    return buffer;
+const std::string_view lexer::getBuffer(){
+    return {buffer.data(), buffer.size()};
 }
 
 }
