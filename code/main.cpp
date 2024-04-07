@@ -42,7 +42,6 @@ int main(int argc, char* argv[]){
     }
 std::cout <<"--------------------------lexer--------------------------------\n";
     lexer lx = lexer(argv[1]);
-
     while (lexer::STATE::END != lx.Next()) ;
 
     auto tks = make_unique<std::vector<token_t>>(lx.getTokens());
@@ -54,6 +53,7 @@ std::cout <<"--------------------------lexer--------------------------------\n";
 std::cout <<"--------------------------preprocess--------------------------------\n";
     Preprocess *pp = new Preprocess(*tks);
     pp->Process();
+
     for(unsigned i=0; i<pp->getSize(); i++){
         auto& next = pp->getNext();
         std::cout << next.tk <<' ';

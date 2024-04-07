@@ -4,7 +4,7 @@
 
 #include <string>
 #include <vector>
-
+#include <functional>
 
 #include "base/vasdef.hpp"
 
@@ -52,7 +52,7 @@ private:
     STATE state;
     
     STATE ParseWhiteSpace();
-    RESULT ParseKeyWord(const std::string&, TOKEN, bool(char endsymbol), TOKEN Default, bool(char endsymbol));
+    RESULT ParseKeyWord(const std::string&, TOKEN, std::function<bool(char)>, TOKEN Default, std::function<bool(char)>);
     //todo: add enum
     void ParseNumber();
     void forSingelWord(const std::string& target, TOKEN target_type);

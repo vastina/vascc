@@ -116,11 +116,3 @@
     12c0:	66 0f 70 c9 ff       	pshufd $0xff,%xmm1,%xmm1
     12c5:	66 0f 7e c8          	movd   %xmm1,%eax
     12c9:	c3                   	ret
-
-Disassembly of section .fini:
-
-00000000000012cc <_fini>:
-    12cc:	f3 0f 1e fa          	endbr64
-    12d0:	48 83 ec 08          	sub    $0x8,%rsp
-    12d4:	48 83 c4 08          	add    $0x8,%rsp
-    12d8:	c3                   	ret

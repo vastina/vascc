@@ -5,6 +5,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <functional>
 
 namespace vastina{
 
@@ -22,7 +23,7 @@ lexer::lexer(const char* filename):tokens(), offset(0), line(1), lineoffset(0){
     std::ifstream ifs = std::ifstream();
     ifs.open(filename);
     //if(!ifs.is_open()) throw "can't open file";
-    char buf[256];
+    char buf[2048];
     while(!ifs.eof()){
         ifs.getline(buf, 256);
         buffer.append(buf).append("\n");
@@ -43,8 +44,8 @@ lexer::STATE lexer::ParseWhiteSpace(){
     return STATE::NORMAL;
 }
 
-lexer::RESULT lexer::ParseKeyWord(const std::string& target, TOKEN target_type, bool endjudge(char endsymbol), 
-    TOKEN Default, bool DefaultEndjudge(char endsymbol)){
+lexer::RESULT lexer::ParseKeyWord(const std::string& target, TOKEN target_type, std::function<bool(char)> endjudge, 
+    TOKEN Default, std::function<bool(char)> DefaultEndjudge){
     unsigned len = target.size();
     if(Strcmp(buffer, offset, target)&&endjudge(buffer[offset+len])){
         tokens.push_back(token_t(target_type, target, line));
@@ -74,6 +75,18 @@ void lexer::ParseNumber(){
     
 }
 
+auto SymbolEndJudge = [flag=true](char ch)mutable{
+    if(flag){//第一个字符不能是数字
+        flag = false;
+        return (CHARTYPE::CHAR == CharType(ch));
+    }
+    return (CHARTYPE::OTHER != CharType(ch));
+};
+
+auto NormalEnd = [](char ch){
+    return (CHARTYPE::OTHER == CharType(ch));
+};
+
 lexer::STATE lexer::Next(){
     if(offset >= buffer.size()) return STATE::END;
 
@@ -86,74 +99,79 @@ lexer::STATE lexer::Next(){
         switch (buffer[offset])
         {
         case 'a':{
-            ParseKeyWord("asm",     TOKEN::ASM,     [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
-                                    TOKEN::SYMBOL,     [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
+            ParseKeyWord("asm",     TOKEN::ASM,     NormalEnd,
+                                    TOKEN::SYMBOL,     SymbolEndJudge);
             break;
         }
         case 'b':{
-            ParseKeyWord("bool",    TOKEN::BOOL,    [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
-                                    TOKEN::SYMBOL,     [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
+            ParseKeyWord("bool",    TOKEN::BOOL,    NormalEnd,
+                                    TOKEN::SYMBOL,     SymbolEndJudge);
             break;
         }
         case 'c':{
-            ParseKeyWord("char",    TOKEN::BOOL,    [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
-                                    TOKEN::SYMBOL,     [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
+            ParseKeyWord("char",    TOKEN::BOOL,    NormalEnd,
+                                    TOKEN::SYMBOL,     SymbolEndJudge);
             break;
         }
         case 'd':{
-            ParseKeyWord("double",  TOKEN::BOOL,    [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
-                                    TOKEN::SYMBOL,     [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
+            ParseKeyWord("double",  TOKEN::BOOL,    NormalEnd,
+                                    TOKEN::SYMBOL,     SymbolEndJudge);
             break;
         }
         case 'e':{
-            ParseKeyWord("else",    TOKEN::ELSE,    [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
-                                    TOKEN::SYMBOL,     [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
+            ParseKeyWord("else",    TOKEN::ELSE,    NormalEnd,
+                                    TOKEN::SYMBOL,     SymbolEndJudge);
             break;
         }
         case 'f':{
             RESULT res = 
-            ParseKeyWord("for",     TOKEN::FOR,     [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
+            ParseKeyWord("for",     TOKEN::FOR,     NormalEnd,
                                     TOKEN::UNKNOW,  [](char ch){return true;});
             if(res == RESULT::SUCCESS) break;
             else res = 
-            ParseKeyWord("float",   TOKEN::FLOAT,   [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
+            ParseKeyWord("float",   TOKEN::FLOAT,   NormalEnd,
                                     TOKEN::UNKNOW,     [](char ch){return true;});
             if(res == RESULT::SUCCESS) break;
             else res =
-            ParseKeyWord("func", TOKEN::FUNC, [](char ch){return (CHARTYPE::OTHER == CharType(ch));}, 
-                                    TOKEN::SYMBOL, [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
+            ParseKeyWord("func", TOKEN::FUNC, NormalEnd, 
+                                    TOKEN::SYMBOL, SymbolEndJudge);
+            if(tokens.back().token == TOKEN::FUNC){
+                ParseWhiteSpace();
+            ParseKeyWord("main", TOKEN::MAIN, NormalEnd, 
+                                    TOKEN::SYMBOLF, SymbolEndJudge);
+            }
             break;
         }
         case 'i':{
             RESULT res = 
-            ParseKeyWord("int",     TOKEN::INT,     [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
+            ParseKeyWord("int",     TOKEN::INT,     NormalEnd,
                                     TOKEN::UNKNOW,  [](char ch){return false;});
             if(res == RESULT::SUCCESS) break;
             else res = 
-            ParseKeyWord("if",      TOKEN::IF,      [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
-                                    TOKEN::SYMBOL,     [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
+            ParseKeyWord("if",      TOKEN::IF,      NormalEnd,
+                                    TOKEN::SYMBOL,     SymbolEndJudge);
             break;
         }
         case 'l':{
-            ParseKeyWord("let",    TOKEN::LET,    [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
-                                    TOKEN::SYMBOL,     [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
+            ParseKeyWord("let",    TOKEN::LET,    NormalEnd,
+                                    TOKEN::SYMBOL,     SymbolEndJudge);
             break;
         }
         case 'm':{
-            ParseKeyWord("main",    TOKEN::MAIN,    [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
-                                    TOKEN::SYMBOL,     [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
+            ParseKeyWord("main",    TOKEN::MAIN,    NormalEnd,
+                                    TOKEN::SYMBOL,     SymbolEndJudge);
 
             break;
         }
         case 'r':{
-            ParseKeyWord("return",  TOKEN::RETURN,  [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
-                                    TOKEN::SYMBOL,     [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
+            ParseKeyWord("return",  TOKEN::RETURN,  NormalEnd,
+                                    TOKEN::SYMBOL,     SymbolEndJudge);
 
             break;
         }
         case 'v':{
-            ParseKeyWord("var",    TOKEN::VAR,    [](char ch){return (CHARTYPE::OTHER == CharType(ch));},
-                                    TOKEN::SYMBOL,     [](char ch){return (CHARTYPE::OTHER != CharType(ch));});
+            ParseKeyWord("var",    TOKEN::VAR,    NormalEnd,
+                                    TOKEN::SYMBOL,     SymbolEndJudge);
             break;
         }
         default:
@@ -197,6 +215,9 @@ lexer::STATE lexer::Next(){
             break;
         case ',':
             forSingelWord(",", TOKEN::COMMA);
+            break;
+        case ':':
+            forSingelWord(":", TOKEN::COLON);
             break;
         case '=':{
             RESULT res = 

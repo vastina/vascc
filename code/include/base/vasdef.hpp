@@ -16,8 +16,8 @@ enum TOKEN{
 //  const  static
     NUMBER, STRING,
 //  number  string
-    NLBRAC, NRBRAC, OBRACE, CBRACE, SEMICOLON, COMMA,
-//  (           )   {           }       ;         ,
+    NLBRAC, NRBRAC, OBRACE, CBRACE, SEMICOLON, COMMA, COLON,
+//  (           )   {           }       ;         ,      :
     MAIN, RETURN,
 //  main  return
     GREATER, LESS, NOT, LOGNOT, AND, LOGAND, OR, LOGOR, OPS,

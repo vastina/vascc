@@ -83,6 +83,10 @@ public:
     typedef struct _scope_node{
         range_t r_;
         SymbolTable st_;
+        
+        _scope_node(const range_t& r): r_(r), st_(){};
+        _scope_node(range_t&& r): r_(std::move(r)), st_(){};
+        //其实没必要，现在的rang_t只剩两个不拥有资源的unsigned了
     } _scope_node;
 
     typedef TreeNode<_scope_node> scope_node;

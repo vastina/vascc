@@ -30,8 +30,8 @@ public:
     pointer parent;
 
     TreeNode(): data(), left(nullptr), right(nullptr), parent(nullptr){};
-    TreeNode(const ty& tk): data(tk), left(nullptr), right(nullptr), parent(nullptr){};
-    TreeNode(ty&& tk): data(std::move(tk)), left(nullptr), right(nullptr), parent(nullptr){};
+    TreeNode(const ty& _data): data(_data), left(nullptr), right(nullptr), parent(nullptr){};
+    TreeNode(ty&& _data): data(std::move(_data)), left(nullptr), right(nullptr), parent(nullptr){};
 
 private:
     inline void InOrder(void visit(const ty& data_), pointer root){
