@@ -1,5 +1,5 @@
-#ifndef _AST_H_
-#define _AST_H_
+#ifndef _EXPRESSION_H_
+#define _EXPRESSION_H_
 
 #include "base/vasdef.hpp"
 #include "base/Tree.hpp"
@@ -148,6 +148,7 @@ public:
         unsigned offset = food_.start;
         root_ = Parse_(offset);
     }
+    //if contexpr, calculate it at compile time
     inline void Calculate() override{
         value_ = Calculate_(root_);
         return;
@@ -155,7 +156,7 @@ public:
 
 private:
 
-    //for example 3.14+42, 3.14+(float)42 or (int)3.14+42
+    //for example 3.14+42, 3.14+(double)42
     inline void fallback(){
         
 
@@ -226,6 +227,9 @@ private:
 template<>
 inline const int CalExpression<int>::Calculate_(const typename cal_node::pointer root){
     switch (root->data.tk.token) {
+        case TOKEN::EQUAL:
+            return Calculate_(root->left) == Calculate_(root->right);
+            break;
         case TOKEN::ADD:
             return Calculate_(root->left) + Calculate_(root->right);
             break;
@@ -256,6 +260,9 @@ inline const int CalExpression<int>::Calculate_(const typename cal_node::pointer
 template<>
 inline const float CalExpression<float>::Calculate_(const typename cal_node::pointer root) {
     switch (root->data.tk.token) {
+        case TOKEN::EQUAL:
+            return Calculate_(root->left) == Calculate_(root->right);
+            break;
         case TOKEN::ADD:
             return Calculate_(root->left) + Calculate_(root->right);
             break;

@@ -1,6 +1,9 @@
-func main :int{
+
+int global = 114514;
+
+func main :int(){
   int ans, abcdefg=0;
-  if(9-8)    
+  if(ans == 1)    
     { ans =abcdefg = ((2+8)|5 + 3*7/ 4 -9 & 6) -5;}
-  return (ans-abcdefg);
+  return (ans-abcdefg)+global;
 }

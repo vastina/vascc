@@ -40,6 +40,110 @@ enum TOKEN{
 
 
 
+//I actually don't need this
+//commit and push to github then delete this function
+//if I need it, I can get it back from github
+constexpr std::string_view token_name(TOKEN tk){
+    switch (tk)
+    {
+    case TOKEN::UNKNOW:
+        return "UNKNOW";
+    case TOKEN::UNSIGNED:
+        return "unsigned";
+    case TOKEN::SIGNED:
+        return "signed";
+    case TOKEN::INT:
+        return "int";
+    case TOKEN::FLOAT:
+        return "float";
+    case TOKEN::DOUBLE:
+        return "double";
+    case TOKEN::BOOL:
+        return "bool";
+    case TOKEN::CHAR:
+        return "char";
+    case TOKEN::VOID:
+        return "void";
+    case TOKEN::VAR: 
+        return "var";
+    case TOKEN::LET:
+        return "let";
+    case TOKEN::SYMBOL:
+        return "symbol";
+    case TOKEN::FUNC:
+        return "func";
+    case TOKEN::SYMBOLF:
+        return "symbolf";
+    case TOKEN::STRUCT:
+        return "struct";
+    case TOKEN::ENUM:
+        return "enum";
+    case TOKEN::CONST:
+        return "const";
+    case TOKEN::NUMBER:
+        return "number";
+    case TOKEN::STRING:
+        return "string";
+    case TOKEN::NLBRAC:
+        return "(";
+    case TOKEN::NRBRAC:
+        return ")";
+    case TOKEN::OBRACE:
+        return "{";
+    case TOKEN::CBRACE:
+        return "}";
+    case TOKEN::SEMICOLON:
+        return ";";
+    case TOKEN::COMMA:
+        return ",";
+    case TOKEN::COLON:
+        return ":";
+    case TOKEN::MAIN:
+        return "main";
+    case TOKEN::RETURN:
+        return "return";
+    case TOKEN::GREATER:
+        return ">";
+    case TOKEN::LESS:
+        return "<";
+    case TOKEN::NOT:
+        return "!";
+    // case TOKEN::LOGNOT:
+    //     return "!!";
+    case TOKEN::AND:
+        return "&";
+    case TOKEN::LOGAND:
+        return "&&";
+    case TOKEN::OR:
+        return "|";
+    case TOKEN::LOGOR:
+        return "||";
+    case TOKEN::OPS:
+        return "~";
+    case TOKEN::NEG:
+        return "-";
+    case TOKEN::ADD:
+        return "+";
+    case TOKEN::MULTI:
+        return "*";
+    case TOKEN::DIV:
+        return "/";
+    case TOKEN::IF:
+        return "if";
+    case TOKEN::ELSE:
+        return "else";
+    case TOKEN::FOR:
+        return "for";
+    case TOKEN::WHILE:
+        return "while";
+    case TOKEN::ASM:
+        return "__asm__";
+    default:
+        return "UNKNOW";
+    }
+}
+//do not delete this if you really know why: the commit message is "preprocess_3"
+
 enum class TOKEN_TYPE{
     OPERATOR,
     VALUE,
@@ -55,6 +159,7 @@ constexpr TOKEN_TYPE token_type(TOKEN tk){
     case TOKEN::NEG:
     case TOKEN::MULTI:
     case TOKEN::DIV:
+    case TOKEN::EQUAL:
     case TOKEN::LOGAND:
     case TOKEN::AND:
     case TOKEN::LOGNOT:
@@ -93,7 +198,7 @@ enum class EXPR{
 
 enum class STMT{
     IF,
-    GOTO,
+    LOOP,
     CALL,//可以为Calculate中的函数调用构造临时匿名变量？
     RET,
 };
@@ -148,5 +253,10 @@ constexpr std::string_view TypeName(const ty&){
 
 #define EXIT_ERROR std::cerr << __FILE__ <<' '<<__LINE__ <<'\n'; \
                         exit(-1);
+#define THIS_NOT_SUPPORT(sth) \
+        std::cerr << sth << " not supported now\n"; \
+        std::cerr << __FILE__ <<' '<<__LINE__ <<'\n'; \
+        exit(-1);
+
 }
 #endif

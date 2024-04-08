@@ -5,9 +5,61 @@
 
 namespace vastina{
 
+//get the child just created and add data in it
+Scope::pointer Scope::CreateChild(range_t&& rr = {0,0}){
+    children_.push_back(new Scope(this, std::move(rr)));
+    return children_.back();
+}
+Scope::pointer Scope::getParent(){ return parent_; }
+
+void Scope::addVar(const std::string_view& name, Variable&& var){st_.addVar(name, std::move(var));}
+void Scope::addFunc(const std::string_view& name, Function&& fc){st_.addFunc(name, std::move(fc));}
+Variable::pointer Scope::getVar(std::string_view name){
+    auto node = this;
+    do{
+        auto res = node->st_.getVar(name);
+        if(nullptr != res) return res;
+        node = node->parent_;
+    }while(nullptr != node);
+    return nullptr;
+}
+Function::pointer Scope::getFunc(std::string_view name){
+    auto node = this;
+    do{
+        auto res = node->st_.getFunc(name);
+        if(nullptr != res) return res;
+        node = node->parent_;
+    }while(nullptr != node);
+    return nullptr;
+}
+void Scope::setRange(unsigned start, unsigned end){r_.start=start;r_.end=end;}
+
+bool Scope::varExist(const std::string_view& name){
+    auto node = this;
+    do{
+        if(node->st_.varExist(name)) return true;
+        else node = node->parent_;
+    }while(nullptr != node);
+
+    return false;
+}
+
+bool Scope::funcExist(const std::string_view& name){
+    auto node = this;
+    do{
+        if(node->st_.funcExist(name)) return true;
+        else node = node->parent_;
+    }while(nullptr != node);
+
+    return false;
+}
 
 inline TOKEN Preprocess::Current(){
    return primary_tokens[offset].token;
+}
+
+inline std::string_view Preprocess::CurrentTokenName(){
+    return primary_tokens[offset].data;
 }
 
 inline TOKEN Preprocess::Peek(unsigned _offset=1){
@@ -23,18 +75,23 @@ void Preprocess::Next(){
     offset++;
 }
 
-int Preprocess::Except(TOKEN excepted, bool last){
+int Preprocess::Except(TOKEN excepted, bool last=false){
+    
+//for debug
+static int count = 0;
     if((Peek() != excepted)){
         if(last){
+if(++count > 10) exit(0);
             //EXIT_ERROR
             std::cerr << __FILE__ <<' '<<__LINE__ <<'\n';
         }
         else return -1;
     }
+
     return 0;
 }
 
-//temporarily use ca;_type here
+
 int Preprocess::Process(){
     unsigned size =  primary_tokens.size();
     while (offset < size) {
@@ -42,10 +99,18 @@ int Preprocess::Process(){
             case TOKEN::SEMICOLON:
                 Next();
                 break;
-            case TOKEN::CBRACE:
-            //this is a scope end, do something
+            case TOKEN::OBRACE:{
+                auto child = current_scope->CreateChild();
+                current_scope = child;
                 Next();
                 break;
+            }
+            case TOKEN::CBRACE:{
+                auto node = current_scope->getParent();
+                current_scope = node;
+                Next();
+                break;
+            }
             case TOKEN::IF:
                 ProcessIfType();
                 break;
@@ -61,13 +126,13 @@ int Preprocess::Process(){
             case TOKEN::WHILE:
             case TOKEN::FOR:
             case TOKEN::DO:
-                ProcessGotoType([]{return false;});
+                ProcessLoopType([]{return false;});
                 break;
-            case TOKEN::SYMBOLF:
-                ProcessCallType([]{return false;});
+            case TOKEN::FUNC:
+                ProcessCallType();
                 break;
             case TOKEN::RETURN:
-                ProcessRetType([]{return false;});
+                ProcessRetType();
                 break;
             default:{
                 switch (token_type(Current())) {
@@ -85,6 +150,9 @@ int Preprocess::Process(){
             }
         }
     }
+
+    //it should be the global scope now
+    current_scope->setRange(0, getSize());
     return 0;
 }
 
@@ -152,12 +220,17 @@ int Preprocess::ProcessAssignType(std::function<bool()> EndJudge){
 
 int Preprocess::ProcessDeclType(std::function<bool()> EndJudge){
 
+    std::function<void()> adder;
     switch (Current()) {
+        //todo: varible need source location to init
         case TOKEN::INT:
-            
+            adder = [this](){current_scope->addVar(CurrentTokenName(), variable<int>());};
             break;
         case TOKEN::FLOAT:
-
+            adder = [this](){current_scope->addVar(CurrentTokenName(), variable<float>());};
+            break;
+        case TOKEN::DOUBLE:
+            
             break;
         default:
             return -1;
@@ -167,7 +240,7 @@ int Preprocess::ProcessDeclType(std::function<bool()> EndJudge){
     unsigned last_offset = offset;
     while(true){
         if(Current()==TOKEN::SYMBOL){
-            //add something to symbol table
+            adder();
             Next();
         }
         else if(Current()==TOKEN::ASSIGN){
@@ -195,27 +268,57 @@ int Preprocess::ProcessIfType(){
     results.push_back({P_TOKEN::IF, offset, offset+1});
     (void)Except(TOKEN::NLBRAC, true);  Next();
     int res = ProcessCalType([this](){ return Current() == TOKEN::OBRACE; });//暂时不支持不带{}的if
-    if(0 == res) Next();
-    else {RETURN_ERROR}
-    
-    // notify some class there is a scope, 
-    // variables declared in this scope should be added to the symbol table
-    // and all can know the scope of variables declared here
+    if(0 != res) {RETURN_ERROR}
 
-    //(void)Except(TOKEN::CBRACE, true); Next();
     return 0;
 }
 
-int Preprocess::ProcessGotoType(std::function<bool()> EndJudge){
+int Preprocess::ProcessLoopType(std::function<bool()> EndJudge){
     return {};
 }
 
-int Preprocess::ProcessCallType(std::function<bool()> EndJudge){
-    return {};
+int Preprocess::ProcessParas(Function::pointer fc){
+
+
+
+    return 0;
+}
+int Preprocess::ProcessCallType(){
+    auto last_offset = offset;  Next();
+    auto name = CurrentTokenName();
+    if(Current()==TOKEN::MAIN){
+
+    } //todo
+    tryNextNext(TOKEN::COLON, true);//call it tryNextAndJump is better
+
+    std::function<void()> adder;  
+    switch (Current()) {
+        case TOKEN::INT:
+            adder = [this](){current_scope->addFunc(CurrentTokenName(), func<int>());};
+            break;
+        case TOKEN::FLOAT:
+        case TOKEN::CHAR:
+        //......
+        default:
+            THIS_NOT_SUPPORT(CurrentTokenName());
+    }   adder();//adder or add?
+
+    tryNext(TOKEN::NLBRAC, true);
+    (void)ProcessParas(current_scope->getFunc(name));//no check here
+    tryNextNext(TOKEN::NRBRAC, true);
+
+    results.push_back({P_TOKEN::CALL, last_offset, offset});
+
+    return 0;
 }
 
-int Preprocess::ProcessRetType(std::function<bool()> EndJudge){
-    return {};
+int Preprocess::ProcessRetType(){
+    results.push_back({P_TOKEN::RET, offset, offset+1});    Next();
+
+    int res = ProcessCalType([this]{return Current()==TOKEN::SEMICOLON;});
+    if(0 != res) {RETURN_ERROR}
+
+    return 0;
 }
 
 
@@ -231,4 +334,6 @@ const unsigned Preprocess::getSize() const{
     return results.size();
 }
 
+
+Scope::pointer Preprocess::CurrentScope(){ return current_scope; }
 } // namespace vastina

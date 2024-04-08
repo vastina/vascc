@@ -8,7 +8,7 @@ int While(int a){
     return a;
 }
 
-int Goto(int a){
+int Loop(int a){
 
 IF:
     if(a>5) goto STMT;
@@ -25,10 +25,10 @@ STMT:
 
 int main(){
     int res1 = While(114514);
-    int res2 = Goto(1919810);
+    int res2 = Loop(1919810);
 
     printf("While: %d\n", res1);
-    printf("Goto: %d\n", res2);
+    printf("Loop: %d\n", res2);
 
     return 0;
 }

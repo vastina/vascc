@@ -76,7 +76,7 @@ void lexer::ParseNumber(){
     
 }
 
-auto SymbolEndJudge = [flag=true](char ch)mutable{
+constexpr auto SymbolEndJudge = [flag=true](char ch)mutable{
     if(flag){//第一个字符不能是数字
         flag = false;
         return (CHARTYPE::CHAR == CharType(ch));
@@ -84,7 +84,7 @@ auto SymbolEndJudge = [flag=true](char ch)mutable{
     return (CHARTYPE::OTHER != CharType(ch));
 };
 
-auto NormalEnd = [](char ch){
+constexpr auto NormalEnd = [](char ch){
     return (CHARTYPE::OTHER == CharType(ch));
 };
 
@@ -127,26 +127,32 @@ lexer::STATE lexer::Next(){
         case 'f':{
             RESULT res = 
             ParseKeyWord("for",     TOKEN::FOR,     NormalEnd,
-                                    TOKEN::UNKNOW,  [](char ch){return true;});
+                                    TOKEN::UNKNOW,      [](char ch){return true;});
             if(res == RESULT::SUCCESS) break;
             else res = 
             ParseKeyWord("float",   TOKEN::FLOAT,   NormalEnd,
-                                    TOKEN::UNKNOW,     [](char ch){return true;});
+                                    TOKEN::UNKNOW,      [](char ch){return true;});
             if(res == RESULT::SUCCESS) break;
             else res =
-            ParseKeyWord("func", TOKEN::FUNC, NormalEnd, 
-                                    TOKEN::SYMBOL, SymbolEndJudge);
-            if(tokens.back().token == TOKEN::FUNC){
+            ParseKeyWord("func",    TOKEN::FUNC,    NormalEnd, 
+                                    TOKEN::SYMBOL,      SymbolEndJudge);
+            if(tokens.at(tokens.size()-1).token == TOKEN::FUNC){
                 ParseWhiteSpace();
-            ParseKeyWord("main", TOKEN::MAIN, NormalEnd, 
-                                    TOKEN::SYMBOLF, SymbolEndJudge);
+            ParseKeyWord("main",    TOKEN::MAIN,    NormalEnd, 
+                                    TOKEN::SYMBOLF,     SymbolEndJudge);
             }
+            break;
+        }
+        case 'g':{
+            (void)
+            ParseKeyWord("?",       TOKEN::UNKNOW,  [](char ch){return false;},
+                                    TOKEN::SYMBOL,      SymbolEndJudge);
             break;
         }
         case 'i':{
             RESULT res = 
             ParseKeyWord("int",     TOKEN::INT,     NormalEnd,
-                                    TOKEN::UNKNOW,  [](char ch){return false;});
+                                    TOKEN::UNKNOW,      [](char ch){return false;});
             if(res == RESULT::SUCCESS) break;
             else res = 
             ParseKeyWord("if",      TOKEN::IF,      NormalEnd,
@@ -154,7 +160,7 @@ lexer::STATE lexer::Next(){
             break;
         }
         case 'l':{
-            ParseKeyWord("let",    TOKEN::LET,    NormalEnd,
+            ParseKeyWord("let",     TOKEN::LET,    NormalEnd,
                                     TOKEN::SYMBOL,     SymbolEndJudge);
             break;
         }
@@ -172,7 +178,7 @@ lexer::STATE lexer::Next(){
         }
         case 'v':{
             ParseKeyWord("var",    TOKEN::VAR,    NormalEnd,
-                                    TOKEN::SYMBOL,     SymbolEndJudge);
+                                   TOKEN::SYMBOL,     SymbolEndJudge);
             break;
         }
         default:
@@ -181,14 +187,13 @@ lexer::STATE lexer::Next(){
         break;
     }
     case CHARTYPE::NUM:{
-        std::string temp = std::string();
+        unsigned last_offset = offset;
         while (CHARTYPE::NUM == CharType(buffer[offset])){
-            temp.push_back(buffer[offset]);
             offset++;
         }
         if(CHARTYPE::OTHER == CharType(buffer[offset])){
             tokens.push_back(
-                token_t(TOKEN::NUMBER, std::move(temp), line)
+                token_t(TOKEN::NUMBER, {buffer.data()+last_offset, offset-last_offset}, line)
             );
             return STATE::NORMAL;
         }
