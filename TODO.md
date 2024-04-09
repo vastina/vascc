@@ -6,6 +6,7 @@
 - [ ] archieve methods that make Parsers accessible by query offset(should be defined in Scope?)
 - [ ] a hellocodegen.cpp to generate the code for basic printf
 - [ ] replace primary pointers with shared_ptr or something others
+- [ ] set general rules in parsing brackets and archive that
 
 ### FINISHED：
 

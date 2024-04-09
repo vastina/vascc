@@ -32,8 +32,6 @@ Function::pointer Scope::getFunc(std::string_view name){
     }while(nullptr != node);
     return nullptr;
 }
-void Scope::setRange(unsigned start, unsigned end){r_.start=start;r_.end=end;}
-
 bool Scope::varExist(const std::string_view& name){
     auto node = this;
     do{
@@ -53,6 +51,11 @@ bool Scope::funcExist(const std::string_view& name){
 
     return false;
 }
+
+void Scope::setRange(unsigned start, unsigned end){r_.start=start;r_.end=end;}
+const range_t& Scope::getRange(){return r_;}
+
+const decltype(Scope::children_)& Scope::getChildren(){return children_;}
 
 inline TOKEN Preprocess::Current(){
    return primary_tokens[offset].token;
@@ -100,14 +103,14 @@ int Preprocess::Process(){
                 Next();
                 break;
             case TOKEN::OBRACE:{
-                auto child = current_scope->CreateChild();
-                current_scope = child;
+                current_scope = current_scope->CreateChild();
+                current_scope->setRange(getSize(), 0);
                 Next();
                 break;
             }
             case TOKEN::CBRACE:{
-                auto node = current_scope->getParent();
-                current_scope = node;
+                current_scope->setRange(current_scope->getRange().start, getSize());
+                current_scope = current_scope->getParent();
                 Next();
                 break;
             }
@@ -277,6 +280,7 @@ int Preprocess::ProcessLoopType(std::function<bool()> EndJudge){
     return {};
 }
 
+//todo
 int Preprocess::ProcessParas(Function::pointer fc){
 
 
@@ -309,7 +313,9 @@ int Preprocess::ProcessCallType(){
 
     results.push_back({P_TOKEN::CALL, last_offset, offset});
 
-    return 0;
+    if(Current()==TOKEN::SEMICOLON || Current()==TOKEN::OBRACE) return 0;
+
+    return -1;
 }
 
 int Preprocess::ProcessRetType(){

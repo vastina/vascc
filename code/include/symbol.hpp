@@ -27,13 +27,13 @@ public:
 
 class Variable{
 protected:
-    bool isConst_;
+    bool isConstexpr_{};
 public:
     using pointer = Variable*;
 
-    Variable(): isConst_(false) {};
+    Variable() {};
     ~Variable()=default;
-    inline bool isConst(){return isConst_;};
+    inline bool isConst(){return isConstexpr_;};
     inline pointer self(){return this;}
 };
 
@@ -44,7 +44,7 @@ private:
     //I need source_location
 public:
     using Variable::Variable;
-    using Variable::isConst_;
+    using Variable::isConstexpr_;
     using Variable::isConst;
 
     variable(){};
@@ -157,10 +157,13 @@ public:
     void addFunc(const std::string_view& name, Function&& fc);
     Variable::pointer getVar(std::string_view name);
     Function::pointer getFunc(std::string_view name);
-    void setRange(unsigned start, unsigned end);
-
     bool varExist(const std::string_view& name);
     bool funcExist(const std::string_view& name);
+    
+    void setRange(unsigned start, unsigned end);
+    const range_t& getRange();
+
+    const decltype(children_)& getChildren();
 };
 
 class Preprocess{
@@ -171,6 +174,22 @@ public:
         IF, LOOP, CALL, RET,
     };
     
+    inline static constexpr std::string_view p_token_str(P_TOKEN ptk){
+        switch (ptk)
+        {
+        case P_TOKEN::CAL:      return "calculate";
+        case P_TOKEN::ASSIGN:   return "assign";
+        case P_TOKEN::DECL:     return "declare";
+        case P_TOKEN::ADDR:     return "address";
+        case P_TOKEN::IF:       return "if";
+        case P_TOKEN::LOOP:     return "loop";
+        case P_TOKEN::CALL:     return "call";
+        case P_TOKEN::RET:      return "return";
+        default:                return "unknow";
+        }
+        return {};
+    }
+
     typedef struct p_token_t{
         P_TOKEN tk;
         unsigned start;

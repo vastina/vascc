@@ -1,0 +1,10 @@
+#ifndef _VIRTUAL_M_H_
+#define _VIRTUAL_M_H_
+
+namespace vastina{
+
+
+
+};//namesapce vastina
+
+#endif
