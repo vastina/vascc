@@ -13,8 +13,7 @@
 #include <iostream>
 
 namespace vastina{
-//finite state machine, aka FSM
-//https://zh.cppreference.com/w/cpp/language/operator_precedence
+
 using TokenPtr = //std::shared_ptr<std::vector<token_t>>;
     std::vector<token_t>*;//todo: use shared_ptr
 

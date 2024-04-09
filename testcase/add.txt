@@ -1,0 +1,9 @@
+func add:int(int a, int b){
+    return a+ b;
+}
+
+func main:int(){
+    int o = add(114514, 1919&810) - 42;
+
+    return (o-o);
+}

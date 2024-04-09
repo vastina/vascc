@@ -56,6 +56,7 @@ void Scope::setRange(unsigned start, unsigned end){r_.start=start;r_.end=end;}
 const range_t& Scope::getRange(){return r_;}
 
 const decltype(Scope::children_)& Scope::getChildren(){return children_;}
+const SymbolTable& Scope::getSymbolTable(){return st_;}
 
 inline TOKEN Preprocess::Current(){
    return primary_tokens[offset].token;
@@ -78,21 +79,16 @@ void Preprocess::Next(){
     offset++;
 }
 
-int Preprocess::Except(TOKEN excepted, bool last=false){
-    
-//for debug
-static int count = 0;
-    if((Peek() != excepted)){
-        if(last){
-if(++count > 10) exit(0);
-            //EXIT_ERROR
-            std::cerr << __FILE__ <<' '<<__LINE__ <<'\n';
-        }
-        else return -1;
-    }
-
-    return 0;
-}
+// int Preprocess::Except(TOKEN excepted, bool last=false){
+//     if((Peek() != excepted)){
+//         if(last){
+//             //EXIT_ERROR
+//             std::cerr << __FILE__ <<' '<<__LINE__ <<'\n';
+//         }
+//         else return -1;
+//     }
+//     return 0;
+// }
 
 
 int Preprocess::Process(){
@@ -118,12 +114,12 @@ int Preprocess::Process(){
                 ProcessIfType();
                 break;
             case TOKEN::SYMBOL:{
-                int res = Except(TOKEN::ASSIGN, false);
-                if(res == 0){
+                Except(TOKEN::ASSIGN, false, result);
+                if(result == 0){
                     ProcessAssignType([this](){ return Current()==TOKEN::SEMICOLON || Current()==TOKEN::COMMA;});
                     break;
                 }
-                else res = Except(TOKEN::SEMICOLON, true);
+                else Except(TOKEN::SEMICOLON, true, result);
                 break;
             }
             case TOKEN::WHILE:
@@ -140,7 +136,7 @@ int Preprocess::Process(){
             default:{
                 switch (token_type(Current())) {
                     case TOKEN_TYPE::TYPE:{
-                        (void)Except(TOKEN::SYMBOL, true);
+                        Except(TOKEN::SYMBOL, true, result);
                         ProcessDeclType([this](){ return Current() == TOKEN::SEMICOLON;});
                         break;
                     }
@@ -177,8 +173,9 @@ int Preprocess::ProcessCalType(std::function<bool()> EndJudge){
                 break;
             }
             case TOKEN_TYPE::VALUE:{
-                if(token_type(Peek()) == TOKEN_TYPE::VALUE){
-                    {RETURN_ERROR}
+                if(token_type(Peek()) == TOKEN_TYPE::VALUE) {RETURN_ERROR}
+                if(Current()==TOKEN::SYMBOLF){
+
                 }
                 break;
             }
@@ -269,7 +266,8 @@ int Preprocess::ProcessAddrType(std::function<bool()> EndJudge){
 
 int Preprocess::ProcessIfType(){
     results.push_back({P_TOKEN::IF, offset, offset+1});
-    (void)Except(TOKEN::NLBRAC, true);  Next();
+//there is a problem when I change it to tryNextNext
+    Except(TOKEN::NLBRAC, true, result);  Next();
     int res = ProcessCalType([this](){ return Current() == TOKEN::OBRACE; });//暂时不支持不带{}的if
     if(0 != res) {RETURN_ERROR}
 
@@ -291,14 +289,14 @@ int Preprocess::ProcessCallType(){
     auto last_offset = offset;  Next();
     auto name = CurrentTokenName();
     if(Current()==TOKEN::MAIN){
-
+        //maybe nothing todo, at last in parse
     } //todo
     tryNextNext(TOKEN::COLON, true);//call it tryNextAndJump is better
 
     std::function<void()> adder;  
     switch (Current()) {
         case TOKEN::INT:
-            adder = [this](){current_scope->addFunc(CurrentTokenName(), func<int>());};
+            adder = [this, &name](){current_scope->addFunc(name, func<int>());};
             break;
         case TOKEN::FLOAT:
         case TOKEN::CHAR:
@@ -330,7 +328,6 @@ int Preprocess::ProcessRetType(){
 
 const Preprocess::p_token_t& Preprocess::getNext(){
     if(id >= results.size()){
-        //todo: log it
         exit(1);
     }
     return static_cast<const p_token_t&>(results[id++]);
@@ -341,5 +338,5 @@ const unsigned Preprocess::getSize() const{
 }
 
 
-Scope::pointer Preprocess::CurrentScope(){ return current_scope; }
+const Scope::pointer Preprocess::CurrentScope(){ return current_scope; }
 } // namespace vastina

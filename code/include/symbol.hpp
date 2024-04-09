@@ -163,7 +163,9 @@ public:
     void setRange(unsigned start, unsigned end);
     const range_t& getRange();
 
+//for test
     const decltype(children_)& getChildren();
+    const SymbolTable& getSymbolTable();
 };
 
 class Preprocess{
@@ -216,19 +218,34 @@ private:
     inline TOKEN PreToken(unsigned _offset);
     void Next();
     //last==true means if this don't match, stop and return error
-    int Except(TOKEN excepted, bool last);
+    #define Except(excepted, last, res) \
+        do{ \
+            if(Peek() != excepted){ \
+                if(last){ \
+                    {EXIT_ERROR} \
+                } \
+                else res=-1; \
+            } \
+        res=0; \
+    }while(0);
+    //int Except(TOKEN excepted, bool last);
     #define tryNext(excepted ,last) \
         do{ \
-            if(Except(excepted, last) == 0){ Next(); }\
+            Except(excepted, last, result) \
+            if(0 == result){ Next(); }\
             else {RETURN_ERROR} \
     }while(0)
     #define tryNextNext(excepted ,last) \
         do{ \
-            if(Except(excepted, last) == 0){ Next(); Next(); }\
+            Except(excepted, last, result) \
+            if(0 == result){ Next(); Next(); }\
             else {RETURN_ERROR} \
     }while(0)
 
 private:
+    //for Except, use this when you need Except 
+    //and you can get a more friendly log, instead of cerr in Except(), always the same line
+    int result{};
     //someone need custom judge
 
     //please be careful about Cal and Call, so familar
@@ -249,7 +266,7 @@ public:
     const unsigned getSize() const;
 
     //for test?
-    Scope::pointer CurrentScope();
+    const Scope::pointer CurrentScope();
 };
 
 

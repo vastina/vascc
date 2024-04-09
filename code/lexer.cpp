@@ -149,6 +149,12 @@ lexer::STATE lexer::Next(){
                                     TOKEN::SYMBOL,      SymbolEndJudge);
             break;
         }
+        case 'h':{
+            (void)
+            ParseKeyWord("?",       TOKEN::UNKNOW,  [](char ch){return false;},
+                                    TOKEN::SYMBOL,      SymbolEndJudge);
+            break;
+        }
         case 'i':{
             RESULT res = 
             ParseKeyWord("int",     TOKEN::INT,     NormalEnd,
@@ -157,6 +163,18 @@ lexer::STATE lexer::Next(){
             else res = 
             ParseKeyWord("if",      TOKEN::IF,      NormalEnd,
                                     TOKEN::SYMBOL,     SymbolEndJudge);
+            break;
+        }
+        case 'j':{
+            (void)
+            ParseKeyWord("?",       TOKEN::UNKNOW,  [](char ch){return false;},
+                                    TOKEN::SYMBOL,      SymbolEndJudge);
+            break;
+        }
+        case 'k':{
+            (void)
+            ParseKeyWord("?",       TOKEN::UNKNOW,  [](char ch){return false;},
+                                    TOKEN::SYMBOL,      SymbolEndJudge);
             break;
         }
         case 'l':{
@@ -170,15 +188,81 @@ lexer::STATE lexer::Next(){
 
             break;
         }
+        case 'n':{
+            (void)
+            ParseKeyWord("?",       TOKEN::UNKNOW,  [](char ch){return false;},
+                                    TOKEN::SYMBOL,      SymbolEndJudge);
+            break;
+        }
+        case 'o':{
+            (void)
+            ParseKeyWord("?",       TOKEN::UNKNOW,  [](char ch){return false;},
+                                    TOKEN::SYMBOL,      SymbolEndJudge);
+            break;
+        }
+        case 'p':{
+            (void)
+            ParseKeyWord("?",       TOKEN::UNKNOW,  [](char ch){return false;},
+                                    TOKEN::SYMBOL,      SymbolEndJudge);
+            break;
+        }
+        case 'q':{
+            (void)
+            ParseKeyWord("?",       TOKEN::UNKNOW,  [](char ch){return false;},
+                                    TOKEN::SYMBOL,      SymbolEndJudge);
+            break;
+        }
         case 'r':{
             ParseKeyWord("return",  TOKEN::RETURN,  NormalEnd,
                                     TOKEN::SYMBOL,     SymbolEndJudge);
 
             break;
         }
+        case 's':{
+            (void)
+            ParseKeyWord("?",       TOKEN::UNKNOW,  [](char ch){return false;},
+                                    TOKEN::SYMBOL,      SymbolEndJudge);
+            break;
+        }
+        case 't':{
+            (void)
+            ParseKeyWord("?",       TOKEN::UNKNOW,  [](char ch){return false;},
+                                    TOKEN::SYMBOL,      SymbolEndJudge);
+            break;
+        }
+        case 'u':{
+            (void)
+            ParseKeyWord("?",       TOKEN::UNKNOW,  [](char ch){return false;},
+                                    TOKEN::SYMBOL,      SymbolEndJudge);
+            break;
+        }
         case 'v':{
             ParseKeyWord("var",    TOKEN::VAR,    NormalEnd,
                                    TOKEN::SYMBOL,     SymbolEndJudge);
+            break;
+        }
+        case 'w':{
+            (void)
+            ParseKeyWord("?",       TOKEN::UNKNOW,  [](char ch){return false;},
+                                    TOKEN::SYMBOL,      SymbolEndJudge);
+            break;
+        }
+        case 'x':{
+            (void)
+            ParseKeyWord("?",       TOKEN::UNKNOW,  [](char ch){return false;},
+                                    TOKEN::SYMBOL,      SymbolEndJudge);
+            break;
+        }
+        case 'y':{
+            (void)
+            ParseKeyWord("?",       TOKEN::UNKNOW,  [](char ch){return false;},
+                                    TOKEN::SYMBOL,      SymbolEndJudge);
+            break;
+        }
+        case 'z':{
+            (void)
+            ParseKeyWord("?",       TOKEN::UNKNOW,  [](char ch){return false;},
+                                    TOKEN::SYMBOL,      SymbolEndJudge);
             break;
         }
         default:
@@ -240,9 +324,15 @@ lexer::STATE lexer::Next(){
         case '<':
             forSingelWord("<", TOKEN::LESS);
             break;
-        case '!':
-            forSingelWord("!", TOKEN::LOGNOT);
+        case '!':{
+            RESULT res = 
+            ParseKeyWord("!=",      TOKEN::NOTEQUAL,[](char ch){return true;},
+                                    TOKEN::UNKNOW,  [](char ch){return false;});
+            if(res == RESULT::SUCCESS) break;
+            else
+                forSingelWord("!", TOKEN::LOGNOT);
             break;
+        }
         case '&':{
             RESULT res = 
             ParseKeyWord("&&",      TOKEN::LOGAND,  [](char ch){return true;},

@@ -9,3 +9,6 @@ git push --force
 ```
 ## 31/3/24
 Goodbye March, I thought I could finish the compiler in a week, for a very mini version
+
+## 4/9/24
+expression parse could be a very small part

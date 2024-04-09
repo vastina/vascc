@@ -1,7 +1,7 @@
 # ignored in project dir
 *.out
 cc
-vcc
+perf.data
 .vscode/
 build/
 .xmake/

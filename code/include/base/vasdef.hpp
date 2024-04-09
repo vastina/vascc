@@ -22,8 +22,8 @@ enum TOKEN{
     NLBRAC, NRBRAC, OBRACE, CBRACE, SEMICOLON, COMMA, COLON,
 //  main  return
     MAIN, RETURN,
-//    >       <    !=     !      &     &&    |     ||    ~           
-    GREATER, LESS, NOT, LOGNOT, AND, LOGAND, OR, LOGOR, OPS,
+//    >       <       !    &      &&     |    ||    ~           
+    GREATER, LESS, LOGNOT, AND, LOGAND, OR, LOGOR, OPS,
 //   -    +     *     /
     NEG, ADD, MULTI, DIV, 
 //  if  else  for  while  do  switch  case  break  continue  default
@@ -57,14 +57,22 @@ constexpr TOKEN_TYPE token_type(TOKEN tk){
     case TOKEN::MULTI:
     case TOKEN::DIV:
     case TOKEN::EQUAL:
-    case TOKEN::LOGAND:
-    case TOKEN::AND:
+    case TOKEN::NOTEQUAL:
+    case TOKEN::GREATEREQUAL:
+    case TOKEN::LESSEQUAL:
+    case TOKEN::GREATER:
+    case TOKEN::LESS:
     case TOKEN::LOGNOT:
-    case TOKEN::LOGOR :
+    case TOKEN::AND:
+    case TOKEN::LOGAND:
     case TOKEN::OR:
+    case TOKEN::LOGOR:
+    case TOKEN::OPS:
         return TOKEN_TYPE::OPERATOR;
     case TOKEN::SYMBOL:
     case TOKEN::NUMBER:
+    case TOKEN::STRING:
+    case TOKEN::SYMBOLF://what about void?
         return TOKEN_TYPE::VALUE;
     case TOKEN::NLBRAC:
     case TOKEN::NRBRAC:
@@ -100,6 +108,7 @@ enum class STMT{
     RET,
 };
 
+//https://zh.cppreference.com/w/cpp/language/operator_precedence todo
 inline constexpr unsigned Level(TOKEN tk){
     switch (tk){
         case TOKEN::EQUAL:
@@ -110,7 +119,7 @@ inline constexpr unsigned Level(TOKEN tk){
         case TOKEN::NEG:
             return 3;
         case TOKEN::AND:
-        case TOKEN::NOT:
+        case TOKEN::OPS:
         case TOKEN::OR :
             return 2;
         case TOKEN::MULTI:
