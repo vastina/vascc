@@ -1,7 +1,6 @@
 #ifndef _VASTINA_GLOBAL_DEFINE_
 #define _VASTINA_GLOBAL_DEFINE_
 
-#include <string_view>
 
 namespace vastina{
 
@@ -17,8 +16,8 @@ enum TOKEN{
     CONST, //STATIC,
 //  number  string  true  false
     NUMBER, STRING, TRUE, FALSE, 
-//  (           )   {           }       ;         ,      :
-    NLBRAC, NRBRAC, OBRACE, CBRACE, SEMICOLON, COMMA, COLON,
+//  (           )   {           }       ;         ,      :      "       '
+    NLBRAC, NRBRAC, OBRACE, CBRACE, SEMICOLON, COMMA, COLON, DQUOTE, SQUOTE, 
 //  main  return
     MAIN, RETURN,
 //    >         !      <     &      &&     |    ||    ~           

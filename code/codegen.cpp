@@ -1,5 +1,5 @@
 #include "codegen.hpp"
 
-namespace vastina{
+namespace vastina {
 
 };

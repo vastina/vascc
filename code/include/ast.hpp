@@ -1,17 +1,14 @@
 #ifndef _AST_H_
 #define _AST_H_
 
-namespace vastina{
+namespace vastina {
 
-class AstNode{
-public:
+class AstNode {
+  public:
     virtual ~AstNode() = default;
     virtual void print() = 0;
 };
 
-
-
-}
-
+} // namespace vastina
 
 #endif

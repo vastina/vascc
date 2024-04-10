@@ -3,7 +3,7 @@
 
 // #include <iostream>
 
-namespace vastina{
+namespace vastina {
 
 /*----------------------------------matchtable----------------------------------------------*/
 
@@ -18,14 +18,17 @@ namespace vastina{
 // MatchTable::MatchTable() = default;
 // MatchTable::~MatchTable(){};
 
-// void MatchTable::RegisteCase(TOKEN current_token, TOKEN except_token, FSM state){
+// void MatchTable::RegisteCase(TOKEN current_token, TOKEN except_token,
+// FSM state){
 //     auto& matcher = matchTable[current_token];
 //     matcher.units.push_back({except_token, state});
 // }
 
-// void MatchTable::UnregisteCase(TOKEN current_token, TOKEN except_token, FSM state){
+// void MatchTable::UnregisteCase(TOKEN current_token, TOKEN except_token,
+// FSM state){
 //     auto& matcher = matchTable[current_token];
-//     for(auto it = matcher.units.begin(); it != matcher.units.end(); it++){
+//     for(auto it = matcher.units.begin(); it != matcher.units.end();
+//     it++){
 //         if(it->tk_type == except_token && it->current_state == state){
 //             matcher.units.erase(it);
 //             return;
@@ -42,8 +45,8 @@ namespace vastina{
 //     std::cerr << what << std::endl;
 // }
 
-
-// const std::vector<MatchTable::MatchUnit>& MatchTable::getMatchList(TOKEN tk){
+// const std::vector<MatchTable::MatchUnit>& MatchTable::getMatchList(TOKEN
+// tk){
 //     return matchTable[tk].units;
 // }
 
@@ -58,6 +61,4 @@ namespace vastina{
 
 /*----------------------------------matchtable----------------------------------------------*/
 
-
-
-} //namespace vastina
+} // namespace vastina

@@ -1,0 +1,18 @@
+
+Language: Cpp
+IndentWidth: 4
+UseTab: Never
+AlignOperands: false
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: false
+  AfterNamespace: false
+  AfterStruct: false
+  AfterClass: false
+  AfterControlStatement: false
+  AfterEnum: false
+  AfterUnion: false
+  BeforeCatch: false
+  BeforeElse: false
+ColumnLimit: 0
+

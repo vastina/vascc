@@ -1,5 +1,5 @@
 #include "ast.hpp"
 
-namespace vastina{
+namespace vastina {
 
 }
