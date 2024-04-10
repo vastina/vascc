@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4.1.2
     - name: cmake_configure
       run: cmake -Bbuild .
     - name: build
@@ -21,8 +21,6 @@ jobs:
       run: ./testcase/run.sh
     - name: remove_cc
       run: rm -f cc
-    steps:
-    - uses: actions/checkout@v3
     - name: install_xmake
       run:  curl -fsSL https://xmake.io/shget.text | bash
     - name: xmake_build
