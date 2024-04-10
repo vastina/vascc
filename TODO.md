@@ -8,6 +8,7 @@
 - [ ] replace primary pointers with shared_ptr or something others
 - [ ] set general rules in parsing brackets and archive that
 - [ ] make lexer more scalable(sth like read .in file, add keyword after compile)
+- [ ] I need to get rid of offset, it's so stupid
 
 ### FINISHED：
 

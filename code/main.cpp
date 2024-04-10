@@ -17,8 +17,9 @@ int main(int argc, char* argv[]){
         std::cout << "Usage: " << argv[0] << " <filename>\n";
         return 1;
     }
-std::cout <<"--------------------------lexer-------------------------------------\n";
+
     lexer lx = lexer(argv[1]);
+std::cout <<"--------------------------lexer-------------------------------------\n";
     while (lexer::STATE::END != lx.Next()) ;
 
     auto tks = std::make_unique<std::vector<token_t>>(lx.getTokens());
@@ -56,7 +57,7 @@ std::cout <<"--------------------------preprocess-result------------------------
         for(auto&& child: scope->getChildren()) st.push(child);
     }
 
-
+std::cout <<"--------------------------------------------------------------------\n";
 
 
 

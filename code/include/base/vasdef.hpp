@@ -2,7 +2,6 @@
 #define _VASTINA_GLOBAL_DEFINE_
 
 #include <string_view>
-#include <typeinfo>
 
 namespace vastina{
 
@@ -16,8 +15,8 @@ enum TOKEN{
     STRUCT, ENUM, 
 //  const  static
     CONST, //STATIC,
-//  number  string
-    NUMBER, STRING,
+//  number  string  true  false
+    NUMBER, STRING, TRUE, FALSE, 
 //  (           )   {           }       ;         ,      :
     NLBRAC, NRBRAC, OBRACE, CBRACE, SEMICOLON, COMMA, COLON,
 //  main  return
@@ -69,6 +68,8 @@ inline static constexpr TOKEN_TYPE token_type(TOKEN tk){
     case TOKEN::LOGOR:
     case TOKEN::OPS:
         return TOKEN_TYPE::OPERATOR;
+    case TOKEN::TRUE:
+    case TOKEN::FALSE:
     case TOKEN::SYMBOL:
     case TOKEN::NUMBER:
     case TOKEN::STRING:
@@ -131,20 +132,6 @@ inline static constexpr unsigned Level(TOKEN tk){
             return 1<<31;
     }
 }
-
-
-#define RETURN_ERROR ::std::cerr << __FILE__ <<' '<<__LINE__ <<'\n'; \
-                        return -1;
-
-#define EXIT_ERROR ::std::cerr << __FILE__ <<' '<<__LINE__ <<'\n'; \
-                        exit(-1);
-#define THIS_NOT_SUPPORT(sth) \
-        ::std::cerr << sth << " not supported now\n"; \
-        ::std::cerr << __FILE__ <<' '<<__LINE__ <<'\n'; \
-        exit(-1);
-
-#define RETURN_NULL std::cerr << __FILE__ <<' '<<__LINE__ <<'\n'; \
-                        return nullptr;
 
 }
 #endif

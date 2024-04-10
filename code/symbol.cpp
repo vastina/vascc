@@ -1,6 +1,7 @@
 #include "symbol.hpp"
 #include "expr.hpp"
 #include "base/vasdef.hpp"
+#include "base/log.hpp"
 #include <iostream>
 
 namespace vastina{
@@ -72,10 +73,14 @@ const decltype(Scope::children_)& Scope::getChildren(){
 const SymbolTable& Scope::getSymbolTable(){
     return st_;
 }
-Scope::pointer Scope::getNextChild(){
-    return children_.at(idchild++);
+//you can get other if you like
+Scope::pointer Scope::getNextChild(unsigned offst=1){
+    idchild += offst;
+    return children_.at(idchild-offst);
 }
-
+Scope::pointer Scope::getChildat(unsigned offst){
+    return children_.at(offst);
+}
 
 
 inline TOKEN Preprocess::Current(){
@@ -120,35 +125,48 @@ int Preprocess::Process(){
                 break;
             }
             case TOKEN::IF:
-                ProcessIfType();
+                IfType();
                 break;
             case TOKEN::SYMBOL:{
                 if(!current_scope->varExist(CurrentTokenName())) 
-                    {EXIT_ERROR}
+                    {std::cerr << CurrentTokenName() <<'\n';
+                    EXIT_ERROR}
                 Except(TOKEN::ASSIGN, false, result);
                 if(result == 0){
-                    ProcessAssignType([this](){ return Current()==TOKEN::SEMICOLON || Current()==TOKEN::COMMA;});
+                    Assign([this](){ return Current()==TOKEN::SEMICOLON || Current()==TOKEN::COMMA;});
                     break;
                 }
                 else Except(TOKEN::SEMICOLON, true, result);
                 break;
             }
+            case TOKEN::SYMBOLF:{//void go here
+                if(!current_scope->funcExist(CurrentTokenName())) 
+                    {std::cerr << CurrentTokenName() <<'\n';
+                    EXIT_ERROR}
+                results.push_back({P_TOKEN::CALL, offset, offset+1});
+                Callee(current_scope->getFunc(CurrentTokenName()));
+                break;
+            }
             case TOKEN::WHILE:
+                LoopW();
+                break;
             case TOKEN::FOR:
+                LoopF([]{return false;});
+                break;
             case TOKEN::DO:
-                ProcessLoopType([]{return false;});
+                LoopD([]{return false;});
                 break;
             case TOKEN::FUNC:
-                ProcessCallType();
+                FuncDecl();
                 break;
             case TOKEN::RETURN:
-                ProcessRetType();
+                RetType();
                 break;
             default:{
                 switch (token_type(Current())) {
                     case TOKEN_TYPE::TYPE:{
                         Except(TOKEN::SYMBOL, true, result);
-                        ProcessDeclType([this](){ return Current() == TOKEN::SEMICOLON;});
+                        Declare([this](){ return Current() == TOKEN::SEMICOLON;});
                         break;
                     }
                     case TOKEN_TYPE::VALUE:{
@@ -158,7 +176,7 @@ int Preprocess::Process(){
                     }
 
                     default: 
-                        std::cout << Current() <<'\n';
+                        std::cerr << Current() <<'\n';
                         {RETURN_ERROR}
                 }
             }
@@ -171,7 +189,7 @@ int Preprocess::Process(){
 }
 
 //then I will make no check on the Parser of calculate because it is checked here
-int Preprocess::ProcessCalType(std::function<bool()> EndJudge){
+int Preprocess::CalType(std::function<bool()> EndJudge){
 
     BracketCount bc;
     unsigned last_offset = offset;
@@ -193,12 +211,14 @@ int Preprocess::ProcessCalType(std::function<bool()> EndJudge){
                 {
                     case TOKEN::SYMBOL:
                         if(!current_scope->varExist(CurrentTokenName())) 
-                            {std::cout << CurrentTokenName() <<'\n';
+                            {std::cerr << CurrentTokenName() <<'\n';
                             EXIT_ERROR}
                         break;
-                    case TOKEN::SYMBOLF:
+                    case TOKEN::SYMBOLF:// nonvoid go here
                         if(!current_scope->funcExist(CurrentTokenName())) 
-                            {EXIT_ERROR}
+                            {std::cerr << CurrentTokenName() <<'\n';
+                            EXIT_ERROR}
+                        Callee(current_scope->getFunc(CurrentTokenName()));
                         break;
                     case TOKEN::NUMBER:
                         break;
@@ -229,7 +249,7 @@ int Preprocess::ProcessCalType(std::function<bool()> EndJudge){
     return 0;
 }
 
-int Preprocess::ProcessAssignType(std::function<bool()> EndJudge){
+int Preprocess::Assign(std::function<bool()> EndJudge){
 
     unsigned last_offset = offset;
 
@@ -239,7 +259,7 @@ int Preprocess::ProcessAssignType(std::function<bool()> EndJudge){
         }
         else{
             results.push_back({P_TOKEN::ASSIGN, last_offset, offset});
-            (void)ProcessCalType([this](){return Current()==TOKEN::SEMICOLON;});
+            (void)CalType([this](){return Current()==TOKEN::SEMICOLON;});
             break;
         }
         if(EndJudge()) break;
@@ -248,7 +268,7 @@ int Preprocess::ProcessAssignType(std::function<bool()> EndJudge){
     return 0;
 }
 
-int Preprocess::ProcessDeclType(std::function<bool()> EndJudge){
+int Preprocess::Declare(std::function<bool()> EndJudge){
 
     std::function<void()> adder;
     switch (Current()) {
@@ -263,7 +283,8 @@ int Preprocess::ProcessDeclType(std::function<bool()> EndJudge){
             
             break;
         default:
-            return -1;
+            std::cerr <<offset <<' '<<Current() <<' '<< CurrentTokenName()<<' ';
+            {RETURN_ERROR}
     }
     Next();
 
@@ -277,46 +298,71 @@ int Preprocess::ProcessDeclType(std::function<bool()> EndJudge){
             results.push_back({P_TOKEN::ASSIGN, last_offset, offset+1});
             last_offset = offset+1;
             Next();
-            (void)ProcessCalType([this](){return Current()==TOKEN::SEMICOLON || Current()==TOKEN::COMMA;});
+            (void)CalType([this](){return Current()==TOKEN::SEMICOLON || Current()==TOKEN::COMMA;});
         }
+        else if(EndJudge()) break;
         else if(Current()==TOKEN::COMMA){
-            results.push_back({P_TOKEN::ASSIGN, last_offset, offset});
+            // results.push_back({P_TOKEN::ASSIGN, last_offset, offset});
             last_offset = offset+1;
             Next();
         }
-        else if(EndJudge()) break;
     }
 
     return 0;
 }
 
-int Preprocess::ProcessAddrType(std::function<bool()> EndJudge){
+int Preprocess::Address(std::function<bool()> EndJudge){
     return {};
 }
 
-int Preprocess::ProcessIfType(){
+int Preprocess::IfType(){
     results.push_back({P_TOKEN::IF, offset, offset+1});
-//there is a problem when I change it to trySkip
-    tryNext(TOKEN::NLBRAC, true);//, result);  Next();
-    int res = ProcessCalType([this](){ return Current() == TOKEN::OBRACE; });//暂时不支持不带{}的if
+
+    tryNext(TOKEN::NLBRAC, true);
+    int res = CalType([this](){ return Current() == TOKEN::OBRACE; });//暂时不支持不带{}的if
     if(0 != res) {RETURN_ERROR}
 
     return 0;
 }
 
-int Preprocess::ProcessLoopType(std::function<bool()> EndJudge){
-    return {};
-}
+int Preprocess::Callee(Function::pointer callee){
+    results.push_back({P_TOKEN::CALL, offset, offset+1});
+//nothing done here actually
+    trySkip(TOKEN::NLBRAC, true);
+    while(true){
+        if(CalType([this]{
+            return (Current()==TOKEN::COMMA)||(Current()==TOKEN::NRBRAC);
+        }) != 0) {EXIT_ERROR}
+        if(Current()==TOKEN::NRBRAC) break;
+        else Next();
 
-//todo
-int Preprocess::ProcessParas(Function::pointer fc){
-
-
+        //todo fc
+    }
 
     return 0;
 }
-int Preprocess::ProcessCallType(){
+
+int Preprocess::Paras(Function::pointer fc){
+//just kepp it like this, do not modify if you really know what you are doing
+    if(Peek()==TOKEN::NRBRAC) {Next(); return 0;}
+    else {Next();}
+
+    while(true){
+        if(Declare([this]{
+            return ((Current()==TOKEN::COMMA) || ((Current()==TOKEN::NRBRAC)
+                &&((Peek()==TOKEN::SEMICOLON)||(Peek()==TOKEN::OBRACE))));
+        })  != 0)   {EXIT_ERROR}
+        if(Current()!=TOKEN::COMMA) break;
+        else {Next();}
+
+        //todo fc
+    }
+
+    return 0;
+}
+int Preprocess::FuncDecl(){
     auto last_offset = offset;  Next();
+
     auto name = CurrentTokenName();
     if(Current()==TOKEN::MAIN){
     } //todo
@@ -335,29 +381,54 @@ int Preprocess::ProcessCallType(){
     }   adder();//adder or add?
 
     tryNext(TOKEN::NLBRAC, true);
-    (void)ProcessParas(current_scope->getFunc(name));//no check here
-    trySkip(TOKEN::NRBRAC, true);
+        current_scope = current_scope->getChildat(id);//getNextchild(0), jump in temply
+    (void)Paras(current_scope->getFunc(name));//no check here
+        current_scope = current_scope->getParent();
+    tryNext(TOKEN::OBRACE, false);
 
-    results.push_back({P_TOKEN::CALL, last_offset, offset});
+    if(0 != result) tryNext(TOKEN::SEMICOLON, true);
 
-    if(Current()==TOKEN::SEMICOLON || Current()==TOKEN::OBRACE) return 0;
+    results.push_back({P_TOKEN::DECL, last_offset, offset});
 
-    return -1;
+    if(0 == result) return 0;
+    {RETURN_ERROR};
 }
 
-int Preprocess::ProcessRetType(){
+int Preprocess::RetType(){
     results.push_back({P_TOKEN::RET, offset, offset+1});    Next();
 
-    int res = ProcessCalType([this]{return Current()==TOKEN::SEMICOLON;});
+    int res = CalType([this]{return Current()==TOKEN::SEMICOLON;});
     if(0 != res) {RETURN_ERROR}
 
     return 0;
 }
 
 
+int Preprocess::LoopW(){
+    results.push_back({P_TOKEN::LOOP, offset, offset+1});
+
+    tryNext(TOKEN::NLBRAC, true);
+    int res = CalType([this](){ return Current() == TOKEN::OBRACE; });//暂时不支持不带{}的while
+    if(0 != res) {RETURN_ERROR}
+
+    return 0;
+}
+
+int Preprocess::LoopF(std::function<bool()> EndJudge){
+
+
+    return {};
+}
+
+int Preprocess::LoopD(std::function<bool()> EndJudge){
+
+
+    return {};
+}
+
 const Preprocess::p_token_t& Preprocess::getNext(){
     if(id >= results.size()){
-        exit(1);
+        {EXIT_ERROR}
     }
     return static_cast<const p_token_t&>(results[id++]);
 }

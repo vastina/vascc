@@ -6,7 +6,7 @@ func fc:int(){
 }
 
 func main :int(){
-  int ans, abcdefg=0;
+  int ans =9, abcdefg=0;
   if(ans == 1)    
     { ans =abcdefg = ((2+8)|5 + 3*7/ 4 -9 & 6) -5 +fc();}
   return (ans-abcdefg)+global;

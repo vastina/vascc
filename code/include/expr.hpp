@@ -5,6 +5,7 @@
 #include "base/Tree.hpp"
 #include "lexer.hpp"
 #include "symbol.hpp"
+#include "base/log.hpp"
 
 #include <memory>
 #include <string>
@@ -240,6 +241,10 @@ inline const int CalExpression<int>::Calculate_(const typename cal_node::pointer
         case TOKEN::NUMBER:
             return std::stoi(root->data.tk.data.data());
             break;
+        case TOKEN::TRUE:
+            return 1;
+        case TOKEN::FALSE:
+            return 0;
         case TOKEN::AND:
             return Calculate_(root->left) & Calculate_(root->right);
             break;

@@ -56,17 +56,18 @@ lexer::RESULT lexer::ParseKeyWord(const std::string_view& target, TOKEN target_t
     }
     else if(Default == TOKEN::UNKNOW) return lexer::RESULT::FAIL;
     else{
-        //std::string temp;
         unsigned last_offset = offset;
         while (DefaultEndjudge(buffer[offset])){
-            //temp += buffer[offset];
             offset++;
         }
 //bad
-if(!current_scope->funcExist({buffer.data()+last_offset, offset-last_offset}))
-        tokens.push_back(
-            token_t(Default, {buffer.data()+last_offset, offset-last_offset}, line)
-        );
+    std::string_view temp = {buffer.data()+last_offset, offset-last_offset};
+    if(!current_scope->funcExist(temp)){
+        tokens.push_back(token_t(Default, temp, line));
+    }
+    else{
+        tokens.push_back(token_t(TOKEN::SYMBOLF, temp, line));
+    }
         return lexer::RESULT::SUCCESS;
     }
 }
@@ -135,6 +136,10 @@ lexer::STATE lexer::Next(){
             if(res == RESULT::SUCCESS) break;
             else res = 
             ParseKeyWord("float",   TOKEN::FLOAT,   NormalEnd,
+                                    TOKEN::UNKNOW,      [](char ch){return true;});
+            if(res == RESULT::SUCCESS) break;
+            else res = 
+            ParseKeyWord("false",   TOKEN::FALSE,   NormalEnd,
                                     TOKEN::UNKNOW,      [](char ch){return true;});
             if(res == RESULT::SUCCESS) break;
             else res =
@@ -230,9 +235,8 @@ lexer::STATE lexer::Next(){
             break;
         }
         case 't':{
-            (void)
-            ParseKeyWord("?",       TOKEN::UNKNOW,  [](char ch){return false;},
-                                    TOKEN::SYMBOL,      SymbolEndJudge);
+            ParseKeyWord("true",    TOKEN::TRUE,    NormalEnd,
+                                    TOKEN::UNKNOW,      SymbolEndJudge);
             break;
         }
         case 'u':{
@@ -242,14 +246,13 @@ lexer::STATE lexer::Next(){
             break;
         }
         case 'v':{
-            ParseKeyWord("var",    TOKEN::VAR,    NormalEnd,
-                                   TOKEN::SYMBOL,     SymbolEndJudge);
+            ParseKeyWord("var",     TOKEN::VAR,    NormalEnd,
+                                    TOKEN::SYMBOL,     SymbolEndJudge);
             break;
         }
         case 'w':{
-            (void)
-            ParseKeyWord("?",       TOKEN::UNKNOW,  [](char ch){return false;},
-                                    TOKEN::SYMBOL,      SymbolEndJudge);
+            ParseKeyWord("while",   TOKEN::WHILE,    NormalEnd,
+                                    TOKEN::SYMBOL,     SymbolEndJudge);
             break;
         }
         case 'x':{

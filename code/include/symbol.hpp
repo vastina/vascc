@@ -44,6 +44,10 @@ public:
 
     literal() = default;
     ~literal() = default;
+
+    inline std::string_view Typename(){
+        return typeid(ty).name();
+    }
 };
 
 
@@ -71,6 +75,10 @@ public:
 
     variable(){};
 
+    inline std::string_view Typename(){
+        return typeid(ty).name();
+    }
+
 };
 
 class Function{
@@ -87,7 +95,13 @@ public:
 template<typename ty>
 class func :public Function{
 public:
-    ;
+    using Function::isVoid_;
+
+    func(){};
+
+    inline std::string_view Typename(){
+        return typeid(ty).name();
+    }
 private:
     ;
 };
@@ -101,8 +115,10 @@ typedef struct SymbolTable{
         {return static_cast<bool>(Variables.count(name));}
     inline bool funcExist(const std::string_view& name)
         {return static_cast<bool>(functions.count(name));}
+    //override old value
     inline void addVar(const std::string_view& name, Variable&& var){
-        Variables.insert(std::make_pair(name, var)); }
+        Variables[name] = var;}
+        //Variables.insert(std::make_pair(name, var)); }
     inline Variable::pointer getVar(std::string_view name){
         if(Variables.count(name)) return Variables.at(name).self();
         return nullptr;
@@ -111,9 +127,11 @@ typedef struct SymbolTable{
         if(Variables.count(name)) return functions.at(name).self();
         return nullptr;
     }
-    // inline Variable::pointer getVar( `the source-location` )
+    //override old value
     inline void addFunc(const std::string_view& name, Function&& fc){
-        functions.insert(std::make_pair(name, fc));  }
+        functions[name] = fc;}
+        
+    // inline Variable::pointer getVar( `the source-location` ) todo
 } SymbolTable;
 
 
@@ -175,7 +193,8 @@ public:
     const decltype(children_)& getChildren();
     const SymbolTable& getSymbolTable();
 
-    pointer getNextChild();
+    pointer getNextChild(unsigned);
+    Scope::pointer getChildat(unsigned);
 };
 
 class Preprocess{
@@ -243,22 +262,22 @@ private:
                 if(last){ \
                     {EXIT_ERROR} \
                 } \
-                else res=-1; \
+                else {res=-1;} \
             } \
-        res=0; \
+        else {res=0;} \
     }while(0);
     //int Except(TOKEN excepted, bool last);
     #define tryNext(excepted ,last) \
         do{ \
             Except(excepted, last, result) \
             if(0 == result){ Next(); }\
-            else {RETURN_ERROR} \
+            else if(last) {RETURN_ERROR} \
     }while(0)
     #define trySkip(excepted ,last) \
         do{ \
             Except(excepted, last, result) \
             if(0 == result){ Next(); Next(); }\
-            else {RETURN_ERROR} \
+            else if(last) {RETURN_ERROR} \
     }while(0)
 
 private:
@@ -268,16 +287,20 @@ private:
     //someone need custom judge
 
     //please be careful about Cal and Call, so familar
-    int ProcessCalType(std::function<bool()> EndJudge);
-    int ProcessAssignType(std::function<bool()> EndJudge);
-    int ProcessDeclType(std::function<bool()> EndJudge);
-    int ProcessAddrType(std::function<bool()> EndJudge);
-    int ProcessIfType();
-    int ProcessLoopType(std::function<bool()> EndJudge);
-    int ProcessRetType();
+    int CalType(std::function<bool()> EndJudge);
+    int Assign(std::function<bool()> EndJudge);
+    int Declare(std::function<bool()> EndJudge);
+    int Address(std::function<bool()> EndJudge);
+    int IfType();
+    int RetType();
     
-    int ProcessParas(Function::pointer fc);
-    int ProcessCallType();
+    int Paras(Function::pointer fc);
+    int Callee(Function::pointer callee);
+    int FuncDecl();
+
+    int LoopW();//while
+    int LoopF(std::function<bool()> EndJudge);//for
+    int LoopD(std::function<bool()> EndJudge);//do
 //return a code to indicate the result
 public:
     int Process();

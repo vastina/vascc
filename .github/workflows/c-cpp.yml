@@ -7,7 +7,7 @@ on:
     branches: [ "vascc" ]
 
 jobs:
-  build:
+  build_and_run:
 
     runs-on: ubuntu-latest
 
@@ -21,6 +21,8 @@ jobs:
       run: ./testcase/run.sh
     - name: remove_cc
       run: rm -f cc
+    steps:
+    - uses: actions/checkout@v3
     - name: install_xmake
       run:  curl -fsSL https://xmake.io/shget.text | bash
     - name: xmake_build
