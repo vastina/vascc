@@ -3,7 +3,7 @@
 
 //#include "base/Tree.hpp"
 #include "base/vasdef.hpp"
-#include "lexer.hpp"
+//#include "lexer.hpp"
 
 #include <string_view>
 #include <unordered_map>
@@ -12,16 +12,38 @@
 #include <memory>
 
 namespace vastina{
+struct token_t{
+    TOKEN token;
+    std::string_view data;
+    unsigned line;
 
+//some were here just because I am lazy to delete them
+    token_t(TOKEN tk) ;
+    token_t(TOKEN tk, const std::string_view& sv);
+    token_t(TOKEN tk, std::string_view&& sv);
+    token_t(TOKEN tk, const std::string_view& sv, unsigned _line);
+    token_t(TOKEN tk, std::string_view&& sv, unsigned _line);
+
+    token_t(const token_t& tk);
+    token_t(token_t&& tk);
+} ;
 // "create symbol tables for every scope"
 
+class Literal{
+protected:
+    bool isTrivial;
+};
+
+
 template<typename ty>
-class Literal{//compile time values like "Hello World",114514,3.14
+class literal :public Literal{//compile time values like "Hello World",114514,3.14
 private:
     ty value;
 public:
-    Literal() = default;
-    ~Literal() = default;
+    using Literal::isTrivial;
+
+    literal() = default;
+    ~literal() = default;
 };
 
 
@@ -31,7 +53,7 @@ protected:
 public:
     using pointer = Variable*;
 
-    Variable() {};
+    Variable()=default;
     ~Variable()=default;
     inline bool isConst(){return isConstexpr_;};
     inline pointer self(){return this;}
@@ -40,8 +62,8 @@ public:
 template<typename ty>
 class variable :public Variable{
 private:
-    //ty value_;
     //I need source_location
+    //I need reflect or a member to mark the type
 public:
     using Variable::Variable;
     using Variable::isConstexpr_;
@@ -49,11 +71,6 @@ public:
 
     variable(){};
 
-    // inline const ty& getValue_ref(){ return value_;}
-    // inline const ty getValue_copy(){ return value_;}
-    // inline void setValue(const ty& v){ value_ = v;}
-    // inline void setValue(ty&& v){ value_ = std::move(v);}
-    // I don't need the fucking stupid getter and setter
 };
 
 class Function{
@@ -62,6 +79,7 @@ protected:
 public:
     using pointer = Function*;
 
+    Function() = default;
     ~Function() = default;
     inline pointer self(){return this;}
 };
@@ -75,16 +93,14 @@ private:
 };
 
 
-//so this is global, sington is for java
-//std::unordered_map<std::string_view, Variable> Global_Variable;
-//ok, I won't use this, I will use a class to manage this
-
 typedef struct SymbolTable{
     std::unordered_map<std::string_view, Variable> Variables;
     std::unordered_map<std::string_view, Function> functions;
 
-    inline bool varExist(std::string_view name){return Variables.count(name);}
-    inline bool funcExist(std::string_view name){return functions.count(name);}
+    inline bool varExist(const std::string_view& name)//string_view could make mistake in some case
+        {return static_cast<bool>(Variables.count(name));}
+    inline bool funcExist(const std::string_view& name)
+        {return static_cast<bool>(functions.count(name));}
     inline void addVar(const std::string_view& name, Variable&& var){
         Variables.insert(std::make_pair(name, var)); }
     inline Variable::pointer getVar(std::string_view name){
@@ -104,8 +120,6 @@ typedef struct SymbolTable{
 
 typedef struct range_t{
     unsigned start; unsigned end;//[start, end) preprocessed_tokens[start] to preprocessed_tokens[end-1]
-    // range_t* parent;    
-    // range_t* next;    range_t* child;
 
     range_t(): start(0), end(0){};
     inline const range_t& operator =(range_t&& other){
@@ -127,17 +141,9 @@ typedef struct range_t{
 // "create symbol tables for every scope"
 class Scope{
 public:
-    typedef struct _scope_node{
-        range_t r_;
-        SymbolTable st_;
-        
-        _scope_node(const range_t& r): r_(r), st_(){};
-        _scope_node(range_t&& r): r_(std::move(r)), st_(){};
-        //其实没必要，现在的rang_t只剩两个不拥有资源的unsigned了
-    } _scope_node;
 
     using pointer = Scope*;
-    using nodeptr = std::shared_ptr<Scope>;
+    using ScopePtr = std::shared_ptr<Scope>;
 
 private:
 
@@ -145,6 +151,8 @@ private:
     range_t r_;
     SymbolTable st_; //so decl a samename-var in child scope is acceptable
     std::vector<pointer> children_;
+    //so bad
+    unsigned idchild{};
 public:
     Scope() = delete;
     Scope(range_t&& r): parent_(nullptr), r_(r), st_(), children_() {};
@@ -166,6 +174,8 @@ public:
 //for test
     const decltype(children_)& getChildren();
     const SymbolTable& getSymbolTable();
+
+    pointer getNextChild();
 };
 
 class Preprocess{
@@ -198,7 +208,7 @@ public:
         unsigned end;
     } p_token_t;
     //[start, end)
-    //这个是后来写的，在expression后面加进来的，也许以后会把expr class里面的food_改成和这个更匹配
+    //see expr.hpp ExpressionUnit
 
 private:
     std::vector<token_t>& primary_tokens;
@@ -209,11 +219,20 @@ private:
 
     Scope::pointer current_scope;
 public:
-    Preprocess(std::vector<token_t>& tks): primary_tokens(tks), offset(), current_scope(new Scope({0,0})) {};
+    Preprocess(std::vector<token_t>& tks): 
+        primary_tokens(tks), 
+        offset(), 
+        current_scope(new Scope({0,0})) {
+    };
+    Preprocess(std::vector<token_t>& tks, Scope::pointer self): 
+        primary_tokens(tks), 
+        offset() {
+        current_scope = self;
+    };
     ~Preprocess() = default;
 private:
     inline TOKEN Current();
-    inline std::string_view CurrentTokenName();
+    inline const std::string_view& CurrentTokenName();
     inline TOKEN Peek(unsigned _offset);
     inline TOKEN PreToken(unsigned _offset);
     void Next();
@@ -235,7 +254,7 @@ private:
             if(0 == result){ Next(); }\
             else {RETURN_ERROR} \
     }while(0)
-    #define tryNextNext(excepted ,last) \
+    #define trySkip(excepted ,last) \
         do{ \
             Except(excepted, last, result) \
             if(0 == result){ Next(); Next(); }\

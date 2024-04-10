@@ -1,0 +1,5 @@
+func main:int(){
+    123;
+    int a = 0;
+    return a;
+}

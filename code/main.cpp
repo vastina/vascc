@@ -26,7 +26,7 @@ std::cout <<"--------------------------lexer------------------------------------
         std::cout << tks->at(i).token << ' ' << tks->at(i).data <<' '<< tks->at(i).line << '\n';
     }
 std::cout <<"--------------------------preprocess--------------------------------\n";
-    Preprocess *pp = new Preprocess(*tks);
+    Preprocess *pp = new Preprocess(*tks, lx.getScope());
     pp->Process();
 
     for(unsigned i=0; i<pp->getSize(); i++){

@@ -3,6 +3,8 @@
 #include "base/String.hpp"
 #include "base/vasdef.hpp"
 
+#include "symbol.hpp"//todo
+
 #include <fstream>
 #include <iostream>
 #include <functional>
@@ -19,13 +21,13 @@ token_t::token_t(const token_t& tk): token(tk.token), data(tk.data), line(tk.lin
 token_t::token_t(token_t&& tk): token(tk.token), data(std::move(tk.data)), line(tk.line) {};
 
 //just read file into buffer
-lexer::lexer(const char* filename):tokens(), offset(0), line(1), lineoffset(0){
+lexer::lexer(const char* filename):tokens(), offset(0), line(1), lineoffset(0), current_scope(new Scope(range_t(0,0))){
     std::ifstream ifs = std::ifstream();
     ifs.open(filename);
     //if(!ifs.is_open()) throw "can't open file";
     char buf[2048];
     while(!ifs.eof()){
-        ifs.getline(buf, 256);
+        ifs.getline(buf, 2048);
         buffer.append(buf).append("\n");
     }
 std::cout << buffer <<'\n';
@@ -60,6 +62,8 @@ lexer::RESULT lexer::ParseKeyWord(const std::string_view& target, TOKEN target_t
             //temp += buffer[offset];
             offset++;
         }
+//bad
+if(!current_scope->funcExist({buffer.data()+last_offset, offset-last_offset}))
         tokens.push_back(
             token_t(Default, {buffer.data()+last_offset, offset-last_offset}, line)
         );
@@ -140,6 +144,7 @@ lexer::STATE lexer::Next(){
                 ParseWhiteSpace();
             ParseKeyWord("main",    TOKEN::MAIN,    NormalEnd, 
                                     TOKEN::SYMBOLF,     SymbolEndJudge);
+            current_scope->addFunc(tokens.back().data, Function());
             }
             break;
         }
@@ -295,9 +300,11 @@ lexer::STATE lexer::Next(){
             forSingelWord(")", TOKEN::NRBRAC);
             break;
         case '{':
+            current_scope = current_scope->CreateChild({0,0});
             forSingelWord("{", TOKEN::OBRACE);
             break;
         case '}':
+            current_scope = current_scope->getParent();
             forSingelWord("}", TOKEN::CBRACE);
             break;
         case ';':
@@ -383,6 +390,10 @@ const std::vector<token_t>& lexer::getTokens(){
 
 const std::string_view lexer::getBuffer(){
     return {buffer.data(), buffer.size()};
+}
+
+Scope::pointer lexer::getScope(){
+    return current_scope;
 }
 
 }

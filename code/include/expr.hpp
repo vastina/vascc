@@ -14,32 +14,6 @@
 
 namespace vastina{
 
-using TokenPtr = //std::shared_ptr<std::vector<token_t>>;
-    std::vector<token_t>*;//todo: use shared_ptr
-
-typedef struct ExpressionUnit{
-    TokenPtr tokens;
-    unsigned start;
-    unsigned end;
-
-    ExpressionUnit(TokenPtr tks, unsigned s, unsigned e): tokens(tks), start(s), end(e){};
-    ~ExpressionUnit(){
-        if(nullptr != tokens) 
-            tokens = nullptr;
-    }
-} ExpressionUnit;
-
-typedef struct Statement{
-
-} Statement;
-
-typedef struct Block{
-    std::vector<Statement> statements;
-    unsigned offset;
-} Block;
-
-
-
 /*
 // class MatchTable{
 
@@ -92,6 +66,22 @@ typedef struct Block{
 
 */
 
+using TokenPtr = //std::shared_ptr<std::vector<token_t>>;
+    std::vector<token_t>*;//todo: use shared_ptr
+
+//see symbol.hpp Preprocess::p_token_t
+typedef struct ExpressionUnit{
+    TokenPtr tokens;
+    unsigned start;
+    unsigned end;
+
+    ExpressionUnit(TokenPtr tks, unsigned s, unsigned e): tokens(tks), start(s), end(e){};
+    ~ExpressionUnit(){
+        if(nullptr != tokens) 
+            tokens = nullptr;
+    }
+} ExpressionUnit;
+
 class Expression{
 protected:
     ExpressionUnit food_; //because it is to be eaten
@@ -102,18 +92,14 @@ public:
     virtual void Walk(walk_order) const =0;
     virtual void Parse() =0;
     virtual void Calculate() =0;
-    
-    //friend std::string_view ToString<ty>(const ty& t);
 };
-
-
 
 template<typename ty>
 class CalExpression: public Expression{
 
-public://they will not be created every time when a instance of CalExpression is created
+public:
     typedef struct _cal_node{
-        token_t tk;//should use ref instead of copy
+        token_t& tk;
         unsigned level = 0;
 
         _cal_node(): tk(TOKEN::UNKNOW){};
@@ -122,12 +108,12 @@ public://they will not be created every time when a instance of CalExpression is
 
     typedef TreeNode<_cal_node> cal_node;
 
-private:
+protected:
     ty value_;
     typename cal_node::pointer root_;
     bool isConstexpr;//todo
-public:
     using Expression::food_;
+public:
     using Expression::Expression;
     inline const ty& getValue_ref(){ return value_;}
     inline const ty getValue_copy(){ return value_;}
@@ -153,7 +139,7 @@ public:
         return;
     }
 
-private:
+protected:
 
     //for example 3.14+42, 3.14+(double)42
     inline void fallback(){
@@ -210,7 +196,7 @@ private:
                 }
 
                 default:
-                    return nullptr;
+                    {RETURN_NULL}
             }
         
             if(offset >= food_.end) break;
@@ -223,6 +209,16 @@ private:
 
 
 };
+
+
+//todo
+template<typename ty>
+class ConstCalExpression :public CalExpression<ty>{
+
+};
+
+
+
 template<>
 inline const int CalExpression<int>::Calculate_(const typename cal_node::pointer root){
     switch (root->data.tk.token) {
@@ -286,48 +282,15 @@ inline const float CalExpression<float>::Calculate_(const typename cal_node::poi
 
 template<typename ty>
 class AssignExpression: public Expression{
-public:
-    typedef struct _assign_node{
-        // ty val;
-        // const token_t& tk;
-        // _assign_node() =delete;
-        // _assign_node(const token_t& _tk): val(), tk(_tk){};
-        // _assign_node(const token_t& _tk, const ty& _val): val(_val), tk(_tk) {};
-    } _assign_node;
-
-    typedef TreeNode<_assign_node> assign_node;
 private:
-    ty value_;
-    typename assign_node::pointer root_;
+    
 public:
     using Expression::food_;
     using Expression::Expression;
-    inline const ty& getValue_ref(){ return value_;}
-    inline const ty getValue_copy(){ return value_;}
-    inline void setValue(const ty& v){ value_ = v;}
-    inline void setValue(ty&& v){ value_ = std::move(v);}
-public:
     AssignExpression()=delete;
-    AssignExpression(const ExpressionUnit& e): Expression(e), root_(nullptr){};
-    AssignExpression(ExpressionUnit&& e): Expression(std::move(e)), root_(nullptr){};
-
-    inline void Walk(walk_order wo) const override{
-        root_->Walk(wo, [](const _assign_node& data_){
-            std::cout  << data_.tk.data  << '\n';
-        });
-    }
-    inline void Parse() override{
-        unsigned offset = food_.start;
-        root_ = Parse_(offset);
-    }
-    inline void Calculate() override{
-        value_ = Calculate_(root_);
-        return;
-    }
+    AssignExpression(const ExpressionUnit& e): Expression(e){};
+    AssignExpression(ExpressionUnit&& e): Expression(std::move(e)){};
 private:
-    inline typename assign_node::pointer Parse_(unsigned &offset){
-
-    }
 
 };
 

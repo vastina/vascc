@@ -17,15 +17,13 @@ jobs:
       run: cmake -Bbuild .
     - name: build
       run: cmake --build ./build
-    - name: run
-      run: ./cc testcase/test.txt
-    #- name: install_curl
-    #  run: sudo apt install -y curl
+    - name: c_run
+      run: ./testcase/run.sh
     - name: remove_cc
       run: rm -f cc
     - name: install_xmake
       run:  curl -fsSL https://xmake.io/shget.text | bash
     - name: xmake_build
       run: xmake build
-    - name: xmake_run
-      run: xmake run cc testcase/test.txt
+    - name: x_run
+      run: ./testcase/run.sh

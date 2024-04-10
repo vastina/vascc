@@ -22,14 +22,14 @@ enum TOKEN{
     NLBRAC, NRBRAC, OBRACE, CBRACE, SEMICOLON, COMMA, COLON,
 //  main  return
     MAIN, RETURN,
-//    >       <       !    &      &&     |    ||    ~           
-    GREATER, LESS, LOGNOT, AND, LOGAND, OR, LOGOR, OPS,
+//    >         !      <     &      &&     |    ||    ~           
+    GREATER, LOGNOT, LESS,  AND, LOGAND, OR, LOGOR, OPS,
 //   -    +     *     /
     NEG, ADD, MULTI, DIV, 
 //  if  else  for  while  do  switch  case  break  continue  default
     IF, ELSE, FOR, WHILE, DO, SWITCH, CASE, BREAK, CONTINUE, DEFAULT,
 //     =     ==      !=         >=             <=
-    ASSIGN, EQUAL, NOTEQUAL, GREATEREQUAL, LESSEQUAL,//should these two?
+    ASSIGN, EQUAL, NOTEQUAL, GREATEREQUAL, LESSEQUAL,
 // __LINE__ __FILE__
      LINE,    FILE,
 
@@ -49,7 +49,7 @@ enum class TOKEN_TYPE{
     SEPERATOR //seperator, like comma, semicolon
 };
 
-constexpr TOKEN_TYPE token_type(TOKEN tk){
+inline static constexpr TOKEN_TYPE token_type(TOKEN tk){
     switch (tk)
     {
     case TOKEN::ADD:
@@ -96,7 +96,6 @@ constexpr TOKEN_TYPE token_type(TOKEN tk){
 enum class EXPR{
     CAL,
     ASSIGN,
-    //CONDITION,//it is a type of calculate expression
     DECL,
     ADDR,//address, something like a[0],&a
 };
@@ -104,12 +103,12 @@ enum class EXPR{
 enum class STMT{
     IF,
     LOOP,
-    CALL,//可以为Calculate中的函数调用构造临时匿名变量？
+    CALL,
     RET,
 };
 
-//https://zh.cppreference.com/w/cpp/language/operator_precedence todo
-inline constexpr unsigned Level(TOKEN tk){
+//todo https://zh.cppreference.com/w/cpp/language/operator_precedence
+inline static constexpr unsigned Level(TOKEN tk){
     switch (tk){
         case TOKEN::EQUAL:
             return 5;
@@ -133,36 +132,19 @@ inline constexpr unsigned Level(TOKEN tk){
     }
 }
 
-constexpr std::string_view _TypeName(std::string_view sv){
-    if(sv.size()==0) return "";
 
-    switch (sv[0]) {
-        case 'i': return "int";
-        case 'j': return "unsigned";
-        case 'd': return "double";
-        case 'c': return "char";
-        case 'b': return "bool";
-        case 'l': return "long";
-        case 'v': return "void";
-        
-        default:  return "";
-    }
-}
-
-template<typename ty>
-constexpr std::string_view TypeName(const ty&){
-    return _TypeName(typeid(ty).name());
-}
-
-#define RETURN_ERROR std::cerr << __FILE__ <<' '<<__LINE__ <<'\n'; \
+#define RETURN_ERROR ::std::cerr << __FILE__ <<' '<<__LINE__ <<'\n'; \
                         return -1;
 
-#define EXIT_ERROR std::cerr << __FILE__ <<' '<<__LINE__ <<'\n'; \
+#define EXIT_ERROR ::std::cerr << __FILE__ <<' '<<__LINE__ <<'\n'; \
                         exit(-1);
 #define THIS_NOT_SUPPORT(sth) \
-        std::cerr << sth << " not supported now\n"; \
-        std::cerr << __FILE__ <<' '<<__LINE__ <<'\n'; \
+        ::std::cerr << sth << " not supported now\n"; \
+        ::std::cerr << __FILE__ <<' '<<__LINE__ <<'\n'; \
         exit(-1);
+
+#define RETURN_NULL std::cerr << __FILE__ <<' '<<__LINE__ <<'\n'; \
+                        return nullptr;
 
 }
 #endif

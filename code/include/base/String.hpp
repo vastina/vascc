@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include "base/vasdef.hpp"
 
 namespace vastina{
     
@@ -30,6 +31,26 @@ inline bool Strcmp(const std::string& buffer, unsigned offset, const std::string
     return true;
 }
 
+inline constexpr std::string_view _TypeName(std::string_view sv){
+    if(sv.size()==0) return "";
+
+    switch (sv[0]) {
+        case 'i': return "int";
+        case 'j': return "unsigned";
+        case 'd': return "double";
+        case 'c': return "char";
+        case 'b': return "bool";
+        case 'l': return "long";
+        case 'v': return "void";
+        
+        default:  return "";
+    }
+}
+
+template<typename ty>
+constexpr std::string_view TypeName(const ty&){
+    return _TypeName(typeid(ty).name());
+}
 
 template<typename ty>
 std::string_view ToString(const ty& t);

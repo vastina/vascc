@@ -6,7 +6,6 @@ perf.data
 build/
 .xmake/
 test/
-todo/
 .cache/
 
 # temp main sometimes

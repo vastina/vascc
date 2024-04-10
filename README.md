@@ -12,3 +12,6 @@ Goodbye March, I thought I could finish the compiler in a week, for a very mini 
 
 ## 4/9/24
 expression parse could be a very small part
+
+## 4/10/24
+func keyword helps to avoid SYMBOLF check in lexer if taking both functions and variables as symbol.But I still want to parse function declare that starts with type in the future.C

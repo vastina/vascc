@@ -5,15 +5,21 @@
 
 namespace vastina{
 
-//get the child just created and add data in it
+//get the child just created so add data in it
 Scope::pointer Scope::CreateChild(range_t&& rr = {0,0}){
     children_.push_back(new Scope(this, std::move(rr)));
     return children_.back();
 }
-Scope::pointer Scope::getParent(){ return parent_; }
+Scope::pointer Scope::getParent(){ 
+    return parent_; 
+}
 
-void Scope::addVar(const std::string_view& name, Variable&& var){st_.addVar(name, std::move(var));}
-void Scope::addFunc(const std::string_view& name, Function&& fc){st_.addFunc(name, std::move(fc));}
+void Scope::addVar(const std::string_view& name, Variable&& var){
+    st_.addVar(name, std::move(var));
+}
+void Scope::addFunc(const std::string_view& name, Function&& fc){
+    st_.addFunc(name, std::move(fc));
+}
 Variable::pointer Scope::getVar(std::string_view name){
     auto node = this;
     do{
@@ -35,8 +41,9 @@ Function::pointer Scope::getFunc(std::string_view name){
 bool Scope::varExist(const std::string_view& name){
     auto node = this;
     do{
-        if(node->st_.varExist(name)) return true;
-        else node = node->parent_;
+        if(node->st_.varExist(name)) 
+            {return true;}
+        node = node->parent_;
     }while(nullptr != node);
 
     return false;
@@ -45,24 +52,37 @@ bool Scope::varExist(const std::string_view& name){
 bool Scope::funcExist(const std::string_view& name){
     auto node = this;
     do{
-        if(node->st_.funcExist(name)) return true;
-        else node = node->parent_;
+        if(node->st_.funcExist(name)) 
+            {return true;}
+        node = node->parent_;
     }while(nullptr != node);
 
     return false;
 }
 
-void Scope::setRange(unsigned start, unsigned end){r_.start=start;r_.end=end;}
-const range_t& Scope::getRange(){return r_;}
+void Scope::setRange(unsigned start, unsigned end){
+    r_.start=start;r_.end=end;
+}
+const range_t& Scope::getRange(){
+    return r_;
+}
+const decltype(Scope::children_)& Scope::getChildren(){
+    return children_;
+}
+const SymbolTable& Scope::getSymbolTable(){
+    return st_;
+}
+Scope::pointer Scope::getNextChild(){
+    return children_.at(idchild++);
+}
 
-const decltype(Scope::children_)& Scope::getChildren(){return children_;}
-const SymbolTable& Scope::getSymbolTable(){return st_;}
+
 
 inline TOKEN Preprocess::Current(){
    return primary_tokens[offset].token;
 }
 
-inline std::string_view Preprocess::CurrentTokenName(){
+inline const std::string_view& Preprocess::CurrentTokenName(){
     return primary_tokens[offset].data;
 }
 
@@ -79,17 +99,6 @@ void Preprocess::Next(){
     offset++;
 }
 
-// int Preprocess::Except(TOKEN excepted, bool last=false){
-//     if((Peek() != excepted)){
-//         if(last){
-//             //EXIT_ERROR
-//             std::cerr << __FILE__ <<' '<<__LINE__ <<'\n';
-//         }
-//         else return -1;
-//     }
-//     return 0;
-// }
-
 
 int Preprocess::Process(){
     unsigned size =  primary_tokens.size();
@@ -99,7 +108,7 @@ int Preprocess::Process(){
                 Next();
                 break;
             case TOKEN::OBRACE:{
-                current_scope = current_scope->CreateChild();
+                current_scope = current_scope->getNextChild();
                 current_scope->setRange(getSize(), 0);
                 Next();
                 break;
@@ -114,6 +123,8 @@ int Preprocess::Process(){
                 ProcessIfType();
                 break;
             case TOKEN::SYMBOL:{
+                if(!current_scope->varExist(CurrentTokenName())) 
+                    {EXIT_ERROR}
                 Except(TOKEN::ASSIGN, false, result);
                 if(result == 0){
                     ProcessAssignType([this](){ return Current()==TOKEN::SEMICOLON || Current()==TOKEN::COMMA;});
@@ -140,7 +151,11 @@ int Preprocess::Process(){
                         ProcessDeclType([this](){ return Current() == TOKEN::SEMICOLON;});
                         break;
                     }
-
+                    case TOKEN_TYPE::VALUE:{
+                        tryNext(TOKEN::SEMICOLON, true);
+                        results.push_back({.tk=P_TOKEN::CAL, .start=offset-1, .end=offset});
+                        break;
+                    }
 
                     default: 
                         std::cout << Current() <<'\n';
@@ -165,17 +180,32 @@ int Preprocess::ProcessCalType(std::function<bool()> EndJudge){
         switch (token_type(Current())) {
             case TOKEN_TYPE::BRAC:{
                 if(Current() == TOKEN::NRBRAC){
-                    if(++bc.close > bc.open) return -1;
-                }
-                else{
-                    ++bc.open;
-                }
+                    if(++bc.close > bc.open) 
+                        {EXIT_ERROR};
+                } 
+                else ++bc.open;
                 break;
             }
             case TOKEN_TYPE::VALUE:{
                 if(token_type(Peek()) == TOKEN_TYPE::VALUE) {RETURN_ERROR}
-                if(Current()==TOKEN::SYMBOLF){
 
+                switch (Current())
+                {
+                    case TOKEN::SYMBOL:
+                        if(!current_scope->varExist(CurrentTokenName())) 
+                            {std::cout << CurrentTokenName() <<'\n';
+                            EXIT_ERROR}
+                        break;
+                    case TOKEN::SYMBOLF:
+                        if(!current_scope->funcExist(CurrentTokenName())) 
+                            {EXIT_ERROR}
+                        break;
+                    case TOKEN::NUMBER:
+                        break;
+                    case TOKEN::STRING:
+                        break;
+                    default:
+                        break;
                 }
                 break;
             }
@@ -266,8 +296,8 @@ int Preprocess::ProcessAddrType(std::function<bool()> EndJudge){
 
 int Preprocess::ProcessIfType(){
     results.push_back({P_TOKEN::IF, offset, offset+1});
-//there is a problem when I change it to tryNextNext
-    Except(TOKEN::NLBRAC, true, result);  Next();
+//there is a problem when I change it to trySkip
+    tryNext(TOKEN::NLBRAC, true);//, result);  Next();
     int res = ProcessCalType([this](){ return Current() == TOKEN::OBRACE; });//暂时不支持不带{}的if
     if(0 != res) {RETURN_ERROR}
 
@@ -289,25 +319,24 @@ int Preprocess::ProcessCallType(){
     auto last_offset = offset;  Next();
     auto name = CurrentTokenName();
     if(Current()==TOKEN::MAIN){
-        //maybe nothing todo, at last in parse
     } //todo
-    tryNextNext(TOKEN::COLON, true);//call it tryNextAndJump is better
+    trySkip(TOKEN::COLON, true);
 
     std::function<void()> adder;  
     switch (Current()) {
-        case TOKEN::INT:
+        case TOKEN::INT://todo, override funnction added in lexer, will insert() override?
             adder = [this, &name](){current_scope->addFunc(name, func<int>());};
             break;
         case TOKEN::FLOAT:
         case TOKEN::CHAR:
-        //......
+        //todo finish this after finish var class
         default:
             THIS_NOT_SUPPORT(CurrentTokenName());
     }   adder();//adder or add?
 
     tryNext(TOKEN::NLBRAC, true);
     (void)ProcessParas(current_scope->getFunc(name));//no check here
-    tryNextNext(TOKEN::NRBRAC, true);
+    trySkip(TOKEN::NRBRAC, true);
 
     results.push_back({P_TOKEN::CALL, last_offset, offset});
 
