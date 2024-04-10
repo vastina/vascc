@@ -6,6 +6,7 @@
 
 namespace vastina{
 
+#define TEMP_LOG std::cerr <<offset <<' '<<Current() <<' '<< CurrentTokenName()<<' ';
 //get the child just created so add data in it
 Scope::pointer Scope::CreateChild(range_t&& rr = {0,0}){
     children_.push_back(new Scope(this, std::move(rr)));
@@ -129,7 +130,7 @@ int Preprocess::Process(){
                 break;
             case TOKEN::SYMBOL:{
                 if(!current_scope->varExist(CurrentTokenName())) 
-                    {std::cerr << CurrentTokenName() <<'\n';
+                    {TEMP_LOG
                     EXIT_ERROR}
                 Except(TOKEN::ASSIGN, false, result);
                 if(result == 0){
@@ -141,7 +142,7 @@ int Preprocess::Process(){
             }
             case TOKEN::SYMBOLF:{//void go here
                 if(!current_scope->funcExist(CurrentTokenName())) 
-                    {std::cerr << CurrentTokenName() <<'\n';
+                    {TEMP_LOG
                     EXIT_ERROR}
                 results.push_back({P_TOKEN::CALL, offset, offset+1});
                 Callee(current_scope->getFunc(CurrentTokenName()));
@@ -199,7 +200,8 @@ int Preprocess::CalType(std::function<bool()> EndJudge){
             case TOKEN_TYPE::BRAC:{
                 if(Current() == TOKEN::NRBRAC){
                     if(++bc.close > bc.open) 
-                        {EXIT_ERROR};
+                        {TEMP_LOG
+                        EXIT_ERROR}
                 } 
                 else ++bc.open;
                 break;
@@ -211,12 +213,12 @@ int Preprocess::CalType(std::function<bool()> EndJudge){
                 {
                     case TOKEN::SYMBOL:
                         if(!current_scope->varExist(CurrentTokenName())) 
-                            {std::cerr << CurrentTokenName() <<'\n';
+                            {TEMP_LOG
                             EXIT_ERROR}
                         break;
                     case TOKEN::SYMBOLF:// nonvoid go here
                         if(!current_scope->funcExist(CurrentTokenName())) 
-                            {std::cerr << CurrentTokenName() <<'\n';
+                            {TEMP_LOG
                             EXIT_ERROR}
                         Callee(current_scope->getFunc(CurrentTokenName()));
                         break;
@@ -239,7 +241,8 @@ int Preprocess::CalType(std::function<bool()> EndJudge){
                 break;
             }
             default:
-                {RETURN_ERROR}
+                {TEMP_LOG;
+                RETURN_ERROR}
         }
         Next();
         if(EndJudge()) break;
@@ -283,7 +286,7 @@ int Preprocess::Declare(std::function<bool()> EndJudge){
             
             break;
         default:
-            std::cerr <<offset <<' '<<Current() <<' '<< CurrentTokenName()<<' ';
+            TEMP_LOG
             {RETURN_ERROR}
     }
     Next();
@@ -329,6 +332,8 @@ int Preprocess::Callee(Function::pointer callee){
     results.push_back({P_TOKEN::CALL, offset, offset+1});
 //nothing done here actually
     trySkip(TOKEN::NLBRAC, true);
+    if(Current()==TOKEN::NRBRAC) return 0;
+
     while(true){
         if(CalType([this]{
             return (Current()==TOKEN::COMMA)||(Current()==TOKEN::NRBRAC);

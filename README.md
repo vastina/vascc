@@ -15,3 +15,6 @@ expression parse could be a very small part
 
 ## 4/10/24
 func keyword helps to avoid SYMBOLF check in lexer if taking both functions and variables as symbol.But I still want to parse function declare that starts with type in the future.C
+
+## 4/11/24
+symbol.cpp is going to be shit if no rebuild in the future

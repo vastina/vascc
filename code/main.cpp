@@ -24,7 +24,7 @@ std::cout <<"--------------------------lexer------------------------------------
 
     auto tks = std::make_unique<std::vector<token_t>>(lx.getTokens());
     for(unsigned i=0; i < tks->size(); i++){
-        std::cout << tks->at(i).token << ' ' << tks->at(i).data <<' '<< tks->at(i).line << '\n';
+        std::cout <<i <<' '<< tks->at(i).token << ' ' << tks->at(i).data <<' '<< tks->at(i).line << '\n';
     }
 std::cout <<"--------------------------preprocess--------------------------------\n";
     Preprocess *pp = new Preprocess(*tks, lx.getScope());
