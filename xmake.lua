@@ -2,7 +2,7 @@
 
 set_xmakever("2.5.1")
 
-target("cc")
+target("vcc")
     -- 设置 C++ 标准
     set_languages("cxx17")
     -- 添加编译选项
@@ -16,4 +16,4 @@ target("cc")
     -- 设置生成路径为当前目录
     set_targetdir("$(projectdir)")
     -- 设置生成目标的名称
-    set_targetdir("./")
+    -- set_targetdir("./")

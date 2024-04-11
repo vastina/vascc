@@ -76,6 +76,9 @@ void Scope::setRange(unsigned start, unsigned end) {
     r_.start = start;
     r_.end = end;
 }
+void Scope::setBreakable(bool breakable){
+    isBreakable_ = breakable;
+}
 const range_t &
 Scope::getRange() {
     return r_;
@@ -434,8 +437,7 @@ int Preprocess::FuncDecl() {
 
     std::function<void()> adder;
     switch (Current()) {
-    case TOKEN::INT: // todo, override funnction added in lexer, will
-                     // insert() override?
+    case TOKEN::INT: 
         adder = [this, &name]() { current_scope->addFunc(name, func<int>()); };
         break;
     case TOKEN::FLOAT:
@@ -476,6 +478,7 @@ int Preprocess::RetType() {
 
 int Preprocess::LoopW() {
     results.push_back({P_TOKEN::LOOP, offset, offset + 1});
+    current_scope->getChildat(offset)->setBreakable(true);
 
     tryNext(TOKEN::NLBRAC, true);
     int res = CalType([this]() {

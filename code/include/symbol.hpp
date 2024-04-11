@@ -197,6 +197,8 @@ class Scope {
     range_t r_;
     SymbolTable st_; // so decl a samename-var in child scope is acceptable
     std::vector<pointer> children_;
+
+    bool isBreakable_{false};//for loop, who else need this?
     // so bad
     unsigned idchild{};
 
@@ -218,6 +220,7 @@ class Scope {
 
     void setRange(unsigned start, unsigned end);
     const range_t &getRange();
+    void setBreakable(bool);
 
     // for test
     const decltype(children_) &getChildren();
@@ -272,7 +275,7 @@ class Preprocess {
         unsigned end;
     } p_token_t;
     //[start, end)
-    // see expr.hpp ExpressionUnit
+    // see expr.hpp ExpressionUnit_
 
   private:
     std::vector<token_t> &primary_tokens;
@@ -338,7 +341,7 @@ class Preprocess {
     int result{};
     // someone need custom judge
 
-    // please be careful about Cal and Call, so familar
+    // return a code to indicate the result
     int CalType(const std::function<bool()> &EndJudge);
     int Assign(const std::function<bool()> &EndJudge);
     int Declare(const std::function<bool()> &EndJudge);
@@ -352,10 +355,8 @@ class Preprocess {
 
     int LoopW();                                      // while
     int LoopF(const std::function<bool()> &EndJudge); // for
-    int LoopD(const std::function<bool()>
-                  &EndJudge); // do
+    int LoopD(const std::function<bool()> &EndJudge); // do
 
-    // return a code to indicate the result
   public:
     int Process();
     const p_token_t &getNext();

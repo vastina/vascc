@@ -1,16 +1,16 @@
-inline int addint(int a, int b){
+int addint(int a, int b){
     return a+b;
 }
 
-inline long long addlong(long long a, long long b){
+long long addlong(long long a, long long b){
     return a+b;
 }
 
-inline float addfloat(float a, float b){
+float addfloat(float a, float b){
     return a+b;
 }
 
-inline double adddouble(double a, double b){
+double adddouble(double a, double b){
     return a+b;
 }
 

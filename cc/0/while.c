@@ -1,4 +1,4 @@
-#include <stdio.h>
+extern int* printf(const char*, ...);
 
 int While(int a){
     while(a>5){

@@ -1,6 +1,6 @@
 # ignored in project dir
 *.out
-cc
+vcc
 perf.data
 .vscode/
 build/
@@ -15,6 +15,7 @@ code/test.cpp
 **/*.ll
 **/*.bc
 **/*.asm
+**/*.ast
 **/*.S
 **/*.s
 **/*o

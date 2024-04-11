@@ -2,13 +2,9 @@
 #define _EXPRESSION_H_
 
 #include "base/Tree.hpp"
-#include "base/log.hpp"
-#include "base/vasdef.hpp"
 #include "symbol.hpp"
 
-#include <iostream>
-#include <string>
-#include <vector>
+#include <concepts>
 
 namespace vastina {
 
@@ -67,37 +63,94 @@ state);
 
 */
 
-using TokenPtr =            // std::shared_ptr<std::vector<token_t>>;
-    std::vector<token_t> *; // todo: use shared_ptr
 
-// see symbol.hpp Preprocess::p_token_t
-typedef struct ExpressionUnit {
-    TokenPtr tokens;
-    unsigned start;
-    unsigned end;
-
-    ExpressionUnit(TokenPtr tks, unsigned s, unsigned e)
-        : tokens(tks), start(s), end(e){};
-    ~ExpressionUnit() {
-        if (nullptr != tokens)
-            tokens = nullptr;
-    }
-} ExpressionUnit;
 
 class Expression {
   protected:
-    ExpressionUnit food_; // because it is to be eaten
+    //ExpressionUnit food_; // because it is to be eaten
   public:
-    Expression(const ExpressionUnit &e) : food_(e){};
-    Expression(ExpressionUnit &&e) : food_(std::move(e)){};
+    //Expression(const ExpressionUnit &e) : food_(e){};
+    //Expression(ExpressionUnit &&e) : food_(std::move(e)){};
     virtual ~Expression() = default;
     virtual void Walk(walk_order) const = 0;
     virtual void Parse() = 0;
     virtual void Calculate() = 0;
 };
 
+class OpExpr : public Expression{
+
+};
+
+//不能被作为值赋值给别的lval 与 不求值表达式
+template<typename ty>
+class ValExpr : public Expression {
+
+};
+
+class nValExpr : public Expression {
+
+};
+
+template<typename ty> 
+class CallExpr : public ValExpr<ty> {
+
+};
+
+// template<>
+// class CallExpr<void> : public nValExpr{
+// };
+
+//class vCallExpr : public nValExpr{};
+
+template<typename ty>
+class AssignExpr : public Expression {
+    
+};
+
+template<typename ty>
+class DeclExpr : public nValExpr {
+
+};
+
+template<typename ty>
+class AddrExpression : public ValExpr<ty> {
+
+};
+
+
+
+/*
+using TokenPtr_ =            // std::shared_ptr<std::vector<token_t>>;
+    std::vector<token_t> *; // todo: use shared_ptr
+
+// see symbol.hpp Preprocess::p_token_t
+typedef struct ExpressionUnit_ {
+    TokenPtr_ tokens;
+    unsigned start;
+    unsigned end;
+
+    ExpressionUnit_(TokenPtr_ tks, unsigned s, unsigned e)
+        : tokens(tks), start(s), end(e){};
+    ~ExpressionUnit_() {
+        if (nullptr != tokens)
+            tokens = nullptr;
+    }
+} ExpressionUnit_;
+
+class Expression_ {
+  protected:
+    ExpressionUnit_ food_; // because it is to be eaten
+  public:
+    Expression_(const ExpressionUnit_ &e) : food_(e){};
+    Expression_(ExpressionUnit_ &&e) : food_(std::move(e)){};
+    virtual ~Expression_() = default;
+    virtual void Walk(walk_order) const = 0;
+    virtual void Parse() = 0;
+    virtual void Calculate() = 0;
+};
+
 template <typename ty>
-class CalExpression : public Expression {
+class CalExpression : public Expression_ {
 
   public:
     typedef struct _cal_node {
@@ -113,10 +166,10 @@ class CalExpression : public Expression {
     ty value_;
     typename cal_node::pointer root_;
     bool isConstexpr; // todo
-    using Expression::food_;
+    using Expression_::food_;
 
   public:
-    using Expression::Expression;
+    using Expression_::Expression_;
     inline const ty &
     getValue_ref() {
         return value_;
@@ -136,10 +189,10 @@ class CalExpression : public Expression {
 
   public:
     CalExpression() = delete;
-    CalExpression(const ExpressionUnit &e)
-        : Expression(e), root_(nullptr), isConstexpr(){};
-    CalExpression(ExpressionUnit &&e)
-        : Expression(std::move(e)), root_(nullptr), isConstexpr(){};
+    CalExpression(const ExpressionUnit_ &e)
+        : Expression_(e), root_(nullptr), isConstexpr(){};
+    CalExpression(ExpressionUnit_ &&e)
+        : Expression_(std::move(e)), root_(nullptr), isConstexpr(){};
 
     inline void
     Walk(walk_order wo) const override {
@@ -275,54 +328,8 @@ CalExpression<int>::Calculate_(const typename cal_node::pointer root) {
     }
 }
 
-template <>
-inline float
-CalExpression<float>::Calculate_(const typename cal_node::pointer root) {
-    switch (root->data.tk.token) {
-    case TOKEN::EQUAL:
-        return Calculate_(root->left) == Calculate_(root->right);
-        break;
-    case TOKEN::ADD:
-        return Calculate_(root->left) + Calculate_(root->right);
-        break;
-    case TOKEN::NEG:
-        return Calculate_(root->left) - Calculate_(root->right);
-        break;
-    case TOKEN::MULTI:
-        return Calculate_(root->left) * Calculate_(root->right);
-        break;
-    case TOKEN::DIV:
-        return Calculate_(root->left) / Calculate_(root->right);
-        break;
-    case TOKEN::NUMBER:
-        return std::stof(root->data.tk.data.data());
-        break;
-    default:
-        return 0;
-        break;
-    }
-}
 
-template <typename ty>
-class AssignExpression : public Expression {
-  private:
-  public:
-    using Expression::Expression;
-    using Expression::food_;
-    AssignExpression() = delete;
-    AssignExpression(const ExpressionUnit &e) : Expression(e){};
-    AssignExpression(ExpressionUnit &&e) : Expression(std::move(e)){};
-
-  private:
-};
-
-template <typename ty>
-class DeclExpression : public Expression {
-};
-
-template <typename ty>
-class AddrExpression : public Expression {
-};
+*/
 
 typedef struct BracketCount {
     unsigned open = 0;
