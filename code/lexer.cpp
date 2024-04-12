@@ -120,8 +120,13 @@ lexer::Next() {
             break;
         }
         case 'b': {
-            ParseKeyWord("bool", TOKEN::BOOL, NormalEnd, TOKEN::SYMBOL,
-                         SymbolEndJudge);
+            RESULT res = ParseKeyWord("BREAK", TOKEN::BREAK, NormalEnd, TOKEN::UNKNOW,
+                                      [](char) { return true; });
+            if (res == RESULT::SUCCESS)
+                break;
+            else
+                res = ParseKeyWord("bool", TOKEN::BOOL, NormalEnd, TOKEN::SYMBOL,
+                                   SymbolEndJudge);
             break;
         }
         case 'c': {

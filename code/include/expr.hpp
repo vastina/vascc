@@ -4,8 +4,8 @@
 #include "base/Tree.hpp"
 #include "symbol.hpp"
 
-#include <iostream>
 #include <concepts>
+#include <iostream>
 #include <type_traits>
 
 namespace vastina {
@@ -58,86 +58,75 @@ state);
 //     TOKEN getNextMarch(TOKEN);
 // };
 
-// typedef struct before_main_t{
-//     before_main_t();
-//     ~before_main_t();
-// } before_main_t;
-
 */
-template<typename ty>
-std::ostream& PrintVal(const ty& val){
-    return (std::cout << val) ;
+
+template <typename ty>
+std::ostream &PrintVal(const ty &val) {
+    return (std::cout << val);
 };
 
+template <typename ty>
+concept NotVoid = !std::is_same_v<ty, void>;
 
 class Expression {
   protected:
-    //ExpressionUnit food_; // because it is to be eaten
+    // ExpressionUnit food_; // because it is to be eaten
   public:
-    //Expression(const ExpressionUnit &e) : food_(e){};
-    //Expression(ExpressionUnit &&e) : food_(std::move(e)){};
+    // Expression(const ExpressionUnit &e) : food_(e){};
+    // Expression(ExpressionUnit &&e) : food_(std::move(e)){};
     virtual void Walk() const = 0;
     virtual void Parse() = 0;
     virtual ~Expression() = default;
 };
 
-class OpExpr : public Expression{
-
+class OpExpr : public Expression {
 };
 
 //不能被作为值赋值给别的lval 与 不求值表达式 不是一回事
-template<typename ty>
+template <typename ty>
+requires NotVoid<ty>
 class ValExpr : public Expression {
 
-private:
+  private:
     ty value_;
 
-public:
-    inline void Walk() const override{PrintVal(value_);}
-    inline void Parse() override {};
+  public:
+    inline void Walk() const override { PrintVal(value_); }
+    inline void Parse() override{};
     virtual ty Calculate() = 0;
 };
 
 class nValExpr : public Expression {
-
 };
 
-template<typename ty> 
-concept NotVoid = !std::is_same_v<ty, void>;
 
-
-template<typename ty> requires NotVoid<ty>
+template <typename ty>
+requires NotVoid<ty>
 class CallExpr : public ValExpr<ty> {
 
-public:
+  public:
     inline void Walk(walk_order) const override{};
-    inline void Parse() override {};
-    inline ty Calculate(){return {};}
+    inline void Parse() override{};
+    inline ty Calculate() { return {}; }
 };
 
 // template<>
 // class CallExpr<void> : public nValExpr{};
 
-class vCallExpr : public nValExpr{//call void
-
+class vCallExpr : public nValExpr { // call void
 };
 
-template<typename ty>
+template <typename ty>
 class AssignExpr : public Expression {
-    
 };
 
-template<typename ty>
+template <typename ty>
 class DeclExpr : public nValExpr {
-
 };
 
-template<typename ty>
+template <typename ty>
 class AddrExpression : public ValExpr<ty> {
-
 };
-
-
 
 /*
 using TokenPtr_ =            // std::shared_ptr<std::vector<token_t>>;

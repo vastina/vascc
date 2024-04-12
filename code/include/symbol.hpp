@@ -198,7 +198,7 @@ class Scope {
     SymbolTable st_; // so decl a samename-var in child scope is acceptable
     std::vector<pointer> children_;
 
-    bool isBreakable_{false};//for loop, who else need this?
+    bool isBreakable_{false}; // for loop, who else need this?
     // so bad
     unsigned idchild{};
 

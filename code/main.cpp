@@ -1,6 +1,7 @@
+#include "base/String.hpp"
 #include "lexer.hpp"
-#include "symbol.hpp"
 #include "stmt.hpp"
+#include "symbol.hpp"
 
 #include <iostream>
 #include <memory>
@@ -21,11 +22,10 @@ int main(int argc, char *argv[]) {
                  "--------\n";
     while (lexer::STATE::END != lx.Next())
         ;
-
     auto tks = std::make_unique<std::vector<token_t>>(lx.getTokens());
     for (unsigned i = 0; i < tks->size(); i++) {
-        std::cout << i << ' ' << tks->at(i).token << ' ' << tks->at(i).data
-                  << ' ' << tks->at(i).line << '\n';
+        print("offset:{}, \ttoken:{}, \tline:{}\n", 
+                i, tks->at(i).data, tks->at(i).line);
     }
     std::cout << "--------------------------preprocess------------------------"
                  "--------\n";
@@ -34,11 +34,11 @@ int main(int argc, char *argv[]) {
 
     for (unsigned i = 0; i < pp->getSize(); i++) {
         auto &next = pp->getNext();
-        std::cout << i << ' ' << Preprocess::p_token_str(next.tk) << ' ';
+        print("offset: {}\nProcessedTokenType: {}\nstr:\t\"", i , Preprocess::p_token_str(next.tk));
         for (unsigned j = next.start; j < next.end; j++) {
             std::cout << tks->at(j).data << ' ';
         }
-        std::cout << '\n';
+        std::cout << "\"\n";
     }
     std::cout << "--------------------------preprocess-result-----------------"
                  "--------\n";
@@ -50,16 +50,13 @@ int main(int argc, char *argv[]) {
         auto scope = st.front();
         st.pop();
         auto table = scope->getSymbolTable();
-        std::cout << scope->getRange().start << ' ' << scope->getRange().end
-                  << '\n';
-        std::cout << "vars: ";
+        print("start:\t {}\nend:\t {}\nvars: ", scope->getRange().start, scope->getRange().end);
         for (auto &&var : table.Variables)
-            std::cout << var.first << ' ';
-        std::cout << '\n';
-        std::cout << "funs: ";
+            print("{}, ", var.first);
+        print("\nfuns: ");
         for (auto &&fc : table.functions)
-            std::cout << fc.first << ' ';
-        std::cout << '\n';
+            print("{}, ", fc.first);
+        print("\n");
         for (auto &&child : scope->getChildren())
             st.push(child);
     }

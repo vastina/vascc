@@ -76,7 +76,7 @@ void Scope::setRange(unsigned start, unsigned end) {
     r_.start = start;
     r_.end = end;
 }
-void Scope::setBreakable(bool breakable){
+void Scope::setBreakable(bool breakable) {
     isBreakable_ = breakable;
 }
 const range_t &
@@ -336,8 +336,9 @@ int Preprocess::Declare(const std::function<bool()> &EndJudge) {
     while (true) {
         if (Current() == TOKEN::SYMBOL) {
             auto table = current_scope->getSymbolTable();
-            if(table.varExist(CurrentTokenName()))
-                {EXIT_ERROR}
+            if (table.varExist(CurrentTokenName())) {
+                EXIT_ERROR
+            }
             adder();
             Next();
         } else if (Current() == TOKEN::ASSIGN) {
@@ -440,7 +441,7 @@ int Preprocess::FuncDecl() {
 
     std::function<void()> adder;
     switch (Current()) {
-    case TOKEN::INT: 
+    case TOKEN::INT:
         adder = [this, &name]() { current_scope->addFunc(name, func<int>()); };
         break;
     case TOKEN::FLOAT:
