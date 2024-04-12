@@ -2,5 +2,5 @@
 
 for file in `ls ./testcase/valid/`; do
     echo  reading $file... 
-    ./cc ./testcase/valid/$file
+    ./vcc ./testcase/valid/$file
 done

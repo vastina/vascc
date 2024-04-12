@@ -335,6 +335,9 @@ int Preprocess::Declare(const std::function<bool()> &EndJudge) {
     unsigned last_offset = offset;
     while (true) {
         if (Current() == TOKEN::SYMBOL) {
+            auto table = current_scope->getSymbolTable();
+            if(table.varExist(CurrentTokenName()))
+                {EXIT_ERROR}
             adder();
             Next();
         } else if (Current() == TOKEN::ASSIGN) {
@@ -478,7 +481,7 @@ int Preprocess::RetType() {
 
 int Preprocess::LoopW() {
     results.push_back({P_TOKEN::LOOP, offset, offset + 1});
-    current_scope->getChildat(offset)->setBreakable(true);
+    current_scope->getChildat(id)->setBreakable(true);
 
     tryNext(TOKEN::NLBRAC, true);
     int res = CalType([this]() {

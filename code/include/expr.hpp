@@ -4,7 +4,9 @@
 #include "base/Tree.hpp"
 #include "symbol.hpp"
 
+#include <iostream>
 #include <concepts>
+#include <type_traits>
 
 namespace vastina {
 
@@ -62,7 +64,10 @@ state);
 // } before_main_t;
 
 */
-
+template<typename ty>
+std::ostream& PrintVal(const ty& val){
+    return (std::cout << val) ;
+};
 
 
 class Expression {
@@ -71,20 +76,26 @@ class Expression {
   public:
     //Expression(const ExpressionUnit &e) : food_(e){};
     //Expression(ExpressionUnit &&e) : food_(std::move(e)){};
-    virtual ~Expression() = default;
-    virtual void Walk(walk_order) const = 0;
+    virtual void Walk() const = 0;
     virtual void Parse() = 0;
-    virtual void Calculate() = 0;
+    virtual ~Expression() = default;
 };
 
 class OpExpr : public Expression{
 
 };
 
-//不能被作为值赋值给别的lval 与 不求值表达式
+//不能被作为值赋值给别的lval 与 不求值表达式 不是一回事
 template<typename ty>
 class ValExpr : public Expression {
 
+private:
+    ty value_;
+
+public:
+    inline void Walk() const override{PrintVal(value_);}
+    inline void Parse() override {};
+    virtual ty Calculate() = 0;
 };
 
 class nValExpr : public Expression {
@@ -92,15 +103,24 @@ class nValExpr : public Expression {
 };
 
 template<typename ty> 
+concept NotVoid = !std::is_same_v<ty, void>;
+
+
+template<typename ty> requires NotVoid<ty>
 class CallExpr : public ValExpr<ty> {
 
+public:
+    inline void Walk(walk_order) const override{};
+    inline void Parse() override {};
+    inline ty Calculate(){return {};}
 };
 
 // template<>
-// class CallExpr<void> : public nValExpr{
-// };
+// class CallExpr<void> : public nValExpr{};
 
-//class vCallExpr : public nValExpr{};
+class vCallExpr : public nValExpr{//call void
+
+};
 
 template<typename ty>
 class AssignExpr : public Expression {

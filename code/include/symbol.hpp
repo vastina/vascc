@@ -264,7 +264,7 @@ class Preprocess {
         case P_TOKEN::RET:
             return "return";
         default:
-            return "unknow";
+            return {};
         }
         return {};
     }

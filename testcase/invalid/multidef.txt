@@ -1,0 +1,10 @@
+func fff:int(int a, int b){
+    int b = a+2;
+    return a+ b;
+}
+
+func main:int(){
+    int o = add(4, 5) - 42;
+
+    return (o-o);
+}
