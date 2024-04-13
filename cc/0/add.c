@@ -15,7 +15,7 @@ double adddouble(double a, double b){
 }
 
 int main(){
-    int a1 = addint(114514, 1919810);
+    int a1 = addint(114514, 1919810) +90;
     long long a2 = addlong(31415926, 217);
     float a3 = addfloat(3.14, 2.17);
     double a4 = adddouble(0.1, 0.2);

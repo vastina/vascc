@@ -20,11 +20,11 @@ Scope::getParent() {
     return parent_;
 }
 
-void Scope::addVar(const std::string_view &name, Variable &&var) {
-    st_.addVar(name, std::move(var));
+void Scope::addVar(const std::string_view &name, const Variable &var) {
+    st_.addVar(name, var);
 }
-void Scope::addFunc(const std::string_view &name, Function &&fc) {
-    st_.addFunc(name, std::move(fc));
+void Scope::addFunc(const std::string_view &name, const Function &fc) {
+    st_.addFunc(name, fc);
 }
 Variable::pointer
 Scope::getVar(std::string_view name) {
@@ -104,6 +104,11 @@ Preprocess::Current() {
     return primary_tokens[offset].token;
 }
 
+inline const token_t &
+Preprocess::CurrentToken() {
+    return primary_tokens[offset];
+}
+
 inline const std::string_view &
 Preprocess::CurrentTokenName() {
     return primary_tokens[offset].data;
@@ -146,16 +151,18 @@ int Preprocess::Process() {
             break;
         }
         case TOKEN::IF:
-            IfType();
+            if (IfType() != 0)
+                EXIT_ERROR;
             break;
         case TOKEN::SYMBOL: {
             if (!current_scope->varExist(CurrentTokenName())) {
                 TEMP_LOG
                 EXIT_ERROR
             }
-            Except(TOKEN::ASSIGN, false, result);
-            if (result == 0) {
-                Assign([this]() {
+            if (token_type(Peek()) == TOKEN_TYPE::OPERATOR) {
+                // Except(TOKEN::ASSIGN, false, result);
+                // if (result == 0) {
+                EXCEPT_ZERO(Binary, [this]() {
                     return Current() == TOKEN::SEMICOLON || Current() == TOKEN::COMMA;
                 });
                 break;
@@ -169,45 +176,43 @@ int Preprocess::Process() {
                 EXIT_ERROR
             }
             results.push_back({P_TOKEN::CALL, offset, offset + 1});
-            Callee(current_scope->getFunc(CurrentTokenName()));
+            tryCall(0, Callee, current_scope->getFunc(CurrentTokenName()));
+            // if(Callee(current_scope->getFunc(CurrentTokenName()))!=0) EXIT_ERROR;
             break;
         }
         case TOKEN::WHILE:
-            LoopW();
+            EXCEPT_ZERO(LoopW);
             break;
         case TOKEN::FOR:
-            LoopF([] { return false; });
+            EXCEPT_ZERO(LoopF, [] { return false; });
             break;
         case TOKEN::DO:
-            LoopD([] { return false; });
+            tryCall(0, LoopD, [] { return false; });
             break;
         case TOKEN::FUNC:
-            FuncDecl();
+            EXCEPT_ZERO(FuncDecl);
             break;
         case TOKEN::RETURN:
-            RetType();
+            EXCEPT_ZERO(RetType);
             break;
         default: {
             switch (token_type(Current())) {
             case TOKEN_TYPE::TYPE: {
                 Except(TOKEN::SYMBOL, true, result);
-                Declare(
-                    [this]() { return Current() == TOKEN::SEMICOLON; });
+                EXCEPT_ZERO(Declare, [this]() { return Current() == TOKEN::SEMICOLON; });
                 break;
             }
             case TOKEN_TYPE::VALUE: {
                 tryNext(TOKEN::SEMICOLON, true);
-                results.push_back({.tk = P_TOKEN::CAL,
+                results.push_back({.tk = P_TOKEN::BINARY,
                                    .start = offset - 1,
                                    .end = offset});
                 break;
             }
 
             default:
-                std::cerr << Current() << '\n';
-                {
-                    RETURN_ERROR
-                }
+                TEMP_LOG;
+                EXIT_ERROR;
             }
         }
         }
@@ -220,7 +225,7 @@ int Preprocess::Process() {
 
 // then I will make no check on the Parser of calculate because it is
 // checked here
-int Preprocess::CalType(const std::function<bool()> &EndJudge) {
+int Preprocess::Binary(const std::function<bool()> &EndJudge) {
 
     BracketCount bc;
     unsigned last_offset = offset;
@@ -231,7 +236,7 @@ int Preprocess::CalType(const std::function<bool()> &EndJudge) {
             if (Current() == TOKEN::NRBRAC) {
                 if (++bc.close > bc.open) {
                     TEMP_LOG
-                    EXIT_ERROR
+                    RETURN_ERROR
                 }
             } else
                 ++bc.open;
@@ -239,6 +244,7 @@ int Preprocess::CalType(const std::function<bool()> &EndJudge) {
         }
         case TOKEN_TYPE::VALUE: {
             if (token_type(Peek()) == TOKEN_TYPE::VALUE) {
+                TEMP_LOG;
                 RETURN_ERROR
             }
 
@@ -246,13 +252,13 @@ int Preprocess::CalType(const std::function<bool()> &EndJudge) {
             case TOKEN::SYMBOL:
                 if (!current_scope->varExist(CurrentTokenName())) {
                     TEMP_LOG
-                    EXIT_ERROR
+                    RETURN_ERROR
                 }
                 break;
             case TOKEN::SYMBOLF: // nonvoid go here
                 if (!current_scope->funcExist(CurrentTokenName())) {
                     TEMP_LOG
-                    EXIT_ERROR
+                    RETURN_ERROR
                 }
                 Callee(current_scope->getFunc(CurrentTokenName()));
                 break;
@@ -268,10 +274,13 @@ int Preprocess::CalType(const std::function<bool()> &EndJudge) {
         case TOKEN_TYPE::OPERATOR: {
             auto peek = Peek();
             if (token_type(peek) == TOKEN_TYPE::OPERATOR) {
-                if (peek != TOKEN::NEG && peek != TOKEN::ADD && peek != TOKEN::OPS && peek != TOKEN::LOGNOT) {
-                    {
-                        RETURN_ERROR
-                    }
+                if (peek != TOKEN::ASSIGN && peek != TOKEN::NEG && peek != TOKEN::ADD && peek != TOKEN::OPS && peek != TOKEN::LOGNOT) {
+                    TEMP_LOG;
+                    RETURN_ERROR
+                }
+                if (peek == TOKEN::ASSIGN && Current() == TOKEN::NOTEQUAL) {
+                    TEMP_LOG;
+                    RETURN_ERROR;
                 }
             }
             break;
@@ -286,29 +295,26 @@ int Preprocess::CalType(const std::function<bool()> &EndJudge) {
             break;
     }
 
-    results.push_back({P_TOKEN::CAL, last_offset, offset});
+    results.push_back({P_TOKEN::BINARY, last_offset, offset});
     return 0;
 }
 
-int Preprocess::Assign(const std::function<bool()> &EndJudge) {
-
-    unsigned last_offset = offset;
-
-    while (true) {
-        if (Current() == TOKEN::SYMBOL && Peek() == TOKEN::ASSIGN) {
-            Next();
-            Next();
-        } else {
-            results.push_back({P_TOKEN::ASSIGN, last_offset, offset});
-            (void)CalType([this]() { return Current() == TOKEN::SEMICOLON; });
-            break;
-        }
-        if (EndJudge())
-            break;
-    }
-
-    return 0;
-}
+// int Preprocess::Assign(const std::function<bool()> &EndJudge) {
+//     unsigned last_offset = offset;
+//     while (true) {
+//         if (Current() == TOKEN::SYMBOL && Peek() == TOKEN::ASSIGN) {
+//             Next();
+//             Next();
+//         } else {
+//             results.push_back({P_TOKEN::BINARY, last_offset, offset});
+//             (void)Binary([this]() { return Current() == TOKEN::SEMICOLON; });
+//             break;
+//         }
+//         if (EndJudge())
+//             break;
+//     }
+//     return 0;
+// }
 
 int Preprocess::Declare(const std::function<bool()> &EndJudge) {
 
@@ -317,12 +323,12 @@ int Preprocess::Declare(const std::function<bool()> &EndJudge) {
     // todo: varible need source location to init
     case TOKEN::INT:
         adder = [this]() {
-            current_scope->addVar(CurrentTokenName(), variable<int>());
+            current_scope->addVar(CurrentTokenName(), variable<int>(CurrentToken()));
         };
         break;
     case TOKEN::FLOAT:
         adder = [this]() {
-            current_scope->addVar(CurrentTokenName(), variable<float>());
+            current_scope->addVar(CurrentTokenName(), variable<float>(CurrentToken()));
         };
         break;
     case TOKEN::DOUBLE:
@@ -337,21 +343,21 @@ int Preprocess::Declare(const std::function<bool()> &EndJudge) {
         if (Current() == TOKEN::SYMBOL) {
             auto table = current_scope->getSymbolTable();
             if (table.varExist(CurrentTokenName())) {
-                EXIT_ERROR
+                RETURN_ERROR
             }
             adder();
             Next();
         } else if (Current() == TOKEN::ASSIGN) {
-            results.push_back({P_TOKEN::ASSIGN, last_offset, offset + 1});
+            results.push_back({P_TOKEN::DECL, last_offset, offset + 1});
             last_offset = offset + 1;
             Next();
-            (void)CalType([this]() {
+            (void)Binary([this]() {
                 return Current() == TOKEN::SEMICOLON || Current() == TOKEN::COMMA;
             });
         } else if (EndJudge())
             break;
         else if (Current() == TOKEN::COMMA) {
-            // results.push_back({P_TOKEN::ASSIGN, last_offset,
+            // results.push_back({P_TOKEN::BINARY, last_offset,
             // offset});
             last_offset = offset + 1;
             Next();
@@ -369,7 +375,7 @@ int Preprocess::IfType() {
     results.push_back({P_TOKEN::IF, offset, offset + 1});
 
     tryNext(TOKEN::NLBRAC, true);
-    int res = CalType([this]() {
+    int res = Binary([this]() {
         return Current() == TOKEN::OBRACE;
     }); //暂时不支持不带{}的if
     if (0 != res) {
@@ -387,10 +393,10 @@ int Preprocess::Callee(Function::pointer callee) {
         return 0;
 
     while (true) {
-        if (CalType([this] {
+        if (Binary([this] {
                 return (Current() == TOKEN::COMMA) || (Current() == TOKEN::NRBRAC);
             }) != 0) {
-            EXIT_ERROR
+            RETURN_ERROR
         }
         if (Current() == TOKEN::NRBRAC)
             break;
@@ -417,7 +423,7 @@ int Preprocess::Paras(Function::pointer fc) {
         if (Declare([this] {
                 return ((Current() == TOKEN::COMMA) || ((Current() == TOKEN::NRBRAC) && ((Peek() == TOKEN::SEMICOLON) || (Peek() == TOKEN::OBRACE))));
             }) != 0) {
-            EXIT_ERROR
+            RETURN_ERROR
         }
         if (Current() != TOKEN::COMMA)
             break;
@@ -472,7 +478,7 @@ int Preprocess::RetType() {
     results.push_back({P_TOKEN::RET, offset, offset + 1});
     Next();
 
-    int res = CalType([this] { return Current() == TOKEN::SEMICOLON; });
+    int res = Binary([this] { return Current() == TOKEN::SEMICOLON; });
     if (0 != res) {
         RETURN_ERROR
     }
@@ -485,7 +491,7 @@ int Preprocess::LoopW() {
     current_scope->getChildat(id)->setBreakable(true);
 
     tryNext(TOKEN::NLBRAC, true);
-    int res = CalType([this]() {
+    int res = Binary([this]() {
         return Current() == TOKEN::OBRACE;
     }); //暂时不支持不带{}的while
     if (0 != res) {
@@ -506,9 +512,7 @@ int Preprocess::LoopD(const std::function<bool()> &EndJudge) {
 const Preprocess::p_token_t &
 Preprocess::getNext() {
     if (id >= results.size()) {
-        {
-            EXIT_ERROR
-        }
+        EXIT_ERROR
     }
     return static_cast<const p_token_t &>(results[id++]);
 }

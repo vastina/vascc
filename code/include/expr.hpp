@@ -88,17 +88,14 @@ requires NotVoid<ty>
 class ValExpr : public Expression {
 
   private:
-    ty value_;
-
   public:
-    inline void Walk() const override { PrintVal(value_); }
+    inline void Walk() const override {}
     inline void Parse() override{};
     virtual ty Calculate() = 0;
 };
 
 class nValExpr : public Expression {
 };
-
 
 template <typename ty>
 requires NotVoid<ty>

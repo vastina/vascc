@@ -18,3 +18,6 @@ func keyword helps to avoid SYMBOLF check in lexer if taking both functions and 
 
 ## 4/11/24
 symbol.cpp is going to be shit if no rebuild in the future
+
+## 4/13/24
+using binary expression is better than using calculate and assign

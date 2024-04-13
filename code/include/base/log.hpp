@@ -21,6 +21,17 @@ namespace vastina {
     std::cerr << __FILE__ << ' ' << __LINE__ << '\n'; \
     return nullptr;
 
+#define tryCall(target, callee, ...)     \
+    if (callee(__VA_ARGS__) != target) { \
+        EXIT_ERROR                       \
+    }
+
+#define EXCEPT_ZERO(callee, ...) tryCall(0, callee, __VA_ARGS__)
+
+// template<class fn, class... Args>
+// auto tryCall(fn&& func, Args&& ...){
+// };
+
 } // namespace vastina
 
 #endif

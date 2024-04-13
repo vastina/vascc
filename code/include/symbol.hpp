@@ -2,6 +2,7 @@
 #define _SYMBOL_H_
 
 //#include "base/Tree.hpp"
+#include "base/String.hpp"
 #include "base/vasdef.hpp"
 //#include "lexer.hpp"
 
@@ -51,14 +52,24 @@ class literal : public Literal { // compile time values like "Hello World",11451
     }
 };
 
-class Variable {
-  protected:
-    bool isConstexpr_{};
+// typedef struct SourceLocation {
+//     token_t& src;
+//     Scope::pointer location;
+// } SourceLocation;
 
+class Variable {
   public:
     using pointer = Variable *;
+    using SourceLocation = token_t;
 
+  protected:
+    bool isConstexpr_{};
+    bool isTrivial_{};
+    const SourceLocation &Srcloc_;
+
+  public:
     Variable() = default;
+    Variable(const SourceLocation &srcloc) : Srcloc_(srcloc){};
     ~Variable() = default;
     inline bool
     isConst() {
@@ -72,20 +83,20 @@ class Variable {
 
 template <typename ty>
 class variable : public Variable {
-  private:
+  protected:
+    using Variable::isConstexpr_;
+    using Variable::isTrivial_;
+    using Variable::Srcloc_;
     // I need source_location
     // I need reflect or a member to mark the type
   public:
     using Variable::isConst;
-    using Variable::isConstexpr_;
+    using Variable::self;
     using Variable::Variable;
 
-    variable(){};
+    variable(const SourceLocation &srcloc) : Variable(srcloc){};
 
-    inline std::string_view
-    Typename() {
-        return typeid(ty).name();
-    }
+    friend constexpr TOKEN Type<ty>();
 };
 
 class Function {
@@ -124,19 +135,12 @@ typedef struct SymbolTable {
     std::unordered_map<std::string_view, Function> functions;
 
     inline bool
-    varExist(const std::string_view &name) // string_view could make
-                                           // mistake in some case
-    {
+    varExist(const std::string_view &name) {
         return static_cast<bool>(Variables.count(name));
     }
     inline bool
     funcExist(const std::string_view &name) {
         return static_cast<bool>(functions.count(name));
-    }
-    // override old value
-    inline void
-    addVar(const std::string_view &name, Variable &&var) {
-        Variables[name] = var;
     }
     // Variables.insert(std::make_pair(name, var)); }
     inline Variable::pointer
@@ -151,10 +155,18 @@ typedef struct SymbolTable {
             return functions.at(name).self();
         return nullptr;
     }
-    // override old value
-    inline void
-    addFunc(const std::string_view &name, Function &&fc) {
-        functions[name] = fc;
+
+    // always override
+    inline void addVar(const std::string_view &name, const Variable &var) {
+        Variables.erase(name);
+        Variables.insert(std::make_pair(name, var));
+        // Variables[name] = var;
+    }
+    // always override
+    inline void addFunc(const std::string_view &name, const Function &fc) {
+        functions.erase(name);
+        functions.insert(std::make_pair(name, fc));
+        // functions[name] = fc;
     }
 
     // inline Variable::pointer getVar( `the source-location` ) todo
@@ -211,8 +223,8 @@ class Scope {
     pointer CreateChild(range_t &&);
     pointer getParent();
 
-    void addVar(const std::string_view &name, Variable &&var);
-    void addFunc(const std::string_view &name, Function &&fc);
+    void addVar(const std::string_view &name, const Variable &var);
+    void addFunc(const std::string_view &name, const Function &fc);
     Variable::pointer getVar(std::string_view name);
     Function::pointer getFunc(std::string_view name);
     bool varExist(const std::string_view &name);
@@ -234,8 +246,7 @@ class Preprocess {
   public:
     enum P_TOKEN { // processed token
         UNKNOW = -1,
-        CAL,
-        ASSIGN,
+        BINARY,
         DECL,
         ADDR,
         IF,
@@ -247,10 +258,10 @@ class Preprocess {
     inline static constexpr std::string_view
     p_token_str(P_TOKEN ptk) {
         switch (ptk) {
-        case P_TOKEN::CAL:
-            return "calculate";
-        case P_TOKEN::ASSIGN:
-            return "assign";
+        // case P_TOKEN::CAL:
+        //     return "calculate";
+        case P_TOKEN::BINARY:
+            return "binary";
         case P_TOKEN::DECL:
             return "declare";
         case P_TOKEN::ADDR:
@@ -297,12 +308,15 @@ class Preprocess {
     ~Preprocess() = default;
 
   private:
+    // Getter and Setter----------------------------------------------------
     inline TOKEN Current();
+    inline const token_t &CurrentToken();
     inline const std::string_view &CurrentTokenName();
     inline TOKEN Peek(unsigned _offset);
     inline TOKEN PreToken(unsigned _offset);
     void Next();
-// last==true means if this don't match, stop and return error
+// Getter and Setter----------------------------------------------------
+//  last==true means if this don't match, stop and return error
 #define Except(excepted, last, res) \
     do {                            \
         if (Peek() != excepted) {   \
@@ -333,7 +347,7 @@ class Preprocess {
             RETURN_ERROR                                  \
         }                                                 \
     } while (0)
-
+    // Getter and Setter----------------------------------------------------
   private:
     // for Except, use this when you need Except
     // and you can get a more friendly log, instead of cerr in Except(),
@@ -342,7 +356,7 @@ class Preprocess {
     // someone need custom judge
 
     // return a code to indicate the result
-    int CalType(const std::function<bool()> &EndJudge);
+    int Binary(const std::function<bool()> &EndJudge);
     int Assign(const std::function<bool()> &EndJudge);
     int Declare(const std::function<bool()> &EndJudge);
     int Address(const std::function<bool()> &EndJudge);
@@ -359,11 +373,14 @@ class Preprocess {
 
   public:
     int Process();
+
+    // Getter and Setter----------------------------------------------------
     const p_token_t &getNext();
     unsigned getSize() const;
 
     // for test?
     Scope::pointer CurrentScope();
+    // Getter and Setter----------------------------------------------------
 };
 
 } // namespace vastina

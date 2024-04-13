@@ -7,7 +7,7 @@ namespace vastina{
 enum TOKEN{
     UNKNOW = -1,
 //  unsigned  signed  int  float  double  bool  char  void
-    UNSIGNED, SIGNED, INT, FLOAT, DOUBLE, BOOL, CHAR, VOID,
+    UNSIGNED, SIGNED, INT, FLOAT, DOUBLE, BOOL, CHAR, VOID, LONG,
 //  var  let          func  //类型后置确实有它的好处，let就先当作const var吧
     VAR, LET, SYMBOL, FUNC, SYMBOLF,
 //  struct  enum
@@ -66,6 +66,7 @@ inline static constexpr TOKEN_TYPE token_type(TOKEN tk){
     case TOKEN::OR:
     case TOKEN::LOGOR:
     case TOKEN::OPS:
+    case TOKEN::ASSIGN:
         return TOKEN_TYPE::OPERATOR;
     case TOKEN::TRUE:
     case TOKEN::FALSE:
@@ -95,7 +96,7 @@ inline static constexpr TOKEN_TYPE token_type(TOKEN tk){
 
 enum class EXPR{
     CAL,
-    ASSIGN,
+    BINARY,
     DECL,
     ADDR,//address, something like a[0],&a
 };
@@ -107,7 +108,7 @@ enum class STMT{
     RET,
 };
 
-//todo https://zh.cppreference.com/w/cpp/language/operator_precedence
+//todo but not cpp https://zh.cppreference.com/w/cpp/language/operator_precedence
 inline static constexpr unsigned Level(TOKEN tk){
     switch (tk){
         case TOKEN::EQUAL:

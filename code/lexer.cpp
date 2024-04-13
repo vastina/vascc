@@ -205,8 +205,13 @@ lexer::Next() {
             break;
         }
         case 'l': {
-            ParseKeyWord("let", TOKEN::LET, NormalEnd, TOKEN::SYMBOL,
-                         SymbolEndJudge);
+            RESULT res = ParseKeyWord("long", TOKEN::LONG, NormalEnd, TOKEN::UNKNOW,
+                                      [](char) { return false; });
+            if (res == RESULT::SUCCESS)
+                break;
+            else
+                ParseKeyWord("let", TOKEN::LET, NormalEnd, TOKEN::SYMBOL,
+                             SymbolEndJudge);
             break;
         }
         case 'm': {
