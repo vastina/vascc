@@ -19,7 +19,6 @@ class lexer {
         END = -1,
         NORMAL,
         ERROR
-        // todo
     };
     enum RESULT {
         SUCCESS,

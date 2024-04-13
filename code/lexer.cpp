@@ -8,24 +8,25 @@
 #include <fstream>
 #include <functional>
 #include <iostream>
+#include <string_view>
 
 namespace vastina {
 
 token_t::token_t(TOKEN tk) : token(tk){};
 token_t::token_t(TOKEN tk, const std::string_view &sv)
-    : token(tk), data(sv){};
-token_t::token_t(TOKEN tk, std::string_view &&sv) : token(tk), data(sv){};
+    : token(tk), name(sv){};
+token_t::token_t(TOKEN tk, std::string_view &&sv) : token(tk), name(sv){};
 token_t::token_t(TOKEN tk, const std::string_view &sv, unsigned _line)
-    : token(tk), data(sv), line(_line) {
+    : token(tk), name(sv), line(_line) {
 }
 token_t::token_t(TOKEN tk, std::string_view &&sv, unsigned _line)
-    : token(tk), data(sv), line(_line) {
+    : token(tk), name(sv), line(_line) {
 }
 
 token_t::token_t(const token_t &tk)
-    : token(tk.token), data(tk.data), line(tk.line){};
+    : token(tk.token), name(tk.name), line(tk.line){};
 token_t::token_t(token_t &&tk)
-    : token(tk.token), data(std::move(tk.data)), line(tk.line){};
+    : token(tk.token), name(std::move(tk.name)), line(tk.line){};
 
 // just read file into buffer
 lexer::lexer(const char *filename)
@@ -39,7 +40,6 @@ lexer::lexer(const char *filename)
         ifs.getline(buf, 2048);
         buffer.append(buf).append("\n");
     }
-    std::cout << buffer << '\n';
     ifs.close();
 }
 
@@ -73,7 +73,6 @@ lexer::ParseKeyWord(const std::string_view &target, TOKEN target_type,
         while (DefaultEndjudge(buffer[offset])) {
             offset++;
         }
-        // bad
         std::string_view temp = {buffer.data() + last_offset, offset - last_offset};
         if (!current_scope->funcExist(temp)) {
             tokens.push_back(token_t(Default, temp, line));
@@ -90,10 +89,11 @@ void lexer::forSingelWord(const std::string_view &target, TOKEN target_type) {
 }
 
 void lexer::ParseNumber() {
+    // todo
 }
 
 constexpr auto SymbolEndJudge = [flag = true](char ch) mutable {
-    if (flag) { //第一个字符不能是数字
+    if (flag) { // 第一个字符不能是数字
         flag = false;
         return (CHARTYPE::CHAR == CharType(ch));
     }
@@ -120,7 +120,7 @@ lexer::Next() {
             break;
         }
         case 'b': {
-            RESULT res = ParseKeyWord("BREAK", TOKEN::BREAK, NormalEnd, TOKEN::UNKNOW,
+            RESULT res = ParseKeyWord("break", TOKEN::BREAK, NormalEnd, TOKEN::UNKNOW,
                                       [](char) { return true; });
             if (res == RESULT::SUCCESS)
                 break;
@@ -166,7 +166,7 @@ lexer::Next() {
                 ParseWhiteSpace();
                 ParseKeyWord("main", TOKEN::MAIN, NormalEnd, TOKEN::SYMBOLF,
                              SymbolEndJudge);
-                current_scope->addFunc(tokens.back().data, Function());
+                current_scope->addFunc(tokens.back().name, Function());
             }
             break;
         }

@@ -15,5 +15,3 @@ target("vcc")
     set_kind("binary")
     -- 设置生成路径为当前目录
     set_targetdir("$(projectdir)")
-    -- 设置生成目标的名称
-    -- set_targetdir("./")

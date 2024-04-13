@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 # auth：ykiko
 # link：https://zhuanlan.zhihu.com/p/669360731
 
@@ -28,4 +29,3 @@ if __name__ == "__main__":
     args = sys.argv
     tu = index.parse(args[1], args=['-std=c99'])
     traverse(tu.cursor)
-

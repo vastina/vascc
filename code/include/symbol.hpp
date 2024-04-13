@@ -1,10 +1,10 @@
 #ifndef _SYMBOL_H_
 #define _SYMBOL_H_
 
-//#include "base/Tree.hpp"
+// #include "base/Tree.hpp"
 #include "base/String.hpp"
 #include "base/vasdef.hpp"
-//#include "lexer.hpp"
+// #include "lexer.hpp"
 
 #include <functional>
 #include <memory>
@@ -15,7 +15,7 @@
 namespace vastina {
 struct token_t {
     TOKEN token;
-    std::string_view data;
+    std::string_view name;
     unsigned line;
 
     // some were here just because I am lazy to delete them
@@ -68,7 +68,7 @@ class Variable {
     const SourceLocation &Srcloc_;
 
   public:
-    Variable() = default;
+    Variable() = delete;
     Variable(const SourceLocation &srcloc) : Srcloc_(srcloc){};
     ~Variable() = default;
     inline bool
@@ -220,9 +220,6 @@ class Scope {
     Scope(pointer parent, range_t &&r)
         : parent_(parent), r_(r), st_(), children_(){};
 
-    pointer CreateChild(range_t &&);
-    pointer getParent();
-
     void addVar(const std::string_view &name, const Variable &var);
     void addFunc(const std::string_view &name, const Function &fc);
     Variable::pointer getVar(std::string_view name);
@@ -238,8 +235,11 @@ class Scope {
     const decltype(children_) &getChildren();
     const SymbolTable &getSymbolTable();
 
-    pointer getNextChild(unsigned);
-    Scope::pointer getChildat(unsigned);
+    pointer CreateChild(range_t &&);
+    pointer getNextChild();
+    pointer getChildat(unsigned);
+    pointer getParent();
+    pointer getRoot();
 };
 
 class Preprocess {
@@ -253,6 +253,7 @@ class Preprocess {
         LOOP,
         CALL,
         RET,
+        END
     };
 
     inline static constexpr std::string_view
@@ -274,6 +275,8 @@ class Preprocess {
             return "call";
         case P_TOKEN::RET:
             return "return";
+        case P_TOKEN::END:
+            return "end";
         default:
             return {};
         }
@@ -312,11 +315,10 @@ class Preprocess {
     inline TOKEN Current();
     inline const token_t &CurrentToken();
     inline const std::string_view &CurrentTokenName();
-    inline TOKEN Peek(unsigned _offset);
-    inline TOKEN PreToken(unsigned _offset);
+    inline TOKEN Peek();
     void Next();
 // Getter and Setter----------------------------------------------------
-//  last==true means if this don't match, stop and return error
+//  last==true means if this is last case and don't match, stop and return error
 #define Except(excepted, last, res) \
     do {                            \
         if (Peek() != excepted) {   \

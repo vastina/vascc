@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
     auto tks = std::make_unique<std::vector<token_t>>(lx.getTokens());
     for (unsigned i = 0; i < tks->size(); i++) {
         print("offset:{}, \ttoken:{}, \tline:{}\n",
-              i, tks->at(i).data, tks->at(i).line);
+              i, tks->at(i).name, tks->at(i).line);
     }
     std::cout << "--------------------------preprocess------------------------"
                  "--------\n";
@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
         auto &next = pp->getNext();
         print("offset: {}\nProcessedTokenType: {}\nstr:\t\"", i, Preprocess::p_token_str(next.tk));
         for (unsigned j = next.start; j < next.end; j++) {
-            std::cout << tks->at(j).data << ' ';
+            std::cout << tks->at(j).name << ' ';
         }
         std::cout << "\"\n";
     }

@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 
+#include "expr.hpp"
 #include "symbol.hpp"
 
 namespace vastina {
@@ -16,17 +17,34 @@ using ptokens = std::vector<Preprocess::p_token_t>;
 using pTokenPtr = shared_ptr<ptokens>;
 
 // saving primary tokens'ref in class private member is better
-typedef struct StmtUnit {
-    pTokenPtr ptks_;
-    unsigned pstart_;
-    unsigned pend_;
+// typedef struct StmtUnit {
+//     pTokenPtr ptks_;
+//     unsigned pstart_;
+//     unsigned pend_;
+//     StmtUnit(const ptokens &ptks_) : ptks_(make_shared<ptokens>(ptks_)), pstart_(), pend_() {}
+//     StmtUnit(const ptokens &ptks_, unsigned _start, unsigned _end) : ptks_(make_shared<ptokens>(ptks_)), pstart_(_start), pend_(_end) {}
+//     StmtUnit(const StmtUnit &other) : ptks_(other.ptks_), pstart_(other.pstart_), pend_(other.pend_) {}
+//     StmtUnit(StmtUnit &&other) : ptks_(std::move(other.ptks_)), pstart_(other.pstart_), pend_(other.pend_) {}
+//     ~StmtUnit() = default;
+// } StmtUnit;
 
-    StmtUnit(const ptokens &ptks_) : ptks_(make_shared<ptokens>(ptks_)), pstart_(), pend_() {}
-    StmtUnit(const ptokens &ptks_, unsigned _start, unsigned _end) : ptks_(make_shared<ptokens>(ptks_)), pstart_(_start), pend_(_end) {}
-    StmtUnit(const StmtUnit &other) : ptks_(other.ptks_), pstart_(other.pstart_), pend_(other.pend_) {}
-    StmtUnit(StmtUnit &&other) : ptks_(std::move(other.ptks_)), pstart_(other.pstart_), pend_(other.pend_) {}
-    ~StmtUnit() = default;
-} StmtUnit;
+class Stmt {
+  protected:
+    pTokenPtr food_;
+    range_t r_;
+    Scope::pointer scope_;
+
+  public:
+    ~Stmt() = default;
+};
+
+template <typename ty>
+class FdeclStmt : public Stmt {
+};
+
+template <typename ty>
+class BinStmt : public Stmt {
+};
 
 }; // namespace vastina
 
