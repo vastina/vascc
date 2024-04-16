@@ -133,5 +133,10 @@ inline static constexpr unsigned Level(TOKEN tk){
     }
 }
 
+//base sizeof
+inline static constexpr unsigned SIZEOF(TOKEN ){
+    return {};
+}
+
 }
 #endif

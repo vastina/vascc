@@ -2,10 +2,12 @@
 #define _EXPRESSION_H_
 
 #include "base/Tree.hpp"
+#include "base/vasdef.hpp"
 #include "symbol.hpp"
 
 #include <concepts>
 #include <iostream>
+#include <memory>
 #include <type_traits>
 
 namespace vastina {
@@ -60,6 +62,9 @@ state);
 
 */
 
+using std::make_shared;
+using std::shared_ptr;
+
 template <typename ty>
 std::ostream &PrintVal(const ty &val) {
     return (std::cout << val);
@@ -73,39 +78,60 @@ class Expression {
     // ExpressionUnit food_; // because it is to be eaten
   public:
     using pointer = Expression *;
+    // using pointer = shared_ptr<Expression>;
     // Expression(const ExpressionUnit &e) : food_(e){};
     // Expression(ExpressionUnit &&e) : food_(std::move(e)){};
-    virtual void Walk() const = 0;
-    virtual void Parse() = 0;
+    virtual void Walk() const {};
+    virtual void Parse() {};
+    // virtual pointer Create() { return pointer(); };
     virtual ~Expression() = default;
 };
 
 class OpExpr : public Expression {
+  protected:
+    TOKEN op_;
+
+  public:
+    using pointer = OpExpr *;
+    OpExpr() : op_(TOKEN::UNKNOW){};
+    OpExpr(TOKEN op) : op_(op){};
+    static inline pointer Create() {
+        return pointer();
+        // return make_shared(OpExpr());
+    }
+    static inline pointer Create(TOKEN tk) {
+        return pointer(tk);
+    }
+
+  public:
+    inline void Walk() const override { std::cout << op_ << '\n'; };
+    inline void Parse() override {};
 };
 
-// 不能被作为值赋值给别的lval 与 不求值表达式 不是一回事
 template <typename ty>
     requires NotVoid<ty>
 class ValExpr : public Expression {
-
   private:
+    Value::pointer value_;
+
   public:
-    inline void Walk() const override {}
+    inline void Walk() const override {
+        //(void)PrintVal(ty());
+    }
     inline void Parse() override {};
     virtual ty Calculate() = 0;
 };
 
+// 不能被作为值赋值给别的lval 与 不求值表达式 不是一回事, 这里为了方便取的是前者
 class nValExpr : public Expression {
 };
 
 template <typename ty>
     requires NotVoid<ty>
 class CallExpr : public ValExpr<ty> {
-
   public:
     inline void Walk(walk_order) const override{};
     inline void Parse() override {};
-    inline ty Calculate() { return {}; }
 };
 
 // template<>
@@ -119,7 +145,7 @@ class DeclExpr : public nValExpr {
 };
 
 template <typename ty>
-class AddrExpression : public ValExpr<ty> {
+class AddrExpr : public ValExpr<ty> {
 };
 
 typedef struct BracketCount {

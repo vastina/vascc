@@ -7,3 +7,4 @@ clang-format -i code/include/*.hpp
 clang-format -i code/include/base/log.hpp
 clang-format -i code/include/base/String.hpp
 clang-format -i code/include/base/Tree.hpp
+clang-format -i code/include/base/io.hpp

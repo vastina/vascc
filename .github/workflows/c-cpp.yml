@@ -13,15 +13,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4.1.2
-    # - name: install_gcc13
-    #   run: sudo add-apt-repository --update -y ppa:ubuntu-toolchain-r/test
-    # - name: _
-    #   run: sudo apt update -y
-    # - name: _
-    #   run: sudo apt install gcc-13 g++-13 -y
-    # - name: _
-    #   run: ./tool/changeversion.sh gcc 13
-    - name: use_g++13
+    - name: install_gcc13
+      run: sudo add-apt-repository --update -y ppa:ubuntu-toolchain-r/test
+    - name: _
+      run: sudo apt update -y
+    - name: _
+      run: sudo apt install gcc-13 g++-13 -y
+    - name: use_gcc13
+      run: ./tool/changeversion.sh gcc 13
+    - name: _
       run: ./tool/changeversion.sh g++ 13
     - name: cmake_configure
       run: cmake -Bbuild .

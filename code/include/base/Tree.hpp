@@ -14,6 +14,7 @@ enum walk_order {
 };
 
 template <typename ty>
+// it's actually just a binary tree
 class TreeNode : public std::enable_shared_from_this<TreeNode<ty>> {
 
   public:

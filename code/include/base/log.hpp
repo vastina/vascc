@@ -23,10 +23,10 @@ namespace vastina {
         exit(-1);                                           \
     }
 
-#define RETURN_NULL                                       \
-    {                                                     \
-        std::cerr << __FILE__ << ' ' << __LINE__ << '\n'; \
-        return nullptr;                                   \
+#define RETURN_NULL                                         \
+    {                                                       \
+        ::std::cerr << __FILE__ << ' ' << __LINE__ << '\n'; \
+        return nullptr;                                     \
     }
 
 #define tryCall(target, callee, ...)         \

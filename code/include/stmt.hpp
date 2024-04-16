@@ -4,6 +4,8 @@
 #include <memory>
 #include <vector>
 
+#include "base/Tree.hpp"
+#include "base/vasdef.hpp"
 #include "expr.hpp"
 #include "symbol.hpp"
 
@@ -29,10 +31,13 @@ using pTokenPtr = shared_ptr<ptokens>;
 // } StmtUnit;
 
 class Stmt {
+  public:
+    using pointer = Stmt *;
+
   protected:
     pTokenPtr food_;
     range_t r_;
-    Scope::pointer scope_;
+    Scope::pointer scope_; // the scope it belongs to
 
   public:
     ~Stmt() = default;
@@ -40,10 +45,21 @@ class Stmt {
 
 template <typename ty>
 class FdeclStmt : public Stmt {
+  protected:
+    Function::pointer func_;
+
+  public:
 };
 
 template <typename ty>
 class BinStmt : public Stmt {
+  protected:
+    TreeNode<Expression> root_;
+
+  public:
+};
+
+class LoopStmt : public Stmt {
 };
 
 }; // namespace vastina

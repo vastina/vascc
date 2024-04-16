@@ -62,6 +62,9 @@ _TypeToken(std::string_view sv) {
     case 'b':
         return TOKEN::BOOL;
         // return "bool";
+    case 'f':
+        return TOKEN::FLOAT;
+        // retur "float";
     case 'l':
         return TOKEN::LONG;
         // return "long";

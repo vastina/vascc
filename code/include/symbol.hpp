@@ -30,7 +30,14 @@ struct token_t {
 };
 // "create symbol tables for every scope"
 
-class Literal {
+class Value {
+
+  public:
+    using pointer = Value *;
+    ~Value() = default;
+};
+
+class Literal : public Value {
   protected:
     bool isTrivial;
 };
@@ -57,7 +64,7 @@ class literal : public Literal { // compile time values like "Hello World",11451
 //     Scope::pointer location;
 // } SourceLocation;
 
-class Variable {
+class Variable : public Value {
   public:
     using pointer = Variable *;
     using SourceLocation = token_t;
@@ -96,7 +103,7 @@ class variable : public Variable {
 
     variable(const SourceLocation &srcloc) : Variable(srcloc){};
 
-    friend constexpr TOKEN Type<ty>();
+    inline constexpr TOKEN Type() { return Type<ty>(); };
 };
 
 class Function {
@@ -117,14 +124,9 @@ class Function {
 template <typename ty>
 class func : public Function {
   public:
-    using Function::isVoid_;
-
     func(){};
 
-    inline std::string_view
-    Typename() {
-        return typeid(ty).name();
-    }
+    inline constexpr TOKEN Type() { return Type<ty>(); };
 
   private:
     ;
