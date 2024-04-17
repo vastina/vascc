@@ -1,4 +1,4 @@
-[[clang::noinline]]unsigned factorial(unsigned n){
+[[clang::noinline]]u32 factorial(u32 n){
     if(n == 0){
         return 1;
     }

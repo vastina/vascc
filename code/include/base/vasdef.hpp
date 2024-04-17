@@ -1,8 +1,15 @@
 #ifndef _VASTINA_GLOBAL_DEFINE_
 #define _VASTINA_GLOBAL_DEFINE_
 
+#include <cstdint>
 
 namespace vastina{
+
+using u32 = std::uint32_t;
+using i32 = std::int32_t;
+using u64 = std::uint64_t;
+using i64 = std::int64_t;
+
 
 enum TOKEN{
     UNKNOW = -1,
@@ -109,7 +116,7 @@ enum class STMT{
 };
 
 //todo but not cpp https://zh.cppreference.com/w/cpp/language/operator_precedence
-inline static constexpr unsigned Level(TOKEN tk){
+inline static constexpr u32 Level(TOKEN tk){
     switch (tk){
         case TOKEN::EQUAL:
             return 5;
@@ -134,7 +141,7 @@ inline static constexpr unsigned Level(TOKEN tk){
 }
 
 //base sizeof
-inline static constexpr unsigned SIZEOF(TOKEN ){
+inline static constexpr u32 SIZEOF(TOKEN ){
     return {};
 }
 

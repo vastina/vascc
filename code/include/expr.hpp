@@ -5,7 +5,6 @@
 #include "base/vasdef.hpp"
 #include "symbol.hpp"
 
-#include <concepts>
 #include <iostream>
 #include <memory>
 #include <type_traits>
@@ -29,7 +28,7 @@ current_state(state){};
 //     struct Matcher{
 //         std::vector<MatchUnit> units;
 //         //maybe set is better?
-//         unsigned offset;
+//         u32 offset;
 //     };
 
 // private:
@@ -149,8 +148,8 @@ class AddrExpr : public ValExpr<ty> {
 };
 
 typedef struct BracketCount {
-    unsigned open = 0;
-    unsigned close = 0;
+    u32 open = 0;
+    u32 close = 0;
 } BracketCount;
 
 } // namespace vastina

@@ -1,13 +1,13 @@
 #ifndef _LEXER_H_
 #define _LEXER_H_
 
-#include <functional>
+#include "base/vasdef.hpp"
+#include "symbol.hpp" // see symbol.hpp struct token_t
+
 #include <string>
 #include <vector>
 
-#include "base/vasdef.hpp"
-// see symbol.hpp struct token_t
-#include "symbol.hpp"
+#include <folly/Function.h>
 
 namespace vastina {
 
@@ -28,17 +28,17 @@ class lexer {
   private:
     std::vector<token_t> tokens;
     std::string buffer;
-    unsigned offset;
-    unsigned line;
-    unsigned lineoffset; // todo
+    u32 offset;
+    u32 line;
+    u32 lineoffset; // todo
     STATE state;
 
     Scope::pointer current_scope;
 
     STATE ParseWhiteSpace();
     RESULT ParseKeyWord(const std::string_view &, TOKEN,
-                        const std::function<bool(char)> &, TOKEN Default,
-                        const std::function<bool(char)> &);
+                        const folly::Function<bool(char)> &, TOKEN Default,
+                        const folly::Function<bool(char)> &);
     // todo: parse number
     void ParseNumber();
     void forSingelWord(const std::string_view &target, TOKEN target_type);

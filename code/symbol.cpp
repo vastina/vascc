@@ -2,7 +2,10 @@
 #include "base/log.hpp"
 #include "base/vasdef.hpp"
 #include "expr.hpp"
+
 #include <iostream>
+
+#include <folly/Function.h>
 
 namespace vastina {
 
@@ -34,7 +37,7 @@ void Scope::addFunc(const std::string_view &name, const Function &fc) {
     st_.addFunc(name, fc);
 }
 Variable::pointer
-Scope::getVar(std::string_view name) {
+Scope::getVar(const std::string_view& name) {
     auto node = this;
     do {
         auto res = node->st_.getVar(name);
@@ -45,7 +48,7 @@ Scope::getVar(std::string_view name) {
     return nullptr;
 }
 Function::pointer
-Scope::getFunc(std::string_view name) {
+Scope::getFunc(const std::string_view& name) {
     auto node = this;
     do {
         auto res = node->st_.getFunc(name);
@@ -79,7 +82,7 @@ bool Scope::funcExist(const std::string_view &name) {
     return false;
 }
 
-void Scope::setRange(unsigned start, unsigned end) {
+void Scope::setRange(u32 start, u32 end) {
     r_.start = start;
     r_.end = end;
 }
@@ -98,10 +101,10 @@ Scope::getSymbolTable() {
 // you can get other if you like
 Scope::pointer
 Scope::getNextChild() {
-    return children_.at(idchild++);
+    return children_.at(idchild_++);
 }
 Scope::pointer
-Scope::getChildat(unsigned offst) {
+Scope::getChildat(u32 offst) {
     return children_.at(offst);
 }
 
@@ -129,8 +132,8 @@ void Preprocess::Next() {
     offset++;
 }
 
-int Preprocess::Process() {
-    unsigned size = primary_tokens.size();
+i32 Preprocess::Process() {
+    u32 size = primary_tokens.size();
     while (offset < size) {
         switch (Current()) {
         case TOKEN::SEMICOLON:
@@ -162,9 +165,7 @@ int Preprocess::Process() {
             if (token_type(Peek()) == TOKEN_TYPE::OPERATOR) {
                 // Except(TOKEN::ASSIGN, false, result);
                 // if (result == 0) {
-                EXCEPT_ZERO(Binary, [this]() {
-                    return Current() == TOKEN::SEMICOLON || Current() == TOKEN::COMMA;
-                });
+                EXCEPT_ZERO(Binary, [this]() { return Current() == TOKEN::SEMICOLON || Current() == TOKEN::COMMA; });
                 break;
             } else {
                 Except(TOKEN::SEMICOLON, true, result);
@@ -186,10 +187,10 @@ int Preprocess::Process() {
             EXCEPT_ZERO(LoopW);
             break;
         case TOKEN::FOR:
-            EXCEPT_ZERO(LoopF, [] { return false; });
+            EXCEPT_ZERO(LoopF);
             break;
         case TOKEN::DO:
-            tryCall(0, LoopD, [] { return false; });
+            tryCall(0, LoopD);
             break;
         case TOKEN::FUNC:
             EXCEPT_ZERO(FuncDecl);
@@ -226,10 +227,10 @@ int Preprocess::Process() {
 
 // then I will make no check on the Parser of calculate because it is
 // checked here
-int Preprocess::Binary(const std::function<bool()> &EndJudge) {
+i32 Preprocess::Binary(const folly::Function<bool()> &EndJudge) {
 
     BracketCount bc;
-    unsigned last_offset = offset;
+    u32 last_offset = offset;
 
     while (true) {
         switch (token_type(Current())) {
@@ -292,7 +293,7 @@ int Preprocess::Binary(const std::function<bool()> &EndJudge) {
         }
         }
         Next();
-        if (EndJudge() && (bc.close == bc.open)) {
+        if (const_cast<folly::Function<bool()> &>(EndJudge)() && (bc.close == bc.open)) {
             results.push_back({P_TOKEN::BINARY, last_offset, offset});
             // if(Current() == TOKEN::SEMICOLON)
             //     results.push_back({P_TOKEN::END, offset, offset + 1});
@@ -303,8 +304,8 @@ int Preprocess::Binary(const std::function<bool()> &EndJudge) {
     return 0;
 }
 
-// int Preprocess::Assign(const std::function<bool()> &EndJudge) {
-//     unsigned last_offset = offset;
+// i32 Preprocess::Assign(folly::Function<bool()> &EndJudge) {
+//     u32 last_offset = offset;
 //     while (true) {
 //         if (Current() == TOKEN::SYMBOL && Peek() == TOKEN::ASSIGN) {
 //             Next();
@@ -320,14 +321,14 @@ int Preprocess::Binary(const std::function<bool()> &EndJudge) {
 //     return 0;
 // }
 
-int Preprocess::Declare(const std::function<bool()> &EndJudge) {
+i32 Preprocess::Declare(const folly::Function<bool()> &EndJudge) {
 
     std::function<void()> adder;
     switch (Current()) {
     // todo: varible need source location to init
     case TOKEN::INT:
         adder = [this]() {
-            current_scope->addVar(CurrentTokenName(), variable<int>(CurrentToken()));
+            current_scope->addVar(CurrentTokenName(), variable<i32>(CurrentToken()));
         };
         break;
     case TOKEN::FLOAT:
@@ -342,7 +343,7 @@ int Preprocess::Declare(const std::function<bool()> &EndJudge) {
     }
     Next();
 
-    unsigned last_offset = offset;
+    u32 last_offset = offset;
     while (true) {
         if (Current() == TOKEN::SYMBOL) {
             auto table = current_scope->getSymbolTable();
@@ -355,10 +356,11 @@ int Preprocess::Declare(const std::function<bool()> &EndJudge) {
             results.push_back({P_TOKEN::DECL, last_offset, offset + 1});
             last_offset = offset + 1;
             Next();
+
             (void)Binary([this]() {
                 return Current() == TOKEN::SEMICOLON || Current() == TOKEN::COMMA;
             });
-        } else if (EndJudge())
+        } else if (const_cast<folly::Function<bool()> &>(EndJudge)())
             break;
         else if (Current() == TOKEN::COMMA) {
             // results.push_back({P_TOKEN::BINARY, last_offset,
@@ -371,15 +373,16 @@ int Preprocess::Declare(const std::function<bool()> &EndJudge) {
     return 0;
 }
 
-int Preprocess::Address(const std::function<bool()> &) {
+i32 Preprocess::Address(const folly::Function<bool()> &) {
     return {};
 }
 
-int Preprocess::IfType() {
+i32 Preprocess::IfType() {
     results.push_back({P_TOKEN::IF, offset, offset + 1});
 
     tryNext(TOKEN::NLBRAC, true);
-    int res = Binary([this]() {
+    // EXCEPT_ZERO(Binary, fn);
+    i32 res = Binary([this]() {
         return Current() == TOKEN::OBRACE;
     }); // 暂时不支持不带{}的if
     if (0 != res) {
@@ -389,7 +392,7 @@ int Preprocess::IfType() {
     return 0;
 }
 
-int Preprocess::Callee(Function::pointer) {
+i32 Preprocess::Callee(Function::pointer) {
     results.push_back({P_TOKEN::CALL, offset, offset + 1});
     // nothing done here actually
     trySkip(TOKEN::NLBRAC, true);
@@ -413,7 +416,7 @@ int Preprocess::Callee(Function::pointer) {
     return 0;
 }
 
-int Preprocess::Paras(Function::pointer) {
+i32 Preprocess::Paras(Function::pointer) {
     // just kepp it like this, do not modify if you really know what you
     // are doing
     if (Peek() == TOKEN::NRBRAC) {
@@ -425,7 +428,8 @@ int Preprocess::Paras(Function::pointer) {
 
     while (true) {
         if (Declare([this] {
-                return ((Current() == TOKEN::COMMA) || ((Current() == TOKEN::NRBRAC) && ((Peek() == TOKEN::SEMICOLON) || (Peek() == TOKEN::OBRACE))));
+                return ((Current() == TOKEN::COMMA) ||
+                        ((Current() == TOKEN::NRBRAC) && ((Peek() == TOKEN::SEMICOLON) || (Peek() == TOKEN::OBRACE))));
             }) != 0) {
             RETURN_ERROR
         }
@@ -440,7 +444,7 @@ int Preprocess::Paras(Function::pointer) {
 
     return 0;
 }
-int Preprocess::FuncDecl() {
+i32 Preprocess::FuncDecl() {
     auto last_offset = offset;
     Next();
 
@@ -452,7 +456,7 @@ int Preprocess::FuncDecl() {
     std::function<void()> adder;
     switch (Current()) {
     case TOKEN::INT:
-        adder = [this, &name]() { current_scope->addFunc(name, func<int>()); };
+        adder = [this, &name]() { current_scope->addFunc(name, func<i32>()); };
         break;
     case TOKEN::FLOAT:
     case TOKEN::CHAR:
@@ -478,11 +482,11 @@ int Preprocess::FuncDecl() {
     {RETURN_ERROR};
 }
 
-int Preprocess::RetType() {
+i32 Preprocess::RetType() {
     results.push_back({P_TOKEN::RET, offset, offset + 1});
     Next();
 
-    int res = Binary([this] { return Current() == TOKEN::SEMICOLON; });
+    i32 res = Binary([this] { return Current() == TOKEN::SEMICOLON; });
     if (0 != res) {
         RETURN_ERROR
     }
@@ -490,14 +494,13 @@ int Preprocess::RetType() {
     return 0;
 }
 
-int Preprocess::LoopW() {
+i32 Preprocess::LoopW() {
     results.push_back({P_TOKEN::LOOP, offset, offset + 1});
     current_scope->getChildat(id)->setBreakable(true);
 
     tryNext(TOKEN::NLBRAC, true);
-    int res = Binary([this]() {
-        return Current() == TOKEN::OBRACE;
-    }); // 暂时不支持不带{}的while
+
+    int res = Binary([this]() { return Current() == TOKEN::OBRACE; }); // 暂时不支持不带{}的while
     if (0 != res) {
         RETURN_ERROR
     }
@@ -505,11 +508,11 @@ int Preprocess::LoopW() {
     return 0;
 }
 
-int Preprocess::LoopF(const std::function<bool()> &) {
+int Preprocess::LoopF() {
     return {};
 }
 
-int Preprocess::LoopD(const std::function<bool()> &) {
+int Preprocess::LoopD() {
     return {};
 }
 
@@ -521,9 +524,8 @@ Preprocess::getNext() {
     return static_cast<const p_token_t &>(results[id++]);
 }
 
-unsigned
-Preprocess::getSize() const {
-    return static_cast<unsigned>(results.size());
+u32 Preprocess::getSize() const {
+    return static_cast<u32>(results.size());
 }
 
 Scope::pointer

@@ -1,4 +1,4 @@
-extern "C" unsigned factorial(unsigned);
+extern "C" u32 factorial(u32);
 
 int main(int argc, char **argv) {
   return factorial(3)*7 == 42;

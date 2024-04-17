@@ -1,13 +1,10 @@
 #ifndef _BASE_STRING_H_
 #define _BASE_STRING_H_
 
-#include <format>
-#include <source_location>
-#include <string_view>
-#include <unordered_map>
-#include <utility>
-
 #include "base/vasdef.hpp"
+
+#include <format>
+#include <string_view>
 
 namespace vastina {
 
@@ -31,10 +28,10 @@ isWhiteSpace(char ch) {
 }
 
 inline bool
-Strcmp(const std::string &buffer, unsigned offset,
+Strcmp(const std::string &buffer, u32 offset,
        const std::string_view &temp) {
-    unsigned len = temp.size();
-    for (unsigned i = 0; i < len; i++) {
+    u32 len = temp.size();
+    for (u32 i = 0; i < len; i++) {
         if (buffer.at(i + offset) != temp.at(i))
             return false;
     }
@@ -122,7 +119,7 @@ void print(const std::string_view fmt_str, Args &&...args) {
 // consteval std::unordered_map<TOKEN, std::string_view> TOKEN_STR;
 // typedef struct before_main_t{
 //     before_main_t(){
-//         for(int i = UNKNOW; i < ASM; i++){
+//         for(i32 i = UNKNOW; i < ASM; i++){
 //             TOKEN_STR.insert(std::make_pair(static_cast<TOKEN>(i),
 //                 enum_name<static_cast<TOKEN>(i)>()));
 //         }

@@ -23,17 +23,21 @@ jobs:
       run: ./tool/changeversion.sh gcc 13
     - name: _
       run: ./tool/changeversion.sh g++ 13
+    - name: install_requires
+      run: sudo apt install libdouble-conversion-dev liblzma-dev lzma-dev liblz4-dev  \
+      lz4 libgoogle-glog-dev libgflags-dev libsnappy-dev  libtool-bin libtool xzip    \
+      libboost-dev libboost-all-dev libevent-dev openssl
     - name: cmake_configure
       run: cmake -Bbuild .
     - name: build
       run: cmake --build ./build
     - name: c_run
       run: ./testcase/run.sh
-    - name: remove_vcc
-      run: rm -f vcc
-    - name: install_xmake
-      run:  curl -fsSL https://xmake.io/shget.text | bash
-    - name: xmake_build
-      run: xmake build
-    - name: x_run
-      run: ./testcase/run.sh
+    # - name: remove_vcc
+    #   run: rm -f vcc
+    # - name: install_xmake
+    #   run:  curl -fsSL https://xmake.io/shget.text | bash
+    # - name: xmake_build
+    #   run: xmake build
+    # - name: x_run
+    #   run: ./testcase/run.sh

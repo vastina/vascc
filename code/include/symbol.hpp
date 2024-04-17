@@ -1,29 +1,27 @@
 #ifndef _SYMBOL_H_
 #define _SYMBOL_H_
 
-// #include "base/Tree.hpp"
-#include "base/String.hpp"
-#include "base/vasdef.hpp"
-// #include "lexer.hpp"
+#include "base/vasdef.hpp" //for the fucking stupid and smart clangd, includeit directly
 
-#include <functional>
 #include <memory>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
 
+#include <folly/Function.h>
+
 namespace vastina {
 struct token_t {
     TOKEN token;
     std::string_view name;
-    unsigned line;
+    u32 line;
 
     // some were here just because I am lazy to delete them
     token_t(TOKEN tk);
     token_t(TOKEN tk, const std::string_view &sv);
     token_t(TOKEN tk, std::string_view &&sv);
-    token_t(TOKEN tk, const std::string_view &sv, unsigned _line);
-    token_t(TOKEN tk, std::string_view &&sv, unsigned _line);
+    token_t(TOKEN tk, const std::string_view &sv, u32 _line);
+    token_t(TOKEN tk, std::string_view &&sv, u32 _line);
 
     token_t(const token_t &tk);
     token_t(token_t &&tk);
@@ -175,9 +173,9 @@ typedef struct SymbolTable {
 } SymbolTable;
 
 typedef struct range_t {
-    unsigned start;
-    unsigned end; //[start, end) preprocessed_tokens[start] to
-                  // preprocessed_tokens[end-1]
+    u32 start;
+    u32 end; //[start, end) preprocessed_tokens[start] to
+             // preprocessed_tokens[end-1]
 
     range_t() : start(0), end(0){};
     inline const range_t &
@@ -186,11 +184,11 @@ typedef struct range_t {
         end = other.end;
         return *this;
     }
-    range_t(unsigned st, unsigned ed) : start(st), end(ed){};
+    range_t(u32 st, u32 ed) : start(st), end(ed){};
     range_t(range_t &&other) : start(other.start), end(other.end){};
     range_t(const range_t &other) : start(other.start), end(other.end){};
     inline bool
-    isInRange(unsigned index) {
+    isInRange(u32 index) {
         return index >= start && index < end;
     }
     inline bool
@@ -214,7 +212,7 @@ class Scope {
 
     bool isBreakable_{false}; // for loop, who else need this?
     // so bad
-    unsigned idchild{};
+    u32 idchild_{};
 
   public:
     Scope() = delete;
@@ -222,14 +220,14 @@ class Scope {
     Scope(pointer parent, range_t &&r)
         : parent_(parent), r_(r), st_(), children_(){};
 
-    void addVar(const std::string_view &name, const Variable &var);
-    void addFunc(const std::string_view &name, const Function &fc);
-    Variable::pointer getVar(std::string_view name);
-    Function::pointer getFunc(std::string_view name);
-    bool varExist(const std::string_view &name);
-    bool funcExist(const std::string_view &name);
+    void addVar(const std::string_view&, const Variable&);
+    void addFunc(const std::string_view&, const Function&);
+    Variable::pointer getVar(const std::string_view&);
+    Function::pointer getFunc(const std::string_view&);
+    bool varExist(const std::string_view&);
+    bool funcExist(const std::string_view&);
 
-    void setRange(unsigned start, unsigned end);
+    void setRange(u32, u32);
     const range_t &getRange();
     void setBreakable(bool);
 
@@ -239,7 +237,7 @@ class Scope {
 
     pointer CreateChild(range_t &&);
     pointer getNextChild();
-    pointer getChildat(unsigned);
+    pointer getChildat(u32);
     pointer getParent();
     pointer getRoot();
 };
@@ -287,18 +285,18 @@ class Preprocess {
 
     typedef struct p_token_t {
         P_TOKEN tk;
-        unsigned start;
-        unsigned end;
+        u32 start;
+        u32 end;
     } p_token_t;
     //[start, end)
     // see expr.hpp ExpressionUnit_
 
   private:
     std::vector<token_t> &primary_tokens;
-    unsigned offset;
+    u32 offset;
 
     std::vector<p_token_t> results;
-    unsigned id = 0;
+    u32 id = 0;
 
     Scope::pointer current_scope;
 
@@ -356,31 +354,31 @@ class Preprocess {
     // for Except, use this when you need Except
     // and you can get a more friendly log, instead of cerr in Except(),
     // always the same line
-    int result{};
+    i32 result{};
     // someone need custom judge
 
     // return a code to indicate the result
-    int Binary(const std::function<bool()> &EndJudge);
-    int Assign(const std::function<bool()> &EndJudge);
-    int Declare(const std::function<bool()> &EndJudge);
-    int Address(const std::function<bool()> &EndJudge);
-    int IfType();
-    int RetType();
+    i32 Binary(const folly::Function<bool()> &EndJudge);
+    i32 Assign(const folly::Function<bool()> &EndJudge);
+    i32 Declare(const folly::Function<bool()> &EndJudge);
+    i32 Address(const folly::Function<bool()> &EndJudge);
+    i32 IfType();
+    i32 RetType();
 
-    int Paras(Function::pointer fc);
-    int Callee(Function::pointer callee);
-    int FuncDecl();
+    i32 Paras(Function::pointer fc);
+    i32 Callee(Function::pointer callee);
+    i32 FuncDecl();
 
-    int LoopW();                                      // while
-    int LoopF(const std::function<bool()> &EndJudge); // for
-    int LoopD(const std::function<bool()> &EndJudge); // do
+    i32 LoopW(); // while
+    i32 LoopF(); // for
+    i32 LoopD(); // do
 
   public:
-    int Process();
+    i32 Process();
 
     // Getter and Setter----------------------------------------------------
     const p_token_t &getNext();
-    unsigned getSize() const;
+    u32 getSize() const;
 
     // for test?
     Scope::pointer CurrentScope();

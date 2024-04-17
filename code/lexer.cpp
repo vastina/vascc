@@ -1,14 +1,12 @@
 #include "lexer.hpp"
-
 #include "base/String.hpp"
 #include "base/vasdef.hpp"
-
 #include "symbol.hpp" //todo
 
 #include <fstream>
-#include <functional>
-#include <iostream>
 #include <string_view>
+
+#include <folly/Function.h>
 
 namespace vastina {
 
@@ -16,10 +14,10 @@ token_t::token_t(TOKEN tk) : token(tk){};
 token_t::token_t(TOKEN tk, const std::string_view &sv)
     : token(tk), name(sv){};
 token_t::token_t(TOKEN tk, std::string_view &&sv) : token(tk), name(sv){};
-token_t::token_t(TOKEN tk, const std::string_view &sv, unsigned _line)
+token_t::token_t(TOKEN tk, const std::string_view &sv, u32 _line)
     : token(tk), name(sv), line(_line) {
 }
-token_t::token_t(TOKEN tk, std::string_view &&sv, unsigned _line)
+token_t::token_t(TOKEN tk, std::string_view &&sv, u32 _line)
     : token(tk), name(sv), line(_line) {
 }
 
@@ -59,18 +57,19 @@ lexer::ParseWhiteSpace() {
 
 lexer::RESULT
 lexer::ParseKeyWord(const std::string_view &target, TOKEN target_type,
-                    const std::function<bool(char)> &endjudge, TOKEN Default,
-                    const std::function<bool(char)> &DefaultEndjudge) {
-    unsigned len = target.size();
-    if (Strcmp(buffer, offset, target) && endjudge(buffer[offset + len])) {
+                    const folly::Function<bool(char)> &endjudge, TOKEN Default,
+                    const folly::Function<bool(char)> &DefaultEndjudge) {
+    u32 len = target.size();
+    if (Strcmp(buffer, offset, target) &&
+        const_cast<folly::Function<bool(char)> &>(endjudge)(buffer[offset + len])) {
         tokens.push_back(token_t(target_type, target, line));
         offset += len;
         return lexer::RESULT::SUCCESS;
     } else if (Default == TOKEN::UNKNOW)
         return lexer::RESULT::FAIL;
     else {
-        unsigned last_offset = offset;
-        while (DefaultEndjudge(buffer[offset])) {
+        u32 last_offset = offset;
+        while (const_cast<folly::Function<bool(char)> &>(DefaultEndjudge)(buffer[offset])) {
             offset++;
         }
         std::string_view temp = {buffer.data() + last_offset, offset - last_offset};
@@ -92,15 +91,16 @@ void lexer::ParseNumber() {
     // todo
 }
 
-constexpr auto SymbolEndJudge = [flag = true](char ch) mutable {
+inline folly::Function<bool(char)> SymbolEndJudge = [flag = true](char ch) mutable {
     if (flag) { // 第一个字符不能是数字
         flag = false;
         return (CHARTYPE::CHAR == CharType(ch));
     }
     return (CHARTYPE::OTHER != CharType(ch));
 };
-
-constexpr auto NormalEnd = [](char ch) { return (CHARTYPE::OTHER == CharType(ch)); };
+inline folly::Function<bool(char)> NormalEnd = [](char ch) { return (CHARTYPE::OTHER == CharType(ch)); };
+inline folly::Function<bool(char)> Truer = [](char) { return true; };
+inline folly::Function<bool(char)> Falser = [](char) { return false; };
 
 lexer::STATE
 lexer::Next() {
@@ -121,7 +121,7 @@ lexer::Next() {
         }
         case 'b': {
             RESULT res = ParseKeyWord("break", TOKEN::BREAK, NormalEnd, TOKEN::UNKNOW,
-                                      [](char) { return true; });
+                                      Truer);
             if (res == RESULT::SUCCESS)
                 break;
             else
@@ -146,17 +146,17 @@ lexer::Next() {
         }
         case 'f': {
             RESULT res = ParseKeyWord("for", TOKEN::FOR, NormalEnd, TOKEN::UNKNOW,
-                                      [](char) { return true; });
+                                      Truer);
             if (res == RESULT::SUCCESS)
                 break;
             else
                 res = ParseKeyWord("float", TOKEN::FLOAT, NormalEnd,
-                                   TOKEN::UNKNOW, [](char) { return true; });
+                                   TOKEN::UNKNOW, Truer);
             if (res == RESULT::SUCCESS)
                 break;
             else
                 res = ParseKeyWord("false", TOKEN::FALSE, NormalEnd,
-                                   TOKEN::UNKNOW, [](char) { return true; });
+                                   TOKEN::UNKNOW, Truer);
             if (res == RESULT::SUCCESS)
                 break;
             else
@@ -172,19 +172,19 @@ lexer::Next() {
         }
         case 'g': {
             (void)ParseKeyWord(
-                "?", TOKEN::UNKNOW, [](char) { return false; },
+                "?", TOKEN::UNKNOW, Falser,
                 TOKEN::SYMBOL, SymbolEndJudge);
             break;
         }
         case 'h': {
             (void)ParseKeyWord(
-                "?", TOKEN::UNKNOW, [](char) { return false; },
+                "?", TOKEN::UNKNOW, Falser,
                 TOKEN::SYMBOL, SymbolEndJudge);
             break;
         }
         case 'i': {
             RESULT res = ParseKeyWord("int", TOKEN::INT, NormalEnd, TOKEN::UNKNOW,
-                                      [](char) { return false; });
+                                      Falser);
             if (res == RESULT::SUCCESS)
                 break;
             else
@@ -194,19 +194,19 @@ lexer::Next() {
         }
         case 'j': {
             (void)ParseKeyWord(
-                "?", TOKEN::UNKNOW, [](char) { return false; },
+                "?", TOKEN::UNKNOW, Falser,
                 TOKEN::SYMBOL, SymbolEndJudge);
             break;
         }
         case 'k': {
             (void)ParseKeyWord(
-                "?", TOKEN::UNKNOW, [](char) { return false; },
+                "?", TOKEN::UNKNOW, Falser,
                 TOKEN::SYMBOL, SymbolEndJudge);
             break;
         }
         case 'l': {
             RESULT res = ParseKeyWord("long", TOKEN::LONG, NormalEnd, TOKEN::UNKNOW,
-                                      [](char) { return false; });
+                                      Falser);
             if (res == RESULT::SUCCESS)
                 break;
             else
@@ -222,25 +222,25 @@ lexer::Next() {
         }
         case 'n': {
             (void)ParseKeyWord(
-                "?", TOKEN::UNKNOW, [](char) { return false; },
+                "?", TOKEN::UNKNOW, Falser,
                 TOKEN::SYMBOL, SymbolEndJudge);
             break;
         }
         case 'o': {
             (void)ParseKeyWord(
-                "?", TOKEN::UNKNOW, [](char) { return false; },
+                "?", TOKEN::UNKNOW, Falser,
                 TOKEN::SYMBOL, SymbolEndJudge);
             break;
         }
         case 'p': {
             (void)ParseKeyWord(
-                "?", TOKEN::UNKNOW, [](char) { return false; },
+                "?", TOKEN::UNKNOW, Falser,
                 TOKEN::SYMBOL, SymbolEndJudge);
             break;
         }
         case 'q': {
             (void)ParseKeyWord(
-                "?", TOKEN::UNKNOW, [](char) { return false; },
+                "?", TOKEN::UNKNOW, Falser,
                 TOKEN::SYMBOL, SymbolEndJudge);
             break;
         }
@@ -252,7 +252,7 @@ lexer::Next() {
         }
         case 's': {
             (void)ParseKeyWord(
-                "?", TOKEN::UNKNOW, [](char) { return false; },
+                "?", TOKEN::UNKNOW, Falser,
                 TOKEN::SYMBOL, SymbolEndJudge);
             break;
         }
@@ -263,7 +263,7 @@ lexer::Next() {
         }
         case 'u': {
             (void)ParseKeyWord(
-                "?", TOKEN::UNKNOW, [](char) { return false; },
+                "?", TOKEN::UNKNOW, Falser,
                 TOKEN::SYMBOL, SymbolEndJudge);
             break;
         }
@@ -279,19 +279,19 @@ lexer::Next() {
         }
         case 'x': {
             (void)ParseKeyWord(
-                "?", TOKEN::UNKNOW, [](char) { return false; },
+                "?", TOKEN::UNKNOW, Falser,
                 TOKEN::SYMBOL, SymbolEndJudge);
             break;
         }
         case 'y': {
             (void)ParseKeyWord(
-                "?", TOKEN::UNKNOW, [](char) { return false; },
+                "?", TOKEN::UNKNOW, Falser,
                 TOKEN::SYMBOL, SymbolEndJudge);
             break;
         }
         case 'z': {
             (void)ParseKeyWord(
-                "?", TOKEN::UNKNOW, [](char) { return false; },
+                "?", TOKEN::UNKNOW, Falser,
                 TOKEN::SYMBOL, SymbolEndJudge);
             break;
         }
@@ -301,7 +301,7 @@ lexer::Next() {
         break;
     }
     case CHARTYPE::NUM: {
-        unsigned last_offset = offset;
+        u32 last_offset = offset;
         while (CHARTYPE::NUM == CharType(buffer[offset])) {
             offset++;
         }
@@ -348,8 +348,8 @@ lexer::Next() {
             break;
         case '=': {
             RESULT res = ParseKeyWord(
-                "==", TOKEN::EQUAL, [](char) { return true; },
-                TOKEN::UNKNOW, [](char) { return false; });
+                "==", TOKEN::EQUAL, Truer,
+                TOKEN::UNKNOW, Falser);
             if (res == RESULT::SUCCESS)
                 break;
             else
@@ -364,8 +364,8 @@ lexer::Next() {
             break;
         case '!': {
             RESULT res = ParseKeyWord(
-                "!=", TOKEN::NOTEQUAL, [](char) { return true; },
-                TOKEN::UNKNOW, [](char) { return false; });
+                "!=", TOKEN::NOTEQUAL, Truer,
+                TOKEN::UNKNOW, Falser);
             if (res == RESULT::SUCCESS)
                 break;
             else
@@ -374,8 +374,8 @@ lexer::Next() {
         }
         case '&': {
             RESULT res = ParseKeyWord(
-                "&&", TOKEN::LOGAND, [](char) { return true; },
-                TOKEN::UNKNOW, [](char) { return false; });
+                "&&", TOKEN::LOGAND, Truer,
+                TOKEN::UNKNOW, Falser);
             if (res == RESULT::SUCCESS)
                 break;
             else
@@ -384,8 +384,8 @@ lexer::Next() {
         }
         case '|': {
             RESULT res = ParseKeyWord(
-                "||", TOKEN::LOGOR, [](char) { return true; },
-                TOKEN::UNKNOW, [](char) { return false; });
+                "||", TOKEN::LOGOR, Truer,
+                TOKEN::UNKNOW, Falser);
             if (res == RESULT::SUCCESS)
                 break;
             else

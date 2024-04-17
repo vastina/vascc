@@ -1,12 +1,10 @@
 #include "base/String.hpp"
 #include "lexer.hpp"
-#include "stmt.hpp"
 #include "symbol.hpp"
 
 #include <iostream>
 #include <memory>
 #include <queue>
-#include <type_traits>
 
 // const static before_main_t before_main = before_main_t();
 
@@ -23,7 +21,7 @@ int main(int argc, char *argv[]) {
     while (lexer::STATE::END != lx.Next())
         ;
     auto tks = std::make_unique<std::vector<token_t>>(lx.getTokens());
-    for (unsigned i = 0; i < tks->size(); i++) {
+    for (u32 i = 0; i < tks->size(); i++) {
         print("offset:{}, \ttoken:{}, \tline:{}\n",
               i, tks->at(i).name, tks->at(i).line);
     }
@@ -32,10 +30,10 @@ int main(int argc, char *argv[]) {
     Preprocess *pp = new Preprocess(*tks, lx.getScope());
     pp->Process();
 
-    for (unsigned i = 0; i < pp->getSize(); i++) {
+    for (u32 i = 0; i < pp->getSize(); i++) {
         auto &next = pp->getNext();
         print("offset: {}\nProcessedTokenType: {}\nstr:\t\"", i, Preprocess::p_token_str(next.tk));
-        for (unsigned j = next.start; j < next.end; j++) {
+        for (u32 j = next.start; j < next.end; j++) {
             std::cout << tks->at(j).name << ' ';
         }
         std::cout << "\"\n";

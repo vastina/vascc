@@ -1,8 +1,9 @@
 #ifndef _BASE_TREE_H_
 #define _BASE_TREE_H_
 
-#include <functional>
 #include <memory>
+
+#include <folly/Function.h>
 
 using std::make_shared;
 using std::shared_ptr;
@@ -100,7 +101,7 @@ class TreeNode : public std::enable_shared_from_this<TreeNode<ty>> {
 
     inline void
     InsertByCompare(
-        pointer new_node, std::function<bool(const ty &a, const ty &b)> compare = [](const ty &a, const ty &b) { return a < b; }) {
+        pointer new_node, folly::Function<bool(const ty &a, const ty &b)> compare = [](const ty &a, const ty &b) { return a < b; }) {
         auto root = this;
         while (true) {
             if (compare(new_node->data, root->data)) {
@@ -120,7 +121,7 @@ class TreeNode : public std::enable_shared_from_this<TreeNode<ty>> {
     }
     inline void
     InsertByCompare(
-        const ty &data_, std::function<bool(const ty &a, const ty &b)> compare = [](const ty &a, const ty &b) { return a < b; }) {
+        const ty &data_, folly::Function<bool(const ty &a, const ty &b)> compare = [](const ty &a, const ty &b) { return a < b; }) {
         auto new_node = new node(data_);
         InsertByCompare(new_node, compare);
     }
