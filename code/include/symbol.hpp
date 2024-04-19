@@ -2,6 +2,7 @@
 #define _SYMBOL_H_
 
 #include "base/vasdef.hpp" //for the fucking stupid and smart clangd, includeit directly
+#include "base/String.hpp"
 
 #include <memory>
 #include <string_view>
@@ -89,15 +90,8 @@ class Variable : public Value {
 template <typename ty>
 class variable : public Variable {
   protected:
-    using Variable::isConstexpr_;
-    using Variable::isTrivial_;
-    using Variable::Srcloc_;
-    // I need source_location
     // I need reflect or a member to mark the type
   public:
-    using Variable::isConst;
-    using Variable::self;
-    using Variable::Variable;
 
     variable(const SourceLocation &srcloc) : Variable(srcloc){};
 
@@ -107,6 +101,7 @@ class variable : public Variable {
 class Function {
   protected:
     bool isVoid_{};
+    std::vector<Variable::pointer> paras_{};
 
   public:
     using pointer = Function *;
@@ -117,6 +112,10 @@ class Function {
     self() {
         return this;
     }
+
+    virtual TOKEN Type(){return TOKEN::UNKNOW;};
+    virtual u32 getParamSize(){return {};};
+    virtual std::string_view getName(){return{};};
 };
 
 template <typename ty>
@@ -124,7 +123,8 @@ class func : public Function {
   public:
     func(){};
 
-    inline constexpr TOKEN Type() { return Type<ty>(); };
+    inline constexpr TOKEN Type()override { return ::vastina::Type<ty>(); };
+    ty RetureType()const {};
 
   private:
     ;
@@ -220,20 +220,22 @@ class Scope {
     Scope(pointer parent, range_t &&r)
         : parent_(parent), r_(r), st_(), children_(){};
 
-    void addVar(const std::string_view&, const Variable&);
-    void addFunc(const std::string_view&, const Function&);
-    Variable::pointer getVar(const std::string_view&);
-    Function::pointer getFunc(const std::string_view&);
-    bool varExist(const std::string_view&);
-    bool funcExist(const std::string_view&);
+    void addVar(const std::string_view &, const Variable &);
+    void addFunc(const std::string_view &, const Function &);
+    Variable::pointer getVar(const std::string_view &);
+    Function::pointer getFunc(const std::string_view &);
+    bool varExist(const std::string_view &);
+    bool funcExist(const std::string_view &);
 
     void setRange(u32, u32);
     const range_t &getRange();
+    range_t findRange(u32);
+    //range_t getNextRangeBetweenChildren(); //this is too stupid, I won't do that
     void setBreakable(bool);
 
     // for test
     const decltype(children_) &getChildren();
-    const SymbolTable &getSymbolTable();
+    SymbolTable &getSymbolTable();
 
     pointer CreateChild(range_t &&);
     pointer getNextChild();
@@ -242,54 +244,22 @@ class Scope {
     pointer getRoot();
 };
 
+typedef struct p_token_t {
+    P_TOKEN tk;
+    u32 start;
+    u32 end;
+
+    inline void setRang(u32 _start, u32 _end){
+        start = _start;
+        end = _end;
+    }
+} p_token_t;
+//[start, end)
+//use rang_t here maybe better
+
 class Preprocess {
   public:
-    enum P_TOKEN { // processed token
-        UNKNOW = -1,
-        BINARY,
-        DECL,
-        ADDR,
-        IF,
-        LOOP,
-        CALL,
-        RET,
-        END
-    };
-
-    inline static constexpr std::string_view
-    p_token_str(P_TOKEN ptk) {
-        switch (ptk) {
-        // case P_TOKEN::CAL:
-        //     return "calculate";
-        case P_TOKEN::BINARY:
-            return "binary";
-        case P_TOKEN::DECL:
-            return "declare";
-        case P_TOKEN::ADDR:
-            return "address";
-        case P_TOKEN::IF:
-            return "if";
-        case P_TOKEN::LOOP:
-            return "loop";
-        case P_TOKEN::CALL:
-            return "call";
-        case P_TOKEN::RET:
-            return "return";
-        case P_TOKEN::END:
-            return "end";
-        default:
-            return {};
-        }
-        return {};
-    }
-
-    typedef struct p_token_t {
-        P_TOKEN tk;
-        u32 start;
-        u32 end;
-    } p_token_t;
-    //[start, end)
-    // see expr.hpp ExpressionUnit_
+    using pointer = Preprocess *;
 
   private:
     std::vector<token_t> &primary_tokens;
@@ -317,38 +287,7 @@ class Preprocess {
     inline const std::string_view &CurrentTokenName();
     inline TOKEN Peek();
     void Next();
-// Getter and Setter----------------------------------------------------
-//  last==true means if this is last case and don't match, stop and return error
-#define Except(excepted, last, res) \
-    do {                            \
-        if (Peek() != excepted) {   \
-            if (last) {             \
-                EXIT_ERROR          \
-            } else {                \
-                res = -1;           \
-            }                       \
-        } else {                    \
-            res = 0;                \
-        }                           \
-    } while (0);
-// int Except(TOKEN excepted, bool last);
-#define tryNext(excepted, last)                                     \
-    do {                                                            \
-        Except(excepted, last, result) if (0 == result) { Next(); } \
-        else if (last) {                                            \
-            RETURN_ERROR                                            \
-        }                                                           \
-    } while (0)
-#define trySkip(excepted, last)                           \
-    do {                                                  \
-        Except(excepted, last, result) if (0 == result) { \
-            Next();                                       \
-            Next();                                       \
-        }                                                 \
-        else if (last) {                                  \
-            RETURN_ERROR                                  \
-        }                                                 \
-    } while (0)
+    void reset();
     // Getter and Setter----------------------------------------------------
   private:
     // for Except, use this when you need Except

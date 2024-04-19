@@ -1,5 +1,6 @@
 #include "lexer.hpp"
 #include "base/String.hpp"
+#include "base/log.hpp"
 #include "base/vasdef.hpp"
 #include "symbol.hpp" //todo
 
@@ -416,6 +417,22 @@ lexer::Next() {
         break;
     }
     return STATE::NORMAL;
+}
+
+i32 lexer::reScan(){
+    
+    return {};
+}
+
+i32 lexer::Parse(){
+    STATE state;
+    while (true){
+        state = this->Next();
+        if(STATE::ERROR == state) RETURN_ERROR
+        else if(STATE::END == state) break;
+    }
+    
+    return reScan();
 }
 
 const std::vector<token_t> &

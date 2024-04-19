@@ -14,44 +14,53 @@ using std::make_shared;
 using std::shared_ptr;
 
 using TokenPtr = shared_ptr<std::vector<token_t>>;
-using ptokens = std::vector<Preprocess::p_token_t>;
+using ptokens = std::vector<p_token_t>;
 using pTokenPtr = shared_ptr<ptokens>;
 
-// saving primary tokens'ref in class private member is better
-// typedef struct StmtUnit {
-//     pTokenPtr ptks_;
-//     u32 pstart_;
-//     u32 pend_;
-//     StmtUnit(const ptokens &ptks_) : ptks_(make_shared<ptokens>(ptks_)), pstart_(), pend_() {}
-//     StmtUnit(const ptokens &ptks_, u32 _start, u32 _end) : ptks_(make_shared<ptokens>(ptks_)), pstart_(_start), pend_(_end) {}
-//     StmtUnit(const StmtUnit &other) : ptks_(other.ptks_), pstart_(other.pstart_), pend_(other.pend_) {}
-//     StmtUnit(StmtUnit &&other) : ptks_(std::move(other.ptks_)), pstart_(other.pstart_), pend_(other.pend_) {}
-//     ~StmtUnit() = default;
-// } StmtUnit;
+class Stmt;
+using Stmts = std::vector<Stmt *>;
 
 class Stmt {
   public:
     using pointer = Stmt *;
 
   protected:
-    pTokenPtr food_;
     range_t r_;
-    Scope::pointer scope_; // the scope it belongs to
+    Scope::pointer scope_; // the scope it belongs to?
 
   public:
     ~Stmt() = default;
 };
 
-template <typename ty>
-class FdeclStmt : public Stmt {
-  protected:
-    Function::pointer func_;
-
+class CompoundStmt : public Stmt {
   public:
+    using pointer = CompoundStmt *;
+
+  protected:
+    Stmts children_;
 };
 
-template <typename ty>
+class FdeclStmt : public Stmt {
+  public:
+    using pointer = FdeclStmt*;
+  protected:
+    Function::pointer func_;
+    CompoundStmt::pointer body_;
+
+  public:
+    FdeclStmt(Function::pointer func) : func_(func), body_() {};
+    i32 Parse(const std::vector<token_t>&, const std::vector<p_token_t>&, range_t);
+};
+
+class VdeclStmt : public Stmt {
+  protected:
+    Variable::pointer var_;
+};
+
 class BinStmt : public Stmt {
+  public:
+    using pointer = BinStmt *;
+
   protected:
     TreeNode<Expression> root_;
 
@@ -59,6 +68,22 @@ class BinStmt : public Stmt {
 };
 
 class LoopStmt : public Stmt {
+
+  protected:
+    BinStmt::pointer condition_;
+    CompoundStmt::pointer body_;
+};
+
+class IfStmt : public Stmt {
+
+  protected:
+    BinStmt::pointer condition_;
+    CompoundStmt::pointer body_;
+};
+
+class RetStmt : public Stmt{
+  protected:
+    Expression::pointer result_;
 };
 
 }; // namespace vastina

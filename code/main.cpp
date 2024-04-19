@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
 
     for (u32 i = 0; i < pp->getSize(); i++) {
         auto &next = pp->getNext();
-        print("offset: {}\nProcessedTokenType: {}\nstr:\t\"", i, Preprocess::p_token_str(next.tk));
+        print("offset: {}\nProcessedTokenType: {}\nstr:\t\"", i, p_token_str(next.tk));
         for (u32 j = next.start; j < next.end; j++) {
             std::cout << tks->at(j).name << ' ';
         }
@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
     while (!st.empty()) {
         auto scope = st.front();
         st.pop();
-        auto table = scope->getSymbolTable();
+        auto &&table = scope->getSymbolTable();
         print("start:\t {}\nend:\t {}\nvars: ", scope->getRange().start, scope->getRange().end);
         for (auto &&var : table.Variables)
             print("{}, ", var.first);

@@ -48,7 +48,10 @@ class lexer {
     lexer(const char *filename);
     ~lexer();
 
+    i32 Parse();
+
     STATE Next();
+    i32 reScan();  //todo, for non-func func declare
 
     const std::vector<token_t> &getTokens();
     const std::string_view getBuffer();

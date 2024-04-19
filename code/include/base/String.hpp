@@ -38,6 +38,35 @@ Strcmp(const std::string &buffer, u32 offset,
     return true;
 }
 
+inline static constexpr std::string_view
+p_token_str(P_TOKEN ptk) {
+    switch (ptk) {
+    // case P_TOKEN::CAL:
+    //     return "calculate";
+    case P_TOKEN::BINARY:
+        return "binary";
+    case P_TOKEN::FDECL:
+        return "func declare";
+    case P_TOKEN::VDECL:
+        return "var declare";
+    case P_TOKEN::ADDR:
+        return "address";
+    case P_TOKEN::IF:
+        return "if";
+    case P_TOKEN::LOOP:
+        return "loop";
+    case P_TOKEN::CALL:
+        return "call";
+    case P_TOKEN::RET:
+        return "return";
+    case P_TOKEN::END:
+        return "end";
+    default:
+        return {};
+    }
+    return {};
+}
+
 inline constexpr TOKEN
 _TypeToken(std::string_view sv) {
     if (sv.size() == 0)

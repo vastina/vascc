@@ -37,7 +37,7 @@ void Scope::addFunc(const std::string_view &name, const Function &fc) {
     st_.addFunc(name, fc);
 }
 Variable::pointer
-Scope::getVar(const std::string_view& name) {
+Scope::getVar(const std::string_view &name) {
     auto node = this;
     do {
         auto res = node->st_.getVar(name);
@@ -48,7 +48,7 @@ Scope::getVar(const std::string_view& name) {
     return nullptr;
 }
 Function::pointer
-Scope::getFunc(const std::string_view& name) {
+Scope::getFunc(const std::string_view &name) {
     auto node = this;
     do {
         auto res = node->st_.getFunc(name);
@@ -86,6 +86,31 @@ void Scope::setRange(u32 start, u32 end) {
     r_.start = start;
     r_.end = end;
 }
+range_t Scope::findRange(u32 start){
+    auto node = this;
+
+    while(true){
+        u32 res ;
+        for(u32 i = 0; i<node->children_.size(); i++){
+            res = node->children_.at(i)->r_.start;
+            if(res == start){
+                node = node->children_.at(i);
+                return node->r_;
+            }
+            if(res > start){
+                //if this will cause crash, just let it crash
+                node = node->children_.at(i-1);
+                break;
+            }
+        }
+        //check child first
+        res = node->r_.start;
+        if(res == start) break;
+    }
+
+    return node->r_;
+}
+
 void Scope::setBreakable(bool breakable) {
     isBreakable_ = breakable;
 }
@@ -94,7 +119,7 @@ Scope::getRange() {
     return r_;
 }
 const decltype(Scope::children_) &Scope::getChildren() { return children_; }
-const SymbolTable &
+SymbolTable &
 Scope::getSymbolTable() {
     return st_;
 }
@@ -130,6 +155,11 @@ Preprocess::Peek() {
 
 void Preprocess::Next() {
     offset++;
+}
+
+void Preprocess::reset() {
+    offset = 0;
+    id = 0;
 }
 
 i32 Preprocess::Process() {
@@ -190,7 +220,7 @@ i32 Preprocess::Process() {
             EXCEPT_ZERO(LoopF);
             break;
         case TOKEN::DO:
-            tryCall(0, LoopD);
+            EXCEPT_ZERO(LoopD);
             break;
         case TOKEN::FUNC:
             EXCEPT_ZERO(FuncDecl);
@@ -231,6 +261,8 @@ i32 Preprocess::Binary(const folly::Function<bool()> &EndJudge) {
 
     BracketCount bc;
     u32 last_offset = offset;
+    results.push_back({P_TOKEN::BINARY, 0, 0});
+    u32 __pos__ = results.size() - 1;
 
     while (true) {
         switch (token_type(Current())) {
@@ -294,7 +326,8 @@ i32 Preprocess::Binary(const folly::Function<bool()> &EndJudge) {
         }
         Next();
         if (const_cast<folly::Function<bool()> &>(EndJudge)() && (bc.close == bc.open)) {
-            results.push_back({P_TOKEN::BINARY, last_offset, offset});
+            //results.push_back({P_TOKEN::BINARY, last_offset, offset});
+            results.at(__pos__).setRang(last_offset, offset);
             // if(Current() == TOKEN::SEMICOLON)
             //     results.push_back({P_TOKEN::END, offset, offset + 1});
             break;
@@ -349,11 +382,13 @@ i32 Preprocess::Declare(const folly::Function<bool()> &EndJudge) {
             auto table = current_scope->getSymbolTable();
             if (table.varExist(CurrentTokenName())) {
                 RETURN_ERROR
+            } else if (Peek() != TOKEN::ASSIGN) {
+                results.push_back({P_TOKEN::VDECL, offset, offset + 1});
             }
             adder();
             Next();
         } else if (Current() == TOKEN::ASSIGN) {
-            results.push_back({P_TOKEN::DECL, last_offset, offset + 1});
+            results.push_back({P_TOKEN::VDECL, last_offset, offset + 1});
             last_offset = offset + 1;
             Next();
 
@@ -466,6 +501,9 @@ i32 Preprocess::FuncDecl() {
     }
     adder(); // adder or add?
 
+    results.push_back({P_TOKEN::FDECL, 0, 0});
+    u32 pos = results.size() - 1;
+
     tryNext(TOKEN::NLBRAC, true);
     current_scope = current_scope->getChildat(id); // getNextchild(0), jump in temply
     EXCEPT_ZERO(Paras, current_scope->getFunc(name));
@@ -475,7 +513,8 @@ i32 Preprocess::FuncDecl() {
     if (0 != result)
         tryNext(TOKEN::SEMICOLON, true);
 
-    results.push_back({P_TOKEN::DECL, last_offset, offset});
+    //results.push_back({P_TOKEN::DECL, last_offset, offset});
+    results.at(pos).setRang(last_offset, offset);
 
     if (0 == result)
         return 0;
@@ -516,7 +555,7 @@ int Preprocess::LoopD() {
     return {};
 }
 
-const Preprocess::p_token_t &
+const p_token_t &
 Preprocess::getNext() {
     if (id >= results.size()) {
         EXIT_ERROR

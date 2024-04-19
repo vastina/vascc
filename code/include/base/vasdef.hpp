@@ -140,6 +140,19 @@ inline static constexpr u32 Level(TOKEN tk){
     }
 }
 
+enum class P_TOKEN { // processed token
+    UNKNOW = -1,
+    BINARY,
+    FDECL,
+    VDECL,
+    ADDR,
+    IF,
+    LOOP,
+    CALL,
+    RET,
+    END
+};
+
 //base sizeof
 inline static constexpr u32 SIZEOF(TOKEN ){
     return {};
