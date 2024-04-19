@@ -1,0 +1,8 @@
+*.out
+cc
+vcc
+.vscode/
+build/
+test/
+todo/
+.cache/
