@@ -1,6 +1,7 @@
 #include "base/String.hpp"
 #include "lexer.hpp"
 #include "symbol.hpp"
+#include "parse.hpp"
 
 #include <iostream>
 #include <memory>
@@ -62,8 +63,8 @@ int main(int argc, char *argv[]) {
     std::cout << "------------------------------------------------------------"
                  "--------\n";
 
-    // std::string filename{argv[1]};
-    // filename += ".s";
+    auto psr = new Parser(*tks.get(), pp->getResult(), pp->CurrentScope());
+    return psr->Parse();
 
-    return 0;
+//    return 0;
 }

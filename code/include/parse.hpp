@@ -54,6 +54,7 @@ class Parser {
     i32 Loop();
     i32 Binary();
 
+    //should this?
     static Expression::pointer Binary(const std::vector<token_t>&, const std::vector<p_token_t>&, range_t);
 };
 

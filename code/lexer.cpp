@@ -167,7 +167,8 @@ lexer::Next() {
                 ParseWhiteSpace();
                 ParseKeyWord("main", TOKEN::MAIN, NormalEnd, TOKEN::SYMBOLF,
                              SymbolEndJudge);
-                current_scope->addFunc(tokens.back().name, Function());
+                auto func_token = tokens.back();
+                current_scope->addFunc(func_token.name, Function(func_token) );
             }
             break;
         }
@@ -258,7 +259,7 @@ lexer::Next() {
             break;
         }
         case 't': {
-            ParseKeyWord("true", TOKEN::TRUE, NormalEnd, TOKEN::UNKNOW,
+            ParseKeyWord("true", TOKEN::TRUE, NormalEnd, TOKEN::SYMBOL,
                          SymbolEndJudge);
             break;
         }
@@ -291,6 +292,12 @@ lexer::Next() {
             break;
         }
         case 'z': {
+            (void)ParseKeyWord(
+                "?", TOKEN::UNKNOW, Falser,
+                TOKEN::SYMBOL, SymbolEndJudge);
+            break;
+        }
+        case '_': {
             (void)ParseKeyWord(
                 "?", TOKEN::UNKNOW, Falser,
                 TOKEN::SYMBOL, SymbolEndJudge);
@@ -357,12 +364,26 @@ lexer::Next() {
                 forSingelWord("=", TOKEN::ASSIGN);
             break;
         }
-        case '>':
-            forSingelWord(">", TOKEN::GREATER);
+        case '>':{
+            RESULT res = ParseKeyWord(
+                ">=", TOKEN::GREATEREQUAL, Truer,
+                TOKEN::UNKNOW, Falser);
+            if (res == RESULT::SUCCESS)
+                break;
+            else
+                forSingelWord(">", TOKEN::GREATER);
             break;
-        case '<':
-            forSingelWord("<", TOKEN::LESS);
+        }
+        case '<':{
+            RESULT res = ParseKeyWord(
+                "<=", TOKEN::LESSEQUAL, Truer,
+                TOKEN::UNKNOW, Falser);
+            if (res == RESULT::SUCCESS)
+                break;
+            else
+                forSingelWord("<", TOKEN::LESS);
             break;
+        }
         case '!': {
             RESULT res = ParseKeyWord(
                 "!=", TOKEN::NOTEQUAL, Truer,

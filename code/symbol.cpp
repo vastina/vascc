@@ -4,14 +4,15 @@
 #include "expr.hpp"
 
 #include <iostream>
+#include <queue>
 
 #include <folly/Function.h>
 
 namespace vastina {
 
-#define TEMP_LOG                                                           \
-    ::std::cerr << offset << ' ' << Current() << ' ' << CurrentTokenName() \
-                << ' ';
+#define TEMP_LOG                                                            \
+    {::std::cerr << offset << ' ' << Current() << ' ' << CurrentTokenName() \
+                << ' ';}
 // get the child just created so add data in it
 Scope::pointer
 Scope::CreateChild(range_t &&rr = {0, 0}) {
@@ -93,9 +94,9 @@ range_t Scope::findRange(u32 start){
         u32 res ;
         for(u32 i = 0; i<node->children_.size(); i++){
             res = node->children_.at(i)->r_.start;
+print("start: {}\n", res);
             if(res == start){
-                node = node->children_.at(i);
-                return node->r_;
+                return node->children_.at(i)->r_;
             }
             if(res > start){
                 //if this will cause crash, just let it crash
@@ -162,6 +163,12 @@ void Preprocess::reset() {
     id = 0;
 }
 
+void Preprocess::Backup(u32 pos){
+    while(results.size() >= pos)
+        results.pop_back();
+    return;
+}
+
 i32 Preprocess::Process() {
     u32 size = primary_tokens.size();
     while (offset < size) {
@@ -193,8 +200,6 @@ i32 Preprocess::Process() {
                 EXIT_ERROR
             }
             if (token_type(Peek()) == TOKEN_TYPE::OPERATOR) {
-                // Except(TOKEN::ASSIGN, false, result);
-                // if (result == 0) {
                 EXCEPT_ZERO(Binary, [this]() { return Current() == TOKEN::SEMICOLON || Current() == TOKEN::COMMA; });
                 break;
             } else {
@@ -252,11 +257,11 @@ i32 Preprocess::Process() {
 
     // it should be the global scope now
     current_scope->setRange(0, getSize());
+//this is bad
+    current_scope->reSet();
     return 0;
 }
 
-// then I will make no check on the Parser of calculate because it is
-// checked here
 i32 Preprocess::Binary(const folly::Function<bool()> &EndJudge) {
 
     BracketCount bc;
@@ -356,9 +361,8 @@ i32 Preprocess::Binary(const folly::Function<bool()> &EndJudge) {
 
 i32 Preprocess::Declare(const folly::Function<bool()> &EndJudge) {
 
-    std::function<void()> adder;
+    folly::Function<void()> adder;
     switch (Current()) {
-    // todo: varible need source location to init
     case TOKEN::INT:
         adder = [this]() {
             current_scope->addVar(CurrentTokenName(), variable<i32>(CurrentToken()));
@@ -371,18 +375,20 @@ i32 Preprocess::Declare(const folly::Function<bool()> &EndJudge) {
         break;
     case TOKEN::DOUBLE:
         break;
-    default:
-        TEMP_LOG { RETURN_ERROR }
+    default:{
+        TEMP_LOG
+        RETURN_ERROR
+    }  
     }
     Next();
 
     u32 last_offset = offset;
     while (true) {
         if (Current() == TOKEN::SYMBOL) {
-            auto table = current_scope->getSymbolTable();
+            /*const auto& table = current_scope->getSymbolTable();
             if (table.varExist(CurrentTokenName())) {
                 RETURN_ERROR
-            } else if (Peek() != TOKEN::ASSIGN) {
+            } else*/ if (Peek() != TOKEN::ASSIGN) {
                 results.push_back({P_TOKEN::VDECL, offset, offset + 1});
             }
             adder();
@@ -417,9 +423,7 @@ i32 Preprocess::IfType() {
 
     tryNext(TOKEN::NLBRAC, true);
     // EXCEPT_ZERO(Binary, fn);
-    i32 res = Binary([this]() {
-        return Current() == TOKEN::OBRACE;
-    }); // 暂时不支持不带{}的if
+    i32 res = Binary([this]() { return Current() == TOKEN::OBRACE; }); // 暂时不支持不带{}的if
     if (0 != res) {
         RETURN_ERROR
     }
@@ -483,7 +487,7 @@ i32 Preprocess::FuncDecl() {
     auto last_offset = offset;
     Next();
 
-    auto name = CurrentTokenName();
+    auto func_token = CurrentToken();
     if (Current() == TOKEN::MAIN) {
     } // todo
     trySkip(TOKEN::COLON, true);
@@ -491,7 +495,7 @@ i32 Preprocess::FuncDecl() {
     std::function<void()> adder;
     switch (Current()) {
     case TOKEN::INT:
-        adder = [this, &name]() { current_scope->addFunc(name, func<i32>()); };
+        adder = [this, &func_token]() { current_scope->addFunc(func_token.name, func<i32>(func_token)); };
         break;
     case TOKEN::FLOAT:
     case TOKEN::CHAR:
@@ -499,14 +503,14 @@ i32 Preprocess::FuncDecl() {
     default:
         THIS_NOT_SUPPORT(CurrentTokenName());
     }
-    adder(); // adder or add?
+    adder(); // adder or just add?
 
     results.push_back({P_TOKEN::FDECL, 0, 0});
-    u32 pos = results.size() - 1;
+    u32 __pos__ = results.size() - 1;
 
     tryNext(TOKEN::NLBRAC, true);
-    current_scope = current_scope->getChildat(id); // getNextchild(0), jump in temply
-    EXCEPT_ZERO(Paras, current_scope->getFunc(name));
+    current_scope = current_scope->getChildat(current_scope->idchild_); // getNextchild(0), jump in temply
+    EXCEPT_ZERO(Paras, current_scope->getFunc(func_token.name));
     current_scope = current_scope->getParent();
     tryNext(TOKEN::OBRACE, false);
 
@@ -514,11 +518,12 @@ i32 Preprocess::FuncDecl() {
         tryNext(TOKEN::SEMICOLON, true);
 
     //results.push_back({P_TOKEN::DECL, last_offset, offset});
-    results.at(pos).setRang(last_offset, offset);
+    results.at(__pos__).setRang(last_offset, offset);
 
     if (0 == result)
         return 0;
-    {RETURN_ERROR};
+
+    RETURN_ERROR
 }
 
 i32 Preprocess::RetType() {
@@ -535,7 +540,7 @@ i32 Preprocess::RetType() {
 
 i32 Preprocess::LoopW() {
     results.push_back({P_TOKEN::LOOP, offset, offset + 1});
-    current_scope->getChildat(id)->setBreakable(true);
+    current_scope->getChildat(current_scope->idchild_)->setBreakable(true);
 
     tryNext(TOKEN::NLBRAC, true);
 
@@ -565,6 +570,10 @@ Preprocess::getNext() {
 
 u32 Preprocess::getSize() const {
     return static_cast<u32>(results.size());
+}
+
+const std::vector<p_token_t>& Preprocess::getResult(){
+    return results;
 }
 
 Scope::pointer

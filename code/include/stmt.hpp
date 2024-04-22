@@ -20,6 +20,7 @@ using pTokenPtr = shared_ptr<ptokens>;
 class Stmt;
 using Stmts = std::vector<Stmt *>;
 
+//base statements
 class Stmt {
   public:
     using pointer = Stmt *;
@@ -30,16 +31,22 @@ class Stmt {
 
   public:
     ~Stmt() = default;
+    virtual i32 Parse(const std::vector<token_t>&, const std::vector<p_token_t>&, range_t){return {};}
 };
 
+//compound statements
 class CompoundStmt : public Stmt {
   public:
     using pointer = CompoundStmt *;
 
   protected:
     Stmts children_;
+  
+  public:
+    void addChildren(Stmt::pointer, i32);
 };
 
+//function declare
 class FdeclStmt : public Stmt {
   public:
     using pointer = FdeclStmt*;
@@ -49,14 +56,21 @@ class FdeclStmt : public Stmt {
 
   public:
     FdeclStmt(Function::pointer func) : func_(func), body_() {};
-    i32 Parse(const std::vector<token_t>&, const std::vector<p_token_t>&, range_t);
+    i32 Parse(const std::vector<token_t>&, const std::vector<p_token_t>&, range_t) override;
+
+    void addChildren(Stmt::pointer);
 };
 
+//variable declare
 class VdeclStmt : public Stmt {
   protected:
     Variable::pointer var_;
+  
+  public:
+    i32 Parse(const std::vector<token_t>&, const std::vector<p_token_t>&, range_t) override;
 };
 
+//binary statement
 class BinStmt : public Stmt {
   public:
     using pointer = BinStmt *;
@@ -67,6 +81,7 @@ class BinStmt : public Stmt {
   public:
 };
 
+//loop statement
 class LoopStmt : public Stmt {
 
   protected:
@@ -74,6 +89,7 @@ class LoopStmt : public Stmt {
     CompoundStmt::pointer body_;
 };
 
+//if statement
 class IfStmt : public Stmt {
 
   protected:
@@ -81,6 +97,7 @@ class IfStmt : public Stmt {
     CompoundStmt::pointer body_;
 };
 
+//retrun statement
 class RetStmt : public Stmt{
   protected:
     Expression::pointer result_;

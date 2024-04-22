@@ -1,6 +1,7 @@
 #include "parse.hpp"
 #include "base/log.hpp"
 #include "base/vasdef.hpp"
+#include "stmt.hpp"
 #include "symbol.hpp"
 
 namespace vastina {
@@ -40,6 +41,7 @@ i32 Parser::Parse() {
         }
         case P_TOKEN::FDECL: {
 
+            EXCEPT_ZERO(Fdecl);
             break;
         }
         case P_TOKEN::VDECL: {
@@ -66,7 +68,6 @@ i32 Parser::Parse() {
             break;
         }
         case P_TOKEN::CALL: {
-            if(isGlobalHere()) EXIT_ERROR;
             EXCEPT_ZERO(Call);
             break;
         }
@@ -74,7 +75,10 @@ i32 Parser::Parse() {
 
             break;
         }
+        case P_TOKEN::END: {
 
+            break;
+        }
         default:
             EXIT_ERROR;
         }
@@ -100,11 +104,14 @@ i32 Parser::Fdecl(){
     //todo, if there's only declare, no body
     auto func = scope_->getSymbolTable().getFunc(primary_tokens_.at(CurrentToken().start+1).name);
     //remember back to i32 symbol.cpp:Paras
-    auto fstmt = FdeclStmt::pointer(func);
+    auto fstmt = new FdeclStmt(func);
     //find range by start number
-    auto range = scope_->findRange(p_offset_);
+    //auto range = scope_->findRange(p_offset_);
+    auto res =  fstmt->Parse(primary_tokens_, processed_tokens_, scope_->getNextChild()->getRange());
+    if(0 != res) RETURN_ERROR
+    else result_.push_back(fstmt);
 
-    return fstmt->Parse(primary_tokens_, processed_tokens_, range);
+    return 0;
 }
 
 i32 Parser::Call(){

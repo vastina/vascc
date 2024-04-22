@@ -58,6 +58,7 @@ class literal : public Literal { // compile time values like "Hello World",11451
     }
 };
 
+using SourceLocation = token_t;
 // typedef struct SourceLocation {
 //     token_t& src;
 //     Scope::pointer location;
@@ -65,8 +66,7 @@ class literal : public Literal { // compile time values like "Hello World",11451
 
 class Variable : public Value {
   public:
-    using pointer = Variable *;
-    using SourceLocation = token_t;
+    using pointer = Variable *;    
 
   protected:
     bool isConstexpr_{};
@@ -102,12 +102,13 @@ class Function {
   protected:
     bool isVoid_{};
     std::vector<Variable::pointer> paras_{};
+    const SourceLocation &Srcloc_;
 
   public:
     using pointer = Function *;
 
-    Function() = default;
-    ~Function() = default;
+    Function(const SourceLocation &Srcloc) : Srcloc_(Srcloc) { };
+    ~Function() { paras_.clear(); };
     inline pointer
     self() {
         return this;
@@ -115,13 +116,13 @@ class Function {
 
     virtual TOKEN Type(){return TOKEN::UNKNOW;};
     virtual u32 getParamSize(){return {};};
-    virtual std::string_view getName(){return{};};
+    std::string_view getName(){return Srcloc_.name;};
 };
 
 template <typename ty>
 class func : public Function {
   public:
-    func(){};
+    func(const SourceLocation &Srcloc) : Function(Srcloc){};
 
     inline constexpr TOKEN Type()override { return ::vastina::Type<ty>(); };
     ty RetureType()const {};
@@ -135,11 +136,11 @@ typedef struct SymbolTable {
     std::unordered_map<std::string_view, Function> functions;
 
     inline bool
-    varExist(const std::string_view &name) {
+    varExist(const std::string_view &name) const{
         return static_cast<bool>(Variables.count(name));
     }
     inline bool
-    funcExist(const std::string_view &name) {
+    funcExist(const std::string_view &name) const{
         return static_cast<bool>(functions.count(name));
     }
     // Variables.insert(std::make_pair(name, var)); }
@@ -211,8 +212,6 @@ class Scope {
     std::vector<pointer> children_;
 
     bool isBreakable_{false}; // for loop, who else need this?
-    // so bad
-    u32 idchild_{};
 
   public:
     Scope() = delete;
@@ -232,6 +231,7 @@ class Scope {
     range_t findRange(u32);
     //range_t getNextRangeBetweenChildren(); //this is too stupid, I won't do that
     void setBreakable(bool);
+    inline void reSet(){idchild_ = 0;};
 
     // for test
     const decltype(children_) &getChildren();
@@ -242,6 +242,9 @@ class Scope {
     pointer getChildat(u32);
     pointer getParent();
     pointer getRoot();
+    
+    // so bad
+    u32 idchild_{};
 };
 
 typedef struct p_token_t {
@@ -288,6 +291,8 @@ class Preprocess {
     inline TOKEN Peek();
     void Next();
     void reset();
+
+    void Backup(u32);
     // Getter and Setter----------------------------------------------------
   private:
     // for Except, use this when you need Except
@@ -319,6 +324,7 @@ class Preprocess {
     const p_token_t &getNext();
     u32 getSize() const;
 
+    const std::vector<p_token_t>& getResult();
     // for test?
     Scope::pointer CurrentScope();
     // Getter and Setter----------------------------------------------------
