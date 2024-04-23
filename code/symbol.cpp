@@ -4,7 +4,6 @@
 #include "expr.hpp"
 
 #include <iostream>
-#include <queue>
 
 #include <folly/Function.h>
 

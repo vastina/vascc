@@ -13,5 +13,5 @@ func closet:int(int x, int y, int z, int target){
 }
 
 func main:int(){
-    return closet(2, 4, 8, 16, 32);
+    return closet(2, 4, 8, 16);
 }

@@ -56,6 +56,11 @@ lexer::ParseWhiteSpace() {
     return STATE::NORMAL;
 }
 
+void lexer::NextLine(){
+    while('\n' != buffer[offset]) offset++;
+    // offset++; line++;
+}
+
 lexer::RESULT
 lexer::ParseKeyWord(const std::string_view &target, TOKEN target_type,
                     const folly::Function<bool(char)> &endjudge, TOKEN Default,
@@ -423,9 +428,11 @@ lexer::Next() {
         case '*':
             forSingelWord("*", TOKEN::MULTI);
             break;
-        case '/':
-            forSingelWord("/", TOKEN::DIV);
+        case '/':{
+            if(buffer[offset+1] == '/') NextLine();//
+            else forSingelWord("/", TOKEN::DIV);
             break;
+        }
         case '~':
             forSingelWord("~", TOKEN::OPS);
             break;

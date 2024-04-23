@@ -1,5 +1,6 @@
 #include "base/String.hpp"
 #include "lexer.hpp"
+#include "stmt.hpp"
 #include "symbol.hpp"
 #include "parse.hpp"
 
@@ -64,7 +65,8 @@ int main(int argc, char *argv[]) {
                  "--------\n";
 
     auto psr = new Parser(*tks.get(), pp->getResult(), pp->CurrentScope());
-    return psr->Parse();
+    (void)psr->Parse();
+    psr->Walk();
 
-//    return 0;
+    return 0;
 }

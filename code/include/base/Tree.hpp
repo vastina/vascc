@@ -2,6 +2,7 @@
 #define _BASE_TREE_H_
 
 #include <memory>
+#include <iostream>
 
 #include <folly/Function.h>
 
@@ -38,31 +39,40 @@ class TreeNode : public std::enable_shared_from_this<TreeNode<ty>> {
 
   private:
     inline void
-    InOrder(void visit(const ty &data_), pointer root) {
+    InOrder(void visit(const ty &data_), pointer root, 
+        void leftmark()=[]{std::cout << "go left\n";}, void rightmark()=[]{std::cout << "go right\n";}) {
         if (root->left != nullptr) {
+            leftmark();
             InOrder(visit, root->left);
         }
         visit(root->data);
         if (root->right != nullptr) {
+            rightmark();
             InOrder(visit, root->right);
         }
     }
     inline void
-    PreOrder(void visit(const ty &data_), pointer root) {
+    PreOrder(void visit(const ty &data_), pointer root, 
+        void leftmark()=[]{std::cout << "go left\n";}, void rightmark()=[]{std::cout << "go right\n";}) {
         visit(root->data);
         if (root->left != nullptr) {
+            leftmark();
             PreOrder(visit, root->left);
         }
         if (root->right != nullptr) {
+            rightmark();
             PreOrder(visit, root->right);
         }
     }
     inline void
-    PostOrder(void visit(const ty &data_), pointer root) {
+    PostOrder(void visit(const ty &data_), pointer root, 
+        void leftmark()=[]{std::cout << "go left\n";}, void rightmark()=[]{std::cout << "go right\n";}) {
         if (root->left != nullptr) {
+            leftmark();
             PostOrder(visit, root->left);
         }
         if (root->right != nullptr) {
+            rightmark();
             PostOrder(visit, root->right);
         }
         visit(root->data);

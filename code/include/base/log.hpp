@@ -9,6 +9,9 @@
 namespace vastina {
 
 // todo a log class, singlton or sth
+
+#define LEAVE_MSG(msg) ::std::cerr << msg <<' ' << __FILE__ << ' ' << __LINE__ << '\n';
+
 #define RETURN_ERROR                                        \
     {                                                       \
         ::std::cerr << __FILE__ << ' ' << __LINE__ << '\n'; \

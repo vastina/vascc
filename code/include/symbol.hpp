@@ -29,16 +29,20 @@ struct token_t {
 };
 // "create symbol tables for every scope"
 
+using SourceLocation = token_t;
 class Value {
 
   public:
     using pointer = Value *;
+    const SourceLocation &Srcloc_;
+    Value(const SourceLocation &srcloc) : Srcloc_(srcloc){};
     ~Value() = default;
+    
 };
 
 class Literal : public Value {
   protected:
-    bool isTrivial;
+    bool isTrivial{};
 };
 
 template <typename ty>
@@ -47,7 +51,6 @@ class literal : public Literal { // compile time values like "Hello World",11451
     ty value;
 
   public:
-    using Literal::isTrivial;
 
     literal() = default;
     ~literal() = default;
@@ -58,11 +61,6 @@ class literal : public Literal { // compile time values like "Hello World",11451
     }
 };
 
-using SourceLocation = token_t;
-// typedef struct SourceLocation {
-//     token_t& src;
-//     Scope::pointer location;
-// } SourceLocation;
 
 class Variable : public Value {
   public:
@@ -71,11 +69,11 @@ class Variable : public Value {
   protected:
     bool isConstexpr_{};
     bool isTrivial_{};
-    const SourceLocation &Srcloc_;
+    
 
   public:
     Variable() = delete;
-    Variable(const SourceLocation &srcloc) : Srcloc_(srcloc){};
+    Variable(const SourceLocation &srcloc) : Value(srcloc){};
     ~Variable() = default;
     inline bool
     isConst() {

@@ -51,6 +51,7 @@ class lexer {
     i32 Parse();
 
     STATE Next();
+    void NextLine();
     i32 reScan();  //todo, for non-func func declare
 
     const std::vector<token_t> &getTokens();
