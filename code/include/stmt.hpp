@@ -36,6 +36,10 @@ class Stmt {
     inline pointer getParent() { return parent_; }
     // CompoundStmt
     virtual void addChildren(Stmt::pointer, i32 = -1){};
+    virtual const Stmts& getChildren(){ 
+      constexpr static Stmts s{};
+      return s; 
+    };
     // CondStmt
     virtual void setCondition(Stmt::pointer){};
     // VdeclStmt
@@ -47,7 +51,7 @@ class Stmt {
     virtual std::string_view getName() { return "Stmt"; };
 };
 
-// compound statements
+//--------------compound statements------------------------------------------------------------------------------------
 class CompoundStmt : public Stmt {
   public:
     using pointer = CompoundStmt *;
@@ -59,13 +63,15 @@ class CompoundStmt : public Stmt {
     CompoundStmt(Stmt::pointer parent) : Stmt(parent), children_{} {};
     virtual ~CompoundStmt() { children_.clear(); }
     void addChildren(Stmt::pointer, i32) override;
-
     inline Stmt::pointer getChildat(u32 pos) { return children_.at(pos); }
     inline u32 getStmtSize() { return children_.size(); }
+    inline const Stmts& getChildren() override {return children_;}
+
     inline std::string_view getName() override { return "CompoundStmt"; };
 };
+//--------------compound statements------------------------------------------------------------------------------------
 
-// function declare
+//--------------function declare statement-----------------------------------------------------------------------------
 class FdeclStmt : public CompoundStmt {
   public:
     using pointer = FdeclStmt *;
@@ -78,8 +84,9 @@ class FdeclStmt : public CompoundStmt {
 
     inline std::string_view getName() override { return "FdeclStmt"; };
 };
+//--------------function declare statement-----------------------------------------------------------------------------
 
-// binary statement
+//--------------binary statement---------------------------------------------------------------------------------------
 class BinStmt : public Stmt {
   public:
     using pointer = BinStmt *;
@@ -91,17 +98,21 @@ class BinStmt : public Stmt {
   public:
     BinStmt(Stmt::pointer parent) : Stmt(parent), root_{nullptr}, scope_{nullptr} {};
     BinStmt(Stmt::pointer parent, Scope::pointer scope) : Stmt(parent), root_{nullptr}, scope_{scope} {};
-    typename TreeNode<Expression::pointer>::pointer
-    doParse(const std::vector<token_t> &primary_tokens, u32 end, u32 &offset);
-    void Parse(const std::vector<token_t> &, range_t) override;
+    // typename TreeNode<Expression::pointer>::pointer
+    // doParse(const std::vector<token_t> &primary_tokens, u32 end, u32 &offset);
+    // void Parse(const std::vector<token_t> &, range_t) override;
+    inline void setRoot(typename TreeNode<Expression::pointer>::pointer root){root_ = root;}
+  
     static Expression::pointer Creator(const token_t &, const Scope::pointer);
-    typename TreeNode<Expression::pointer>::pointer
-    nodeCreator(const token_t &tk);
+  
+    static typename TreeNode<Expression::pointer>::pointer
+    nodeCreator(const token_t &, Scope::pointer);
 
     inline std::string_view getName() override { return "BinStmt"; };
 };
+//--------------binary statement---------------------------------------------------------------------------------------
 
-// variable declare
+//--------------variable declare statement-----------------------------------------------------------------------------
 class VdeclStmt : public Stmt {
   protected:
     Variable::pointer var_;
@@ -115,12 +126,13 @@ class VdeclStmt : public Stmt {
 
     inline std::string_view getName() override { return "VdeclStmt"; };
 };
+//--------------variable declare statement-----------------------------------------------------------------------------
 
-// condition statement
+//--------------condition statement------------------------------------------------------------------------------------
 class CondStmt : public CompoundStmt {
 
   protected:
-    BinStmt::pointer condition_;
+    BinStmt::pointer condition_{nullptr};
 
   public:
     CondStmt(Stmt::pointer parent) : CompoundStmt(parent){};
@@ -128,38 +140,50 @@ class CondStmt : public CompoundStmt {
 
     inline std::string_view getName() override { return "CondStmt"; };
 };
+//--------------condition statement------------------------------------------------------------------------------------
 
-// loop statement
+//--------------loop statement-----------------------------------------------------------------------------------------
 class LoopStmt : public CondStmt {
 
   protected:
-    BinStmt::pointer condition_;
 
   public:
     LoopStmt(Stmt::pointer parent) : CondStmt(parent){};
 
     inline std::string_view getName() override { return "LoopStmt"; };
 };
+//--------------loop statement-----------------------------------------------------------------------------------------
 
-// if statement
+//--------------if statement-------------------------------------------------------------------------------------------
 class IfStmt : public CondStmt {
 
   protected:
-    BinStmt::pointer condition_;
 
   public:
     IfStmt(Stmt::pointer parent) : CondStmt(parent){};
 
     inline std::string_view getName() override { return "IfStmt"; };
 };
+//--------------if statement-------------------------------------------------------------------------------------------
 
-// retrun statement
+//--------------retrun statement---------------------------------------------------------------------------------------
 class RetStmt : public Stmt {
   protected:
-    Expression::pointer result_;
+    Stmt::pointer result_;
 
   public:
     inline std::string_view getName() override { return "RetStmt"; };
+};
+//--------------retrun statement---------------------------------------------------------------------------------------
+
+// I think this would mostly work for void
+class CallStmt : public Stmt {
+  public:
+    using pointer = CallStmt *;
+  protected:
+    Expression::pointer callee_;
+  public:
+    CallStmt(Stmt::pointer parent, Expression::pointer callee) : Stmt(parent), callee_(callee) {};
 };
 
 }; // namespace vastina

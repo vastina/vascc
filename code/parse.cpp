@@ -1,7 +1,12 @@
 #include "parse.hpp"
 
+#include "base/Tree.hpp"
 #include "base/log.hpp"
+#include "base/vasdef.hpp"
+#include "expr.hpp"
 #include "stmt.hpp"
+#include <cstdio>
+#include <queue>
 
 namespace vastina {
 
@@ -27,6 +32,11 @@ Parser::PeekToken() {
     return processed_tokens_.at(p_offset_ + 1);
 }
 
+inline const p_token_t &
+Parser::Peekat(u32 offset) {
+    return processed_tokens_.at(offset);
+}
+
 inline void
 Parser::Next() {
     p_offset_++;
@@ -37,11 +47,10 @@ i32 Parser::Parse() {
     while (p_offset_ < processed_tokens_size) {
         switch (Current()) {
         case P_TOKEN::BINARY: {
-
+            EXCEPT_ZERO(Binary);
             break;
         }
         case P_TOKEN::FDECL: {
-
             EXCEPT_ZERO(Fdecl);
             break;
         }
@@ -54,7 +63,7 @@ i32 Parser::Parse() {
             break;
         }
         case P_TOKEN::IF: {
-
+            EXCEPT_ZERO(Ifer);
             break;
         }
         case P_TOKEN::LOOP: {
@@ -66,11 +75,11 @@ i32 Parser::Parse() {
             break;
         }
         case P_TOKEN::RET: {
-
+// print("\nreturn\n");
+            EXCEPT_ZERO(Ret);
             break;
         }
         case P_TOKEN::END: {
-
             break;
         }
         default:
@@ -78,6 +87,7 @@ i32 Parser::Parse() {
         }
 
         Next();
+// print("\np_offset: {}\n", p_offset_);
         if (p_offset_ >= scope_->getRange().end) {
             // should avoid fall nullptr here?
             if (scope_->getParent() != nullptr)
@@ -93,16 +103,14 @@ i32 Parser::Parse() {
 // I know using new directly is bad
 
 i32 Parser::Vdecl() {
-    auto var = scope_->getSymbolTable().getVar(primary_tokens_.at(CurrentToken().start).name);
+    auto var = scope_->getVar(primary_tokens_.at(CurrentToken().start).name);
     auto vstmt = new VdeclStmt(current_stmt_, var);
 
     current_stmt_->addChildren(vstmt);
 
     if (Peek() == P_TOKEN::BINARY) { // if with literal or sth to init
-        auto bstmt = new BinStmt(current_stmt_, scope_);
         Next();
-        bstmt->Parse(primary_tokens_, {CurrentToken().start, CurrentToken().end});
-        vstmt->InitWithStmt(bstmt);
+        vstmt->InitWithStmt(Binary({CurrentToken().start, CurrentToken().end}));
     }
 
     return 0;
@@ -111,12 +119,10 @@ i32 Parser::Vdecl() {
 i32 Parser::Fdecl() {
     // todo, if there's only declare, no body
     // and this is so stupid
-    auto func = scope_->getSymbolTable().getFunc(primary_tokens_.at(CurrentToken().start + 1).name);
-    // remember back to i32 symbol.cpp:Paras
+    auto func = scope_->getFunc(primary_tokens_.at(CurrentToken().start + 1).name);
     auto fstmt = new FdeclStmt(func, current_stmt_);
     current_stmt_->addChildren(fstmt);
     current_stmt_ = fstmt;
-
     scope_ = scope_->getNextChild();
     /*...*/
 
@@ -142,27 +148,122 @@ i32 Parser::Loop() {
 
     auto lstmt = new LoopStmt(current_stmt_);
     current_stmt_ = lstmt;
-
-    auto bstmt = new BinStmt(current_stmt_);
-    /*bstmt do sth*/
-    current_stmt_->setCondition(bstmt);
+    Next();
+    current_stmt_->setCondition(Binary({CurrentToken().start, CurrentToken().end}));
 
     return 0;
 }
 
 i32 Parser::Binary() {
+    current_stmt_->addChildren(Binary({CurrentToken().start, CurrentToken().end}));    
 
-    return {};
+    return 0;
+}
+
+CallExpr::pointer Parser::Callee(u32 pos){
+    auto& token = primary_tokens_.at(Peekat(pos).start);
+    auto func = scope_->getFunc(token.name);
+    auto callexpr = new class CallExpr(func, token);
+    for(auto i{1u}; i <= func->getParamSize(); i++){
+        auto start {Peekat(pos+i).start};
+        callexpr->addPara(ParseBinary(start, Peekat(pos + i).end));
+    }
+    return callexpr;
+}
+
+BinStmt::pointer
+Parser::Binary(range_t r){
+    auto bstmt = new BinStmt(current_stmt_, scope_);
+    auto start = r.start;
+    auto end = r.end;
+auto root {ParseBinary(start, end)};
+    bstmt->setRoot(root);
+root->Walk(PREORDER, [](const Expression::pointer &_data) { print("token : {}\n", _data->getName()); });
+putchar('\n');
+    return bstmt;
+}
+
+typename TreeNode<Expression::pointer>::pointer
+Parser::ParseBinary(u32& offset, u32 end){
+    auto root = BinStmt::nodeCreator(primary_tokens_.at(offset), scope_);
+    if (offset >= end)
+        return root;
+
+    static u32 counter = 1;
+    auto last_offset {offset};
+    while (true) {
+        auto current = BinStmt::nodeCreator(primary_tokens_.at(offset), scope_);
+        offset++;
+        auto tk = current->data->getToken();
+        switch (token_type(tk)) {
+        case TOKEN_TYPE::BRAC: {
+            if (TOKEN::NRBRAC == tk) {
+                root->data->setLevel(0);
+                return root;
+            } else {
+                if (TOKEN_TYPE::BRAC == token_type(root->data->getToken()))
+                    root = ParseBinary(offset, end);
+                else
+                    current = ParseBinary(offset, end);
+            }
+            break;
+        }
+        case TOKEN_TYPE::VALUE: {
+            if(current->data->getToken() == TOKEN::SYMBOLF){
+                auto pos {p_offset_ + counter};
+                auto parasize {scope_->getFunc(current->data->getName())->getParamSize()};
+                for(auto i {1u}; i <= parasize; i++){
+                    offset += Peekat(pos + i).end - Peekat(pos + i).start + 1;
+                }   offset++;
+                current->data = Callee(pos);
+                counter +=  parasize + 1;
+                if (offset == last_offset) root = current;
+            }
+            if (TOKEN_TYPE::VALUE == token_type(root->data->getToken()))
+                break;
+            auto temp = root->FindChildR(
+                [](const typename TreeNode<Expression::pointer>::pointer _node) { return nullptr == _node->right; });
+            temp->InsertRight(current);
+            break;
+        }
+        case TOKEN_TYPE::OPERATOR: {
+            if (current->data->getLevel() >= root->data->getLevel()) {
+                root->ReplaceByL(current);
+                root = current;
+            } else {
+                auto temp = root->FindChildR(
+                    [&current](const typename TreeNode<Expression::pointer>::pointer _node) {
+                        return (nullptr == _node->right) || (_node->data->getLevel() <= current->data->getLevel());
+                    });
+                if (temp != root)
+                    temp->ReplaceByL(current);
+                else
+                    temp->InsertRight(current);
+            }
+            break;
+        }
+
+        default:
+            return nullptr;
+        }
+
+        if (offset >= end)
+            break;
+    }
+//root->Walk(PREORDER, [](const Expression::pointer &_data) { print("token : {}\n", _data->getName()); });
+//putchar('\n');
+    counter = 1;
+    return root;
 }
 
 void Parser::Walk() {
-    print("at top is {}\n", current_stmt_->getName());
-
-    //......
-    auto fuck = dynamic_cast<CompoundStmt::pointer>(current_stmt_);
-    for (auto i{0u}; i < fuck->getStmtSize(); i++) {
-        auto child = fuck->getChildat(i);
-        print("{}, {}\n", i, child->getName());
+    std::queue<Stmt::pointer> que;
+    que.push(current_stmt_);
+    while(!que.empty()){
+        auto stmt = que.front();    que.pop();
+        print("{}\n", stmt->getName());
+        for(auto&& child: stmt->getChildren())
+            que.push(child);
     }
 }
 

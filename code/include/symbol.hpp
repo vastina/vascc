@@ -32,31 +32,26 @@ struct token_t {
 using SourceLocation = token_t;
 class Value {
 
+  protected:
+    const SourceLocation &Srcloc_;
   public:
     using pointer = Value *;
-    const SourceLocation &Srcloc_;
     Value(const SourceLocation &srcloc) : Srcloc_(srcloc){};
     ~Value() = default;
+    virtual std::string_view getName() { return Srcloc_.name; };
 };
 
-class Literal : public Value {
-  protected:
-    bool isTrivial{};
-};
 
-template <typename ty>
-class literal : public Literal { // compile time values like "Hello World",114514,3.14
-  private:
-    ty value;
+class literal : public Value { // compile time values like "Hello World",114514,3.14
 
   public:
-    literal() = default;
+    literal(const SourceLocation &Srcloc) : Value(Srcloc){};
     ~literal() = default;
 
-    inline std::string_view
-    Typename() {
-        return typeid(ty).name();
-    }
+    // inline std::string_view
+    // Typename() {
+    //     return typeid(ty).name();
+    // }
 };
 
 class Variable : public Value {
@@ -81,26 +76,18 @@ class Variable : public Value {
     }
 };
 
-template <typename ty>
-class variable : public Variable {
-  protected:
-    // I need reflect or a member to mark the type
-  public:
-    variable(const SourceLocation &srcloc) : Variable(srcloc){};
 
-    inline constexpr TOKEN Type() { return Type<ty>(); };
-};
-
-class Function {
+class Function : public Value{
   protected:
     bool isVoid_{};
-    std::vector<Variable::pointer> paras_{};
-    const SourceLocation &Srcloc_;
+    std::vector<Variable::pointer> paras_;
 
   public:
     using pointer = Function *;
 
-    Function(const SourceLocation &Srcloc) : Srcloc_(Srcloc){};
+    Function(const SourceLocation &Srcloc) : Value(Srcloc) {
+      paras_ = std::vector<Variable::pointer>();
+    };
     ~Function() { paras_.clear(); };
     inline pointer
     self() {
@@ -108,8 +95,8 @@ class Function {
     }
 
     virtual TOKEN Type() { return TOKEN::UNKNOW; };
-    virtual u32 getParamSize() { return {}; };
-    std::string_view getName() { return Srcloc_.name; };
+    virtual u32 getParamSize() { return paras_.size(); };
+    void addPara(Variable::pointer var){paras_.push_back(var);}
 };
 
 template <typename ty>
@@ -118,15 +105,16 @@ class func : public Function {
     func(const SourceLocation &Srcloc) : Function(Srcloc){};
 
     inline constexpr TOKEN Type() override { return ::vastina::Type<ty>(); };
-    ty RetureType() const {};
 
   private:
     ;
 };
 
 typedef struct SymbolTable {
-    std::unordered_map<std::string_view, Variable> Variables;
-    std::unordered_map<std::string_view, Function> functions;
+    std::unordered_map<std::string_view, Variable::pointer> Variables;
+    std::unordered_map<std::string_view, Function::pointer> functions;
+
+    SymbolTable() : Variables{}, functions{} {}
 
     inline bool
     varExist(const std::string_view &name) const {
@@ -138,26 +126,26 @@ typedef struct SymbolTable {
     }
     // Variables.insert(std::make_pair(name, var)); }
     inline Variable::pointer
-    getVar(std::string_view name) {
-        if (Variables.count(name))
-            return Variables.at(name).self();
+    getVar(const std::string_view& name) {
+        if (varExist(name))
+            return Variables.at(name);
         return nullptr;
     }
     inline Function::pointer
-    getFunc(std::string_view name) {
-        if (Variables.count(name))
-            return functions.at(name).self();
+    getFunc(const std::string_view& name) {
+        if (funcExist(name))
+            return functions.at(name);
         return nullptr;
     }
 
     // always override
-    inline void addVar(const std::string_view &name, const Variable &var) {
+    inline void addVar(const std::string_view &name, Variable::pointer var) {
         Variables.erase(name);
         Variables.insert(std::make_pair(name, var));
         // Variables[name] = var;
     }
     // always override
-    inline void addFunc(const std::string_view &name, const Function &fc) {
+    inline void addFunc(const std::string_view &name, Function::pointer fc) {
         functions.erase(name);
         functions.insert(std::make_pair(name, fc));
         // functions[name] = fc;
@@ -171,6 +159,7 @@ typedef struct range_t {
     u32 end; //[start, end) preprocessed_tokens[start] to
              // preprocessed_tokens[end-1]
 
+//some are here just because I'm lazy to check which is no longer needed
     range_t() : start(0), end(0){};
     inline const range_t &
     operator=(range_t &&other) {
@@ -212,8 +201,8 @@ class Scope {
     Scope(pointer parent, range_t &&r)
         : parent_(parent), r_(r), st_(), children_(){};
 
-    void addVar(const std::string_view &, const Variable &);
-    void addFunc(const std::string_view &, const Function &);
+    void addVar(const std::string_view &, Variable::pointer );
+    void addFunc(const std::string_view &, Function::pointer);
     Variable::pointer getVar(const std::string_view &);
     Function::pointer getFunc(const std::string_view &);
     bool varExist(const std::string_view &);
@@ -245,7 +234,7 @@ typedef struct p_token_t {
     u32 start;
     u32 end;
 
-    inline void setRang(u32 _start, u32 _end) {
+    inline void setRange(u32 _start, u32 _end) {
         start = _start;
         end = _end;
     }
@@ -299,7 +288,7 @@ class Preprocess {
     i32 Assign(const folly::Function<bool()> &EndJudge);
     i32 Declare(const folly::Function<bool()> &EndJudge);
     i32 Address(const folly::Function<bool()> &EndJudge);
-    i32 IfType();
+    i32 Ifer();
     i32 RetType();
 
     i32 Paras(Function::pointer fc);

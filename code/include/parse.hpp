@@ -9,8 +9,6 @@
 
 namespace vastina {
 
-// looks like Parser is just an interface
-// no need of some members
 class Parser {
 
   protected:
@@ -18,9 +16,6 @@ class Parser {
     // u32 offset_{};
     const ptokens &processed_tokens_;
     u32 p_offset_{};
-
-    // Stmts result_;
-    // u32 id_{};
 
     Stmt::pointer current_stmt_;
     Scope::pointer scope_;
@@ -39,8 +34,8 @@ class Parser {
     inline const p_token_t &CurrentToken();
     inline P_TOKEN Peek();
     inline const p_token_t &PeekToken();
+    inline const p_token_t &Peekat(u32);
     inline void Next();
-    u32 res_;
 
   public:
     void Walk();
@@ -58,7 +53,11 @@ class Parser {
     i32 Binary();
 
     // should this?
-    static Expression::pointer Binary(range_t);
+    BinStmt::pointer Binary(range_t);
+    CallExpr::pointer Callee(u32);
+  private:
+    typename TreeNode<Expression::pointer>::pointer ParseBinary(u32&, u32);
+
 };
 
 } // namespace vastina

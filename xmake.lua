@@ -6,7 +6,7 @@ target("vcc")
     -- 设置 C++ 标准
     set_languages("cxx20")
     -- 添加编译选项
-    add_cxxflags("-Wall", "-g", "-Wextra")
+    add_cxxflags("-Wall", "-g", "-Wextra", "-lfolly", "-lglog", "-lfmt")
     -- 添加包含目录
     add_includedirs("code/include")
     -- 添加源文件

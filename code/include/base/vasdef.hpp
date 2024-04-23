@@ -118,9 +118,9 @@ enum class STMT{
 //todo but not cpp https://zh.cppreference.com/w/cpp/language/operator_precedence
 inline static constexpr u32 Level(TOKEN tk){
     switch (tk){
-        case TOKEN::EQUAL:
-            return 5;
         case TOKEN::ASSIGN:
+            return 5;
+        case TOKEN::EQUAL:
             return 4;
         case TOKEN::ADD:
         case TOKEN::NEG:
@@ -134,6 +134,7 @@ inline static constexpr u32 Level(TOKEN tk){
             return 1;
         case TOKEN::SYMBOL:
         case TOKEN::NUMBER:
+        case TOKEN::SYMBOLF:
             return 0;
         default:
             return 1<<31;

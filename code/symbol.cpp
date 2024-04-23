@@ -30,10 +30,10 @@ Scope::getRoot() {
     }
     return root;
 }
-void Scope::addVar(const std::string_view &name, const Variable &var) {
+void Scope::addVar(const std::string_view &name, Variable::pointer var) {
     st_.addVar(name, var);
 }
-void Scope::addFunc(const std::string_view &name, const Function &fc) {
+void Scope::addFunc(const std::string_view &name, Function::pointer fc) {
     st_.addFunc(name, fc);
 }
 Variable::pointer
@@ -191,7 +191,7 @@ i32 Preprocess::Process() {
             break;
         }
         case TOKEN::IF: {
-            EXCEPT_ZERO(IfType);
+            EXCEPT_ZERO(Ifer);
             break;
         }
         case TOKEN::SYMBOL: {
@@ -332,7 +332,7 @@ i32 Preprocess::Binary(const folly::Function<bool()> &EndJudge) {
         Next();
         if (const_cast<folly::Function<bool()> &>(EndJudge)() && (bc.close == bc.open)) {
             // results.push_back({P_TOKEN::BINARY, last_offset, offset});
-            results.at(__pos__).setRang(last_offset, offset);
+            results.at(__pos__).setRange(last_offset, offset);
             // if(Current() == TOKEN::SEMICOLON)
             //     results.push_back({P_TOKEN::END, offset, offset + 1});
             break;
@@ -365,12 +365,12 @@ i32 Preprocess::Declare(const folly::Function<bool()> &EndJudge) {
     switch (Current()) {
     case TOKEN::INT:
         adder = [this]() {
-            current_scope->addVar(CurrentTokenName(), variable<i32>(CurrentToken()));
+            current_scope->addVar(CurrentTokenName(), new Variable(CurrentToken()));
         };
         break;
     case TOKEN::FLOAT:
         adder = [this]() {
-            current_scope->addVar(CurrentTokenName(), variable<float>(CurrentToken()));
+            current_scope->addVar(CurrentTokenName(), new Variable(CurrentToken()));
         };
         break;
     case TOKEN::DOUBLE:
@@ -385,10 +385,6 @@ i32 Preprocess::Declare(const folly::Function<bool()> &EndJudge) {
     u32 last_offset = offset;
     while (true) {
         if (Current() == TOKEN::SYMBOL) {
-            /*const auto& table = current_scope->getSymbolTable();
-            if (table.varExist(CurrentTokenName())) {
-                RETURN_ERROR
-            } else*/
             if (Peek() != TOKEN::ASSIGN) {
                 results.push_back({P_TOKEN::VDECL, offset, offset + 1});
             }
@@ -405,8 +401,6 @@ i32 Preprocess::Declare(const folly::Function<bool()> &EndJudge) {
         } else if (const_cast<folly::Function<bool()> &>(EndJudge)())
             break;
         else if (Current() == TOKEN::COMMA) {
-            // results.push_back({P_TOKEN::BINARY, last_offset,
-            // offset});
             last_offset = offset + 1;
             Next();
         }
@@ -419,15 +413,13 @@ i32 Preprocess::Address(const folly::Function<bool()> &) {
     return {};
 }
 
-i32 Preprocess::IfType() {
+i32 Preprocess::Ifer() {
     results.push_back({P_TOKEN::IF, offset, offset + 1});
 
     tryNext(TOKEN::NLBRAC, true);
     // EXCEPT_ZERO(Binary, fn);
     i32 res = Binary([this]() { return Current() == TOKEN::OBRACE; }); // 暂时不支持不带{}的if
-    if (0 != res) {
-        RETURN_ERROR
-    }
+    if (0 != res) RETURN_ERROR;
 
     return 0;
 }
@@ -456,7 +448,7 @@ i32 Preprocess::Callee(Function::pointer) {
     return 0;
 }
 
-i32 Preprocess::Paras(Function::pointer) {
+i32 Preprocess::Paras(Function::pointer func) {
     // just kepp it like this, do not modify if you really know what you
     // are doing
     if (Peek() == TOKEN::NRBRAC) {
@@ -465,12 +457,16 @@ i32 Preprocess::Paras(Function::pointer) {
     } else {
         Next();
     }
-
     while (true) {
-        if (Declare([this] {
+        if (Declare([this, func, counter{0u}]()mutable {
+                if(results.size() > counter){
+                    counter = results.size();
+                    auto name = primary_tokens.at(results.at(counter-1).start).name;
+                    func->addPara(current_scope->getVar(name));
+                }
                 return ((Current() == TOKEN::COMMA) ||
                         ((Current() == TOKEN::NRBRAC) && ((Peek() == TOKEN::SEMICOLON) || (Peek() == TOKEN::OBRACE))));
-            }) != 0) {
+            })  != 0) {
             RETURN_ERROR
         }
         if (Current() != TOKEN::COMMA)
@@ -481,7 +477,6 @@ i32 Preprocess::Paras(Function::pointer) {
 
         // todo fc
     }
-
     return 0;
 }
 i32 Preprocess::FuncDecl() {
@@ -493,14 +488,14 @@ i32 Preprocess::FuncDecl() {
     } // todo
     trySkip(TOKEN::COLON, true);
 
-    std::function<void()> adder;
+    folly::Function<void()> adder;
     switch (Current()) {
     case TOKEN::INT:
-        adder = [this, &func_token]() { current_scope->addFunc(func_token.name, func<i32>(func_token)); };
+        adder = [this, &func_token]() { current_scope->addFunc(func_token.name, new Function(func_token)); };
         break;
     case TOKEN::FLOAT:
     case TOKEN::CHAR:
-    // todo finish this after finish var class
+    // todo
     default:
         THIS_NOT_SUPPORT(CurrentTokenName());
     }
@@ -519,7 +514,7 @@ i32 Preprocess::FuncDecl() {
         tryNext(TOKEN::SEMICOLON, true);
 
     // results.push_back({P_TOKEN::DECL, last_offset, offset});
-    results.at(__pos__).setRang(last_offset, offset);
+    results.at(__pos__).setRange(last_offset, offset);
 
     if (0 == result)
         return 0;

@@ -174,7 +174,7 @@ lexer::Next() {
                 ParseKeyWord("main", TOKEN::MAIN, NormalEnd, TOKEN::SYMBOLF,
                              SymbolEndJudge);
                 auto func_token = tokens.back();
-                current_scope->addFunc(func_token.name, Function(func_token));
+                current_scope->addFunc(func_token.name, new Function(func_token));
             }
             break;
         }

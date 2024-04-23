@@ -34,3 +34,6 @@ git log ${commit-hash}..${old-branch-name} --oneline
 # 重新应用那次提交之后的commit
 git cherry-pick xxxxxxx
 ```
+
+## 4/23/24
+runtime polymorphism is awesome and terrible
