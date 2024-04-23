@@ -66,8 +66,7 @@ state);
 using std::make_shared;
 using std::shared_ptr;
 
-
-//some classes here should be deleted
+// some classes here should be deleted
 
 template <typename ty>
 concept NotVoid = !std::is_same_v<ty, void>;
@@ -75,39 +74,40 @@ concept NotVoid = !std::is_same_v<ty, void>;
 class Expression {
   protected:
     u32 level_;
+
   public:
     using pointer = Expression *;
     virtual void Walk() const {};
     virtual void Parse() {};
-//ValExpr and OpExpr
-    virtual TOKEN getToken(){return {};}
-    virtual std::string_view getName(){return {};};
+    // ValExpr and OpExpr
+    virtual TOKEN getToken() { return {}; }
+    virtual std::string_view getName() { return {}; };
 
     virtual ~Expression() = default;
+
   public:
-    inline u32 getLevel(){return level_;};
-    inline void setLevel(u32 level){level_ = level;};
+    inline u32 getLevel() { return level_; };
+    inline void setLevel(u32 level) { level_ = level; };
 };
 
 class OpExpr : public Expression {
   protected:
-    const token_t& op_;
+    const token_t &op_;
 
   public:
     using pointer = OpExpr *;
     OpExpr() = delete;
-    OpExpr(const token_t& op) : op_(op){};
+    OpExpr(const token_t &op) : op_(op){};
     static inline pointer Create(TOKEN tk) {
         return new OpExpr(tk);
     }
 
   public:
-    inline void Walk() const override { };
+    inline void Walk() const override {};
     inline void Parse() override {};
-    inline TOKEN getToken() override {return op_.token;};
-    inline std::string_view getName() override {return op_.name;};
+    inline TOKEN getToken() override { return op_.token; };
+    inline std::string_view getName() override { return op_.name; };
 };
-
 
 class ValExpr : public Expression {
   private:
@@ -115,32 +115,28 @@ class ValExpr : public Expression {
     const token_t val_{TOKEN::UNKNOW, {}, UINT32_MAX};
 
   public:
-    ValExpr(Value::pointer val) : value_(val) {};
-    ValExpr(const token_t& tk) : val_(tk) {};
+    ValExpr(Value::pointer val) : value_(val){};
+    ValExpr(const token_t &tk) : val_(tk){};
     inline void Walk() const override {};
     inline void Parse() override {};
-    inline TOKEN getToken() override {return val_.token;};
-    inline std::string_view getName() override {return val_.name;};
+    inline TOKEN getToken() override { return val_.token; };
+    inline std::string_view getName() override { return val_.name; };
 };
 
 // 不能被作为值赋值给别的lval 与 不求值表达式 不是一回事, 这里为了方便取的是前者
 class nValExpr : public Expression {
 };
 
-
 class CallExpr : public ValExpr {
   public:
     inline void Parse() override {};
 };
 
-
 class vCallExpr : public nValExpr { // call void
 };
 
-
 class DeclExpr : public nValExpr {
 };
-
 
 class AddrExpr : public ValExpr {
 };
@@ -191,7 +187,7 @@ private:
         auto root = new cal_node(food_.tokens->at(offset));
         root->data.level = Level(root->data.tk.token);
         if(offset >= food_.end) return root;
-        
+
         while(true){
             auto current = new cal_node(food_.tokens->at(offset));
             offset++;
@@ -210,13 +206,13 @@ private:
                     auto temp = root->FindChildR(
                         [](const typename cal_node::pointer _node) {return (_node->right == nullptr);}
                     );
-                
+
                     temp->InsertRight(current);
 
                     break;
                 }
                 case TOKEN_TYPE::OPERATOR:{
-                    current->data.level = Level(current->data.tk.token); 
+                    current->data.level = Level(current->data.tk.token);
                     if(current->data.level >= root->data.level){
                         root->ReplaceByL(current);
                         root = current;
@@ -238,7 +234,7 @@ private:
                 default:
                     return nullptr;
             }
-        
+
             if(offset >= food_.end) break;
 
         }

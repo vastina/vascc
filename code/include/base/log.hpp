@@ -1,16 +1,16 @@
 #ifndef _LOGGER_H_
 #define _LOGGER_H_
 
-//to avoid this:
-// #include "base/log.hpp"
-// #include <iostream>
+// to avoid this:
+//  #include "base/log.hpp"
+//  #include <iostream>
 #include <iostream>
 
 namespace vastina {
 
 // todo a log class, singlton or sth
 
-#define LEAVE_MSG(msg) ::std::cerr << msg <<' ' << __FILE__ << ' ' << __LINE__ << '\n';
+#define LEAVE_MSG(msg) ::std::cerr << msg << ' ' << __FILE__ << ' ' << __LINE__ << '\n';
 
 #define RETURN_ERROR                                        \
     {                                                       \

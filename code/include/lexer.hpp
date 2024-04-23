@@ -52,7 +52,7 @@ class lexer {
 
     STATE Next();
     void NextLine();
-    i32 reScan();  //todo, for non-func func declare
+    i32 reScan(); // todo, for non-func func declare
 
     const std::vector<token_t> &getTokens();
     const std::string_view getBuffer();

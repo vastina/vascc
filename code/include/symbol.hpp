@@ -1,8 +1,8 @@
 #ifndef _SYMBOL_H_
 #define _SYMBOL_H_
 
-#include "base/vasdef.hpp" //for the fucking stupid and smart clangd, includeit directly
 #include "base/String.hpp"
+#include "base/vasdef.hpp" //for the fucking stupid and smart clangd, includeit directly
 
 #include <memory>
 #include <string_view>
@@ -37,7 +37,6 @@ class Value {
     const SourceLocation &Srcloc_;
     Value(const SourceLocation &srcloc) : Srcloc_(srcloc){};
     ~Value() = default;
-    
 };
 
 class Literal : public Value {
@@ -51,7 +50,6 @@ class literal : public Literal { // compile time values like "Hello World",11451
     ty value;
 
   public:
-
     literal() = default;
     ~literal() = default;
 
@@ -61,15 +59,13 @@ class literal : public Literal { // compile time values like "Hello World",11451
     }
 };
 
-
 class Variable : public Value {
   public:
-    using pointer = Variable *;    
+    using pointer = Variable *;
 
   protected:
     bool isConstexpr_{};
     bool isTrivial_{};
-    
 
   public:
     Variable() = delete;
@@ -90,7 +86,6 @@ class variable : public Variable {
   protected:
     // I need reflect or a member to mark the type
   public:
-
     variable(const SourceLocation &srcloc) : Variable(srcloc){};
 
     inline constexpr TOKEN Type() { return Type<ty>(); };
@@ -105,16 +100,16 @@ class Function {
   public:
     using pointer = Function *;
 
-    Function(const SourceLocation &Srcloc) : Srcloc_(Srcloc) { };
+    Function(const SourceLocation &Srcloc) : Srcloc_(Srcloc){};
     ~Function() { paras_.clear(); };
     inline pointer
     self() {
         return this;
     }
 
-    virtual TOKEN Type(){return TOKEN::UNKNOW;};
-    virtual u32 getParamSize(){return {};};
-    std::string_view getName(){return Srcloc_.name;};
+    virtual TOKEN Type() { return TOKEN::UNKNOW; };
+    virtual u32 getParamSize() { return {}; };
+    std::string_view getName() { return Srcloc_.name; };
 };
 
 template <typename ty>
@@ -122,8 +117,8 @@ class func : public Function {
   public:
     func(const SourceLocation &Srcloc) : Function(Srcloc){};
 
-    inline constexpr TOKEN Type()override { return ::vastina::Type<ty>(); };
-    ty RetureType()const {};
+    inline constexpr TOKEN Type() override { return ::vastina::Type<ty>(); };
+    ty RetureType() const {};
 
   private:
     ;
@@ -134,11 +129,11 @@ typedef struct SymbolTable {
     std::unordered_map<std::string_view, Function> functions;
 
     inline bool
-    varExist(const std::string_view &name) const{
+    varExist(const std::string_view &name) const {
         return static_cast<bool>(Variables.count(name));
     }
     inline bool
-    funcExist(const std::string_view &name) const{
+    funcExist(const std::string_view &name) const {
         return static_cast<bool>(functions.count(name));
     }
     // Variables.insert(std::make_pair(name, var)); }
@@ -227,9 +222,9 @@ class Scope {
     void setRange(u32, u32);
     const range_t &getRange();
     range_t findRange(u32);
-    //range_t getNextRangeBetweenChildren(); //this is too stupid, I won't do that
+    // range_t getNextRangeBetweenChildren(); //this is too stupid, I won't do that
     void setBreakable(bool);
-    inline void reSet(){idchild_ = 0;};
+    inline void reSet() { idchild_ = 0; };
 
     // for test
     const decltype(children_) &getChildren();
@@ -240,7 +235,7 @@ class Scope {
     pointer getChildat(u32);
     pointer getParent();
     pointer getRoot();
-    
+
     // so bad
     u32 idchild_{};
 };
@@ -250,13 +245,13 @@ typedef struct p_token_t {
     u32 start;
     u32 end;
 
-    inline void setRang(u32 _start, u32 _end){
+    inline void setRang(u32 _start, u32 _end) {
         start = _start;
         end = _end;
     }
 } p_token_t;
 //[start, end)
-//use rang_t here maybe better
+// use rang_t here maybe better
 
 class Preprocess {
   public:
@@ -322,7 +317,7 @@ class Preprocess {
     const p_token_t &getNext();
     u32 getSize() const;
 
-    const std::vector<p_token_t>& getResult();
+    const std::vector<p_token_t> &getResult();
     // for test?
     Scope::pointer CurrentScope();
     // Getter and Setter----------------------------------------------------

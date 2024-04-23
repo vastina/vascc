@@ -9,9 +9,9 @@
 
 namespace vastina {
 
-#define TEMP_LOG                                                            \
-    {::std::cerr << offset << ' ' << Current() << ' ' << CurrentTokenName() \
-                << ' ';}
+#define TEMP_LOG                                                             \
+    { ::std::cerr << offset << ' ' << Current() << ' ' << CurrentTokenName() \
+                  << ' '; }
 // get the child just created so add data in it
 Scope::pointer
 Scope::CreateChild(range_t &&rr = {0, 0}) {
@@ -86,26 +86,27 @@ void Scope::setRange(u32 start, u32 end) {
     r_.start = start;
     r_.end = end;
 }
-range_t Scope::findRange(u32 start){
+range_t Scope::findRange(u32 start) {
     auto node = this;
 
-    while(true){
-        u32 res ;
-        for(u32 i = 0; i<node->children_.size(); i++){
+    while (true) {
+        u32 res;
+        for (u32 i = 0; i < node->children_.size(); i++) {
             res = node->children_.at(i)->r_.start;
-print("start: {}\n", res);
-            if(res == start){
+            print("start: {}\n", res);
+            if (res == start) {
                 return node->children_.at(i)->r_;
             }
-            if(res > start){
-                //if this will cause crash, just let it crash
-                node = node->children_.at(i-1);
+            if (res > start) {
+                // if this will cause crash, just let it crash
+                node = node->children_.at(i - 1);
                 break;
             }
         }
-        //check child first
+        // check child first
         res = node->r_.start;
-        if(res == start) break;
+        if (res == start)
+            break;
     }
 
     return node->r_;
@@ -162,8 +163,8 @@ void Preprocess::reset() {
     id = 0;
 }
 
-void Preprocess::Backup(u32 pos){
-    while(results.size() >= pos)
+void Preprocess::Backup(u32 pos) {
+    while (results.size() >= pos)
         results.pop_back();
     return;
 }
@@ -256,7 +257,7 @@ i32 Preprocess::Process() {
 
     // it should be the global scope now
     current_scope->setRange(0, getSize());
-//this is bad
+    // this is bad
     current_scope->reSet();
     return 0;
 }
@@ -330,7 +331,7 @@ i32 Preprocess::Binary(const folly::Function<bool()> &EndJudge) {
         }
         Next();
         if (const_cast<folly::Function<bool()> &>(EndJudge)() && (bc.close == bc.open)) {
-            //results.push_back({P_TOKEN::BINARY, last_offset, offset});
+            // results.push_back({P_TOKEN::BINARY, last_offset, offset});
             results.at(__pos__).setRang(last_offset, offset);
             // if(Current() == TOKEN::SEMICOLON)
             //     results.push_back({P_TOKEN::END, offset, offset + 1});
@@ -374,10 +375,10 @@ i32 Preprocess::Declare(const folly::Function<bool()> &EndJudge) {
         break;
     case TOKEN::DOUBLE:
         break;
-    default:{
+    default: {
         TEMP_LOG
         RETURN_ERROR
-    }  
+    }
     }
     Next();
 
@@ -387,7 +388,8 @@ i32 Preprocess::Declare(const folly::Function<bool()> &EndJudge) {
             /*const auto& table = current_scope->getSymbolTable();
             if (table.varExist(CurrentTokenName())) {
                 RETURN_ERROR
-            } else*/ if (Peek() != TOKEN::ASSIGN) {
+            } else*/
+            if (Peek() != TOKEN::ASSIGN) {
                 results.push_back({P_TOKEN::VDECL, offset, offset + 1});
             }
             adder();
@@ -516,7 +518,7 @@ i32 Preprocess::FuncDecl() {
     if (0 != result)
         tryNext(TOKEN::SEMICOLON, true);
 
-    //results.push_back({P_TOKEN::DECL, last_offset, offset});
+    // results.push_back({P_TOKEN::DECL, last_offset, offset});
     results.at(__pos__).setRang(last_offset, offset);
 
     if (0 == result)
@@ -571,7 +573,7 @@ u32 Preprocess::getSize() const {
     return static_cast<u32>(results.size());
 }
 
-const std::vector<p_token_t>& Preprocess::getResult(){
+const std::vector<p_token_t> &Preprocess::getResult() {
     return results;
 }
 

@@ -22,7 +22,7 @@ using pTokenPtr = shared_ptr<ptokens>;
 class Stmt;
 using Stmts = std::vector<Stmt *>;
 
-//base statements
+// base statements
 class Stmt {
   public:
     using pointer = Stmt *;
@@ -33,52 +33,53 @@ class Stmt {
   public:
     Stmt(pointer parent) : parent_(parent){};
     virtual ~Stmt() = default;
-    inline pointer getParent(){return parent_;}
-//CompoundStmt
-    virtual void addChildren(Stmt::pointer, i32=-1) {};
-//CondStmt
+    inline pointer getParent() { return parent_; }
+    // CompoundStmt
+    virtual void addChildren(Stmt::pointer, i32 = -1){};
+    // CondStmt
     virtual void setCondition(Stmt::pointer){};
-//VdeclStmt
+    // VdeclStmt
     virtual void InitWithStmt(Stmt::pointer){};
-//BinStmt
+    // BinStmt
     virtual void Parse(const std::vector<token_t> &, range_t) {};
 
-// for test
-    virtual std::string_view getName(){return "Stmt";};
+    // for test
+    virtual std::string_view getName() { return "Stmt"; };
 };
 
-//compound statements
+// compound statements
 class CompoundStmt : public Stmt {
   public:
     using pointer = CompoundStmt *;
 
   protected:
     Stmts children_;
-  
-  public:
-    CompoundStmt(Stmt::pointer parent) : Stmt(parent), children_{}{};
-    virtual ~CompoundStmt(){children_.clear();}
-    void addChildren(Stmt::pointer, i32) override ;
 
-    inline Stmt::pointer getChildat(u32 pos){return children_.at(pos);}
-    inline u32 getStmtSize(){return children_.size();}
-    inline std::string_view getName() override {return "CompoundStmt";} ;
+  public:
+    CompoundStmt(Stmt::pointer parent) : Stmt(parent), children_{} {};
+    virtual ~CompoundStmt() { children_.clear(); }
+    void addChildren(Stmt::pointer, i32) override;
+
+    inline Stmt::pointer getChildat(u32 pos) { return children_.at(pos); }
+    inline u32 getStmtSize() { return children_.size(); }
+    inline std::string_view getName() override { return "CompoundStmt"; };
 };
 
-//function declare
+// function declare
 class FdeclStmt : public CompoundStmt {
   public:
-    using pointer = FdeclStmt*;
+    using pointer = FdeclStmt *;
+
   protected:
     Function::pointer func_;
 
   public:
-    FdeclStmt(Function::pointer func, Stmt::pointer parent) : CompoundStmt(parent) ,func_(func) {};
+    FdeclStmt(Function::pointer func, Stmt::pointer parent) : CompoundStmt(parent), func_(func){};
 
-    inline std::string_view getName() override {return "FdeclStmt";} ;
+    inline std::string_view getName() override { return "FdeclStmt"; };
 };
 
-//binary statement
+// binary statement
 class BinStmt : public Stmt {
   public:
     using pointer = BinStmt *;
@@ -90,44 +91,45 @@ class BinStmt : public Stmt {
   public:
     BinStmt(Stmt::pointer parent) : Stmt(parent), root_{nullptr}, scope_{nullptr} {};
     BinStmt(Stmt::pointer parent, Scope::pointer scope) : Stmt(parent), root_{nullptr}, scope_{scope} {};
-    typename  TreeNode<Expression::pointer>::pointer 
-      doParse(const std::vector<token_t> &primary_tokens, u32 end, u32 &offset);
+    typename TreeNode<Expression::pointer>::pointer
+    doParse(const std::vector<token_t> &primary_tokens, u32 end, u32 &offset);
     void Parse(const std::vector<token_t> &, range_t) override;
-    static Expression::pointer Creator(const token_t&, const Scope::pointer);
-    typename  TreeNode<Expression::pointer>::pointer
-      nodeCreator(const token_t& tk);
+    static Expression::pointer Creator(const token_t &, const Scope::pointer);
+    typename TreeNode<Expression::pointer>::pointer
+    nodeCreator(const token_t &tk);
 
-    inline std::string_view getName() override {return "BinStmt";} ;
+    inline std::string_view getName() override { return "BinStmt"; };
 };
 
-//variable declare
+// variable declare
 class VdeclStmt : public Stmt {
   protected:
     Variable::pointer var_;
-// if not init with val, this is nullptr
+    // if not init with val, this is nullptr
     BinStmt::pointer Initer{nullptr};
-  
+
   public:
-    VdeclStmt(Stmt::pointer parent, Variable::pointer var) : Stmt(parent), var_(var) {};
-//override but not impl will cause a link error
+    VdeclStmt(Stmt::pointer parent, Variable::pointer var) : Stmt(parent), var_(var){};
+    // override but not impl will cause a link error
     void InitWithStmt(Stmt::pointer) override{};
 
-    inline std::string_view getName() override {return "VdeclStmt";} ;
+    inline std::string_view getName() override { return "VdeclStmt"; };
 };
 
-//condition statement
+// condition statement
 class CondStmt : public CompoundStmt {
 
   protected:
     BinStmt::pointer condition_;
+
   public:
     CondStmt(Stmt::pointer parent) : CompoundStmt(parent){};
     void setCondition(Stmt::pointer) override;
 
-    inline std::string_view getName() override {return "CondStmt";} ;
+    inline std::string_view getName() override { return "CondStmt"; };
 };
 
-//loop statement
+// loop statement
 class LoopStmt : public CondStmt {
 
   protected:
@@ -136,10 +138,10 @@ class LoopStmt : public CondStmt {
   public:
     LoopStmt(Stmt::pointer parent) : CondStmt(parent){};
 
-    inline std::string_view getName() override {return "LoopStmt";} ;
+    inline std::string_view getName() override { return "LoopStmt"; };
 };
 
-//if statement
+// if statement
 class IfStmt : public CondStmt {
 
   protected:
@@ -148,16 +150,16 @@ class IfStmt : public CondStmt {
   public:
     IfStmt(Stmt::pointer parent) : CondStmt(parent){};
 
-    inline std::string_view getName() override {return "IfStmt";} ;
+    inline std::string_view getName() override { return "IfStmt"; };
 };
 
-//retrun statement
-class RetStmt : public Stmt{
+// retrun statement
+class RetStmt : public Stmt {
   protected:
     Expression::pointer result_;
 
   public:
-    inline std::string_view getName() override {return "RetStmt";} ;
+    inline std::string_view getName() override { return "RetStmt"; };
 };
 
 }; // namespace vastina

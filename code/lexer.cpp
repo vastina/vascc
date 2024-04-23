@@ -56,8 +56,9 @@ lexer::ParseWhiteSpace() {
     return STATE::NORMAL;
 }
 
-void lexer::NextLine(){
-    while('\n' != buffer[offset]) offset++;
+void lexer::NextLine() {
+    while ('\n' != buffer[offset])
+        offset++;
     // offset++; line++;
 }
 
@@ -173,7 +174,7 @@ lexer::Next() {
                 ParseKeyWord("main", TOKEN::MAIN, NormalEnd, TOKEN::SYMBOLF,
                              SymbolEndJudge);
                 auto func_token = tokens.back();
-                current_scope->addFunc(func_token.name, Function(func_token) );
+                current_scope->addFunc(func_token.name, Function(func_token));
             }
             break;
         }
@@ -369,7 +370,7 @@ lexer::Next() {
                 forSingelWord("=", TOKEN::ASSIGN);
             break;
         }
-        case '>':{
+        case '>': {
             RESULT res = ParseKeyWord(
                 ">=", TOKEN::GREATEREQUAL, Truer,
                 TOKEN::UNKNOW, Falser);
@@ -379,7 +380,7 @@ lexer::Next() {
                 forSingelWord(">", TOKEN::GREATER);
             break;
         }
-        case '<':{
+        case '<': {
             RESULT res = ParseKeyWord(
                 "<=", TOKEN::LESSEQUAL, Truer,
                 TOKEN::UNKNOW, Falser);
@@ -428,9 +429,11 @@ lexer::Next() {
         case '*':
             forSingelWord("*", TOKEN::MULTI);
             break;
-        case '/':{
-            if(buffer[offset+1] == '/') NextLine();//
-            else forSingelWord("/", TOKEN::DIV);
+        case '/': {
+            if (buffer[offset + 1] == '/')
+                NextLine(); //
+            else
+                forSingelWord("/", TOKEN::DIV);
             break;
         }
         case '~':
@@ -447,19 +450,21 @@ lexer::Next() {
     return STATE::NORMAL;
 }
 
-i32 lexer::reScan(){
-    
+i32 lexer::reScan() {
+
     return {};
 }
 
-i32 lexer::Parse(){
+i32 lexer::Parse() {
     STATE state;
-    while (true){
+    while (true) {
         state = this->Next();
-        if(STATE::ERROR == state) RETURN_ERROR
-        else if(STATE::END == state) break;
+        if (STATE::ERROR == state)
+            RETURN_ERROR
+        else if (STATE::END == state)
+            break;
     }
-    
+
     return reScan();
 }
 

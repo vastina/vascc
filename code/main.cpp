@@ -1,8 +1,8 @@
 #include "base/String.hpp"
 #include "lexer.hpp"
+#include "parse.hpp"
 #include "stmt.hpp"
 #include "symbol.hpp"
-#include "parse.hpp"
 
 #include <iostream>
 #include <memory>
