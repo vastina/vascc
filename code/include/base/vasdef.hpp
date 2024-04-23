@@ -27,14 +27,16 @@ enum TOKEN{
     NLBRAC, NRBRAC, OBRACE, CBRACE, SEMICOLON, COMMA, COLON, DQUOTE, SQUOTE, 
 //  main  return
     MAIN, RETURN,
-//    >         !      <     &      &&     |    ||    ~           
-    GREATER, LOGNOT, LESS,  AND, LOGAND, OR, LOGOR, OPS,
-//   -    +     *     /
-    NEG, ADD, MULTI, DIV, 
+//    >         !      <     &      &&    |    ||    ~    ^        
+    GREATER, LOGNOT, LESS,  AND, LOGAND, OR, LOGOR, OPS, XOR,
+//   -    +     *     /     >>      <<     %
+    NEG, ADD, MULTI, DIV, LSHIFT, RSHIFT, MOD,
 //  if  else  for  while  do  switch  case  break  continue  default
     IF, ELSE, FOR, WHILE, DO, SWITCH, CASE, BREAK, CONTINUE, DEFAULT,
-//     =     ==      !=         >=             <=
-    ASSIGN, EQUAL, NOTEQUAL, GREATEREQUAL, LESSEQUAL,
+//    =      ==      !=         >=             <=
+    ASSIGN, EQUAL, NOTEQUAL, GREATEREQUAL, LESSEQUAL, 
+//  +=    -=     *=     /=    %=     <<=     >>=      &=    ^=    |= this is not good
+    SUM, DIFF, MULTIE, DIVE, MODE, LSHIFTE, RSHIFTE, ANDE, XORE, ORE,
 // __LINE__ __FILE__
      LINE,    FILE,
 
@@ -54,26 +56,41 @@ enum class TOKEN_TYPE{
     SEPERATOR //seperator, like comma, semicolon
 };
 
+//I don't see ~= at https://zh.cppreference.com/w/c/language/operator_precedence
 inline static constexpr TOKEN_TYPE token_type(TOKEN tk){
     switch (tk)
     {
+    case TOKEN::ANDE: 
+    case TOKEN::XORE: 
+    case TOKEN::ORE:
+    case TOKEN::LSHIFTE:
+    case TOKEN::RSHIFTE:
+    case TOKEN::MULTIE:
+    case TOKEN::DIVE:
+    case TOKEN::MODE:
+    case TOKEN::SUM:
+    case TOKEN::DIFF:
+    case TOKEN::ASSIGN:
+    case TOKEN::LOGOR:
+    case TOKEN::LOGAND:
+    case TOKEN::OR:
+    case TOKEN::XOR:
+    case TOKEN::AND:
+    case TOKEN::EQUAL:
+    case TOKEN::NOTEQUAL:
+    case TOKEN::GREATER:
+    case TOKEN::GREATEREQUAL:
+    case TOKEN::LESS:
+    case TOKEN::LESSEQUAL:
+    case TOKEN::LSHIFT:
+    case TOKEN::RSHIFT:
     case TOKEN::ADD:
     case TOKEN::NEG:
     case TOKEN::MULTI:
     case TOKEN::DIV:
-    case TOKEN::EQUAL:
-    case TOKEN::NOTEQUAL:
-    case TOKEN::GREATEREQUAL:
-    case TOKEN::LESSEQUAL:
-    case TOKEN::GREATER:
-    case TOKEN::LESS:
+    case TOKEN::MOD:
     case TOKEN::LOGNOT:
-    case TOKEN::AND:
-    case TOKEN::LOGAND:
-    case TOKEN::OR:
-    case TOKEN::LOGOR:
     case TOKEN::OPS:
-    case TOKEN::ASSIGN:
         return TOKEN_TYPE::OPERATOR;
     case TOKEN::TRUE:
     case TOKEN::FALSE:
@@ -115,29 +132,87 @@ enum class STMT{
     RET,
 };
 
-//todo but not cpp https://zh.cppreference.com/w/cpp/language/operator_precedence
+//todo but not cpp https://zh.cppreference.com/w/c/language/operator_precedence
 inline static constexpr u32 Level(TOKEN tk){
     switch (tk){
-        case TOKEN::ASSIGN:
-            return 5;
+        case TOKEN::ANDE: 
+        case TOKEN::XORE: 
+        case TOKEN::ORE:
+            return 1<<31;// &= ^= |=
+        case TOKEN::LSHIFTE:
+        case TOKEN::RSHIFTE:
+            return 1<<30;// <<= >>=
+        case TOKEN::MULTIE:
+        case TOKEN::DIVE:
+        case TOKEN::MODE:
+            return 1<<29;// *= /= %=
+        case TOKEN::SUM:
+        case TOKEN::DIFF:
+            return 1<<28;// += -=
+        case TOKEN::ASSIGN: 
+            return 1<<27;// =
+        // a?b:c 
+            //return 1<<26;
+        case TOKEN::LOGOR:
+            return 1<<25;// ||
+        case TOKEN::LOGAND:
+            return 1<<24;// &&
+        case TOKEN::OR:
+            return 1<<23;// |
+        case TOKEN::XOR:
+            return 1<<22;// ^
+        case TOKEN::AND:
+            return 1<<21;// &
         case TOKEN::EQUAL:
-            return 4;
+        case TOKEN::NOTEQUAL:
+            return 1<<20;// == !=
+        case TOKEN::GREATER:
+        case TOKEN::GREATEREQUAL:
+            return 1<<19;// > >=
+        case TOKEN::LESS:
+        case TOKEN::LESSEQUAL:
+            return 1<<18;// < <=
+        case TOKEN::LSHIFT:
+        case TOKEN::RSHIFT:
+            return 1<<17;// << >>
         case TOKEN::ADD:
         case TOKEN::NEG:
-            return 3;
-        case TOKEN::AND:
-        case TOKEN::OPS:
-        case TOKEN::OR :
-            return 2;
+            return 1<<16;// + -
         case TOKEN::MULTI:
         case TOKEN::DIV:
-            return 1;
+        case TOKEN::MOD:
+            return 1<<15;// * / %
+        //sizeof 
+            //return 1<<14;
+        // address 
+            //return 1<<13;
+        //* for pointer 
+            //return 1<<12;
+        //type cast 
+            //return 1<<11;
+        case TOKEN::LOGNOT:
+        case TOKEN::OPS:
+            return 1<<10;// ! ~
+        //neg or pos, like -1919810, +114514 
+            //return 1<<9;
+        // ++i, --i 
+            //return 1<<8;
+        //struct->member 
+            //return 1<<7;
+        //struct.member  
+            //return 1<<6;
+        //array[index]   
+            //return 1<<5;
+        case TOKEN::SYMBOLF://function call
+            return 1<<4;
+        // i++, i-- 
+            //return 1<<3;
         case TOKEN::SYMBOL:
         case TOKEN::NUMBER:
-        case TOKEN::SYMBOLF:
-            return 0;
+        case TOKEN::STRING:
+            return 1<<2;
         default:
-            return 1<<31;
+            return UINT32_MAX;
     }
 }
 

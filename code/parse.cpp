@@ -147,6 +147,7 @@ i32 Parser::Ifer() {
 i32 Parser::Loop() {
 
     auto lstmt = new LoopStmt(current_stmt_);
+    current_stmt_->addChildren(lstmt);
     current_stmt_ = lstmt;
     Next();
     current_stmt_->setCondition(Binary({CurrentToken().start, CurrentToken().end}));
@@ -198,15 +199,16 @@ Parser::ParseBinary(u32& offset, u32 end){
         switch (token_type(tk)) {
         case TOKEN_TYPE::BRAC: {
             if (TOKEN::NRBRAC == tk) {
-                root->data->setLevel(0);
+                root->data->setLevel(Level(TOKEN::SYMBOL));
                 return root;
             } else {
-                if (TOKEN_TYPE::BRAC == token_type(root->data->getToken()))
+                if (TOKEN_TYPE::BRAC == token_type(root->data->getToken())){
                     root = ParseBinary(offset, end);
-                else
-                    current = ParseBinary(offset, end);
+                    break;
+                }
+                else current = ParseBinary(offset, end);
             }
-            break;
+            //break; so let it fall to `case TOKEN_TYPE::OPERATOR`
         }
         case TOKEN_TYPE::VALUE: {
             if(current->data->getToken() == TOKEN::SYMBOLF){

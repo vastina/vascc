@@ -1,4 +1,0 @@
-func main:int(){ //actually it's created for the Parser I'm writing now, very simple status
-    int res = ((2+8)|5 + 3*7/ 4 -9 & 6) -5;
-    return res;
-}
