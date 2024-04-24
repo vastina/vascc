@@ -37,3 +37,6 @@ git cherry-pick xxxxxxx
 
 ## 4/23/24
 runtime polymorphism is awesome and terrible
+
+## 4/25/24
+compare to preprocess, there's seldom crash at parse, however that add diffculty at debug.

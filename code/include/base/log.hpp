@@ -1,40 +1,38 @@
 #ifndef _LOGGER_H_
 #define _LOGGER_H_
 
-// to avoid this:
-//  #include "base/log.hpp"
-//  #include <iostream>
-#include <iostream>
+#include "base/String.hpp"
 
 namespace vastina {
 
 // todo a log class, singlton or sth
 
-#define LEAVE_MSG(msg) ::std::cerr << msg << ' ' << __FILE__ << ' ' << __LINE__ << '\n';
+#define LEAVE_MSG(msg) ::vastina::print("{}, at {} {}\n", msg, __FILE__, __LINE__);
+#define LEAVE_NOTHING ::vastina::print("{} {}\n", __FILE__, __LINE__);
 
-#define RETURN_ERROR                                        \
-    {                                                       \
-        ::std::cerr << __FILE__ << ' ' << __LINE__ << '\n'; \
-        return -1;                                          \
+#define RETURN_ERROR  \
+    {                 \
+        LEAVE_NOTHING \
+        return -1;    \
     }
 
-#define EXIT_ERROR                                          \
-    {                                                       \
-        ::std::cerr << __FILE__ << ' ' << __LINE__ << '\n'; \
-        exit(-1);                                           \
+#define EXIT_ERROR    \
+    {                 \
+        LEAVE_NOTHING \
+        exit(-1);     \
     }
 
-#define THIS_NOT_SUPPORT(sth)                               \
-    {                                                       \
-        ::std::cerr << sth << " not supported now\n";       \
-        ::std::cerr << __FILE__ << ' ' << __LINE__ << '\n'; \
-        exit(-1);                                           \
+#define THIS_NOT_SUPPORT(sth)               \
+    {                                       \
+        print(sth);                         \
+        LEAVE_MSG(" this not suppored now") \
+        exit(-1);                           \
     }
 
-#define RETURN_NULL                                         \
-    {                                                       \
-        ::std::cerr << __FILE__ << ' ' << __LINE__ << '\n'; \
-        return nullptr;                                     \
+#define RETURN_NULL     \
+    {                   \
+        LEAVE_NOTHING   \
+        return nullptr; \
     }
 
 #define tryCall(target, callee, ...)         \

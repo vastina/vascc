@@ -97,7 +97,7 @@ void lexer::forSingelWord(const std::string_view &target, TOKEN target_type) {
 void lexer::ParseNumber() {
 }
 
-inline const folly::Function<bool(char)> SymbolEndJudge = [flag {true}](char ch) mutable {
+inline const folly::Function<bool(char)> SymbolEndJudge = [flag{true}](char ch) mutable {
     if (flag) { // 第一个字符不能是数字
         flag = false;
         return (CHARTYPE::CHAR == CharType(ch));
@@ -376,6 +376,16 @@ lexer::Next() {
         case '=': {
             RESULT res = ParseKeyWord(
                 "==", TOKEN::EQUAL, Truer,
+                TOKEN::UNKNOW, Falser);
+            if (res == RESULT::SUCCESS)
+                break;
+            else res = ParseKeyWord(
+                "=<", TOKEN::LESSEQUAL, Truer,
+                TOKEN::UNKNOW, Falser);
+            if (res == RESULT::SUCCESS)
+                break;
+            else res = ParseKeyWord(
+                "=>", TOKEN::GREATEREQUAL, Truer,
                 TOKEN::UNKNOW, Falser);
             if (res == RESULT::SUCCESS)
                 break;

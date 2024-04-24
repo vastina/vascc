@@ -72,7 +72,6 @@ i32 Parser::Parse() {
             break;
         }
         case P_TOKEN::RET: {
-            // print("\nreturn\n");
             EXCEPT_ZERO(Ret);
             break;
         }
@@ -100,7 +99,6 @@ i32 Parser::Parse() {
 
     return 0;
 }
-
 
 i32 Parser::Vdecl() {
     auto var = scope_->getVar(primary_tokens_.at(CurrentToken().start).name);
@@ -193,11 +191,11 @@ BinStmt::pointer
 Parser::Binary(range_t r) {
     auto bstmt = new BinStmt(current_stmt_, scope_);
     auto start = r.start;
-    auto end = r.end;
-    auto root{ParseBinary(start, end)};
+    auto root{ParseBinary(start, r.end)};
     bstmt->setRoot(root);
-    root->Walk(PREORDER, [](const Expression::pointer &_data) { print("token : {}\n", _data->getName()); });
-    putchar('\n');
+    // print("poffset: {}\n", p_offset_);
+    // root->Walk(PREORDER, [](const Expression::pointer &_data) { print("token : {}\n", _data->getName()); });
+    // putchar('\n');
     return bstmt;
 }
 
@@ -207,7 +205,7 @@ Parser::ParseBinary(u32 &offset, u32 end) {
     if (offset + 1 >= end)
         return root;
 
-    static u32 counter = 1;
+    u32 last_offset = offset;
     while (true) {
         auto current = BinStmt::nodeCreator(primary_tokens_.at(offset), scope_);
         offset++;
@@ -230,14 +228,9 @@ Parser::ParseBinary(u32 &offset, u32 end) {
         I_DONOT_LIKE_THIS:
         case TOKEN_TYPE::VALUE: {
             if (current->data->getToken() == TOKEN::SYMBOLF) {
-                auto pos{p_offset_ + counter};
-                auto parasize{scope_->getFunc(current->data->getName())->getParamSize()};
-                for (auto i{1u}; i <= parasize; i++) {
-                    offset += Peekat(pos + i).end - Peekat(pos + i).start + 1;
-                }
-                offset++;
-                current->data = Callee(pos);
-                counter += parasize + 1;
+                offset += Peekat(p_offset_).end - Peekat(p_offset_).start + 1 +1;//skip ')', the last char of fun call
+                Next();
+                current->data = Callee(p_offset_ );
             }
             if (token_type(root->data->getToken()) == TOKEN_TYPE::VALUE) {
                 root = current;
@@ -249,6 +242,7 @@ Parser::ParseBinary(u32 &offset, u32 end) {
             break;
         }
         case TOKEN_TYPE::OPERATOR: {
+            if(last_offset == offset) break;
             if (current->data->getLevel() >= root->data->getLevel()) {
                 root->ReplaceByL(current);
                 root = current;
@@ -274,7 +268,6 @@ Parser::ParseBinary(u32 &offset, u32 end) {
     }
     // root->Walk(PREORDER, [](const Expression::pointer &_data) { print("token : {}\n", _data->getName()); });
     // putchar('\n');
-    counter = 1;
     return root;
 }
 

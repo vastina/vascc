@@ -278,8 +278,12 @@ i32 Preprocess::Binary(const folly::Function<bool()> &EndJudge) {
                     TEMP_LOG
                     RETURN_ERROR
                 }
-            } else
+            } else if (Current() == TOKEN::NLBRAC) {
                 ++bc.open;
+            } else {
+                TEMP_LOG
+                RETURN_ERROR
+            }
             break;
         }
         case TOKEN_TYPE::VALUE: {
