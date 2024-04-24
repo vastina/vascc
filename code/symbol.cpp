@@ -419,7 +419,8 @@ i32 Preprocess::Ifer() {
     tryNext(TOKEN::NLBRAC, true);
     // EXCEPT_ZERO(Binary, fn);
     i32 res = Binary([this]() { return Current() == TOKEN::OBRACE; }); // 暂时不支持不带{}的if
-    if (0 != res) RETURN_ERROR;
+    if (0 != res)
+        RETURN_ERROR;
 
     return 0;
 }
@@ -458,15 +459,15 @@ i32 Preprocess::Paras(Function::pointer func) {
         Next();
     }
     while (true) {
-        if (Declare([this, func, counter{0u}]()mutable {
-                if(results.size() > counter){
+        if (Declare([this, func, counter{0u}]() mutable {
+                if (results.size() > counter) {
                     counter = results.size();
-                    auto name = primary_tokens.at(results.at(counter-1).start).name;
+                    auto name = primary_tokens.at(results.at(counter - 1).start).name;
                     func->addPara(current_scope->getVar(name));
                 }
                 return ((Current() == TOKEN::COMMA) ||
                         ((Current() == TOKEN::NRBRAC) && ((Peek() == TOKEN::SEMICOLON) || (Peek() == TOKEN::OBRACE))));
-            })  != 0) {
+            }) != 0) {
             RETURN_ERROR
         }
         if (Current() != TOKEN::COMMA)

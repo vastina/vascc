@@ -55,9 +55,9 @@ class Parser {
     // should this?
     BinStmt::pointer Binary(range_t);
     CallExpr::pointer Callee(u32);
-  private:
-    typename TreeNode<Expression::pointer>::pointer ParseBinary(u32&, u32);
 
+  private:
+    typename TreeNode<Expression::pointer>::pointer ParseBinary(u32 &, u32);
 };
 
 } // namespace vastina

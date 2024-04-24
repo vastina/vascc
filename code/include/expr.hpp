@@ -30,9 +30,9 @@ class Expression {
     // ValExpr and OpExpr
     virtual TOKEN getToken() { return {}; }
     virtual std::string_view getName() { return {}; };
-    //CallExpr
-    virtual Function::pointer getFunc() {return nullptr;};
-    virtual void Parse(const std::vector<token_t>&, u32, u32&) {};
+    // CallExpr
+    virtual Function::pointer getFunc() { return nullptr; };
+    virtual void Parse(const std::vector<token_t> &, u32, u32 &) {};
 
     virtual ~Expression() = default;
 
@@ -61,7 +61,7 @@ class OpExpr : public Expression {
 class ValExpr : public Expression {
   protected:
     Value::pointer value_;
-    const token_t& val_;
+    const token_t &val_;
 
   public:
     ValExpr(Value::pointer val, const token_t &tk) : value_(val), val_(tk){};
@@ -72,14 +72,15 @@ class ValExpr : public Expression {
 class CallExpr : public ValExpr {
   public:
     using pointer = CallExpr *;
+
   protected:
     std::vector<typename TreeNode<Expression::pointer>::pointer> paras_;
-//    Function::pointer func;
+    //    Function::pointer func;
   public:
-    CallExpr(Value::pointer val, const token_t &tk) : ValExpr(val, tk), paras_{}{};
-    void Parse(const std::vector<token_t>&, u32, u32&) override{};
-    inline Function::pointer getFunc() override{return dynamic_cast<Function::pointer>(value_);};
-    inline void addPara(typename TreeNode<Expression::pointer>::pointer val) {paras_.push_back(val);};
+    CallExpr(Value::pointer val, const token_t &tk) : ValExpr(val, tk), paras_{} {};
+    void Parse(const std::vector<token_t> &, u32, u32 &) override {};
+    inline Function::pointer getFunc() override { return dynamic_cast<Function::pointer>(value_); };
+    inline void addPara(typename TreeNode<Expression::pointer>::pointer val) { paras_.push_back(val); };
 
     inline std::string_view getName() override { return val_.name; };
 };
@@ -97,6 +98,5 @@ typedef struct BracketCount {
 } BracketCount;
 
 } // namespace vastina
-
 
 #endif

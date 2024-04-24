@@ -34,13 +34,13 @@ class Value {
 
   protected:
     const SourceLocation &Srcloc_;
+
   public:
     using pointer = Value *;
     Value(const SourceLocation &srcloc) : Srcloc_(srcloc){};
     ~Value() = default;
     virtual std::string_view getName() { return Srcloc_.name; };
 };
-
 
 class literal : public Value { // compile time values like "Hello World",114514,3.14
 
@@ -76,8 +76,7 @@ class Variable : public Value {
     }
 };
 
-
-class Function : public Value{
+class Function : public Value {
   protected:
     bool isVoid_{};
     std::vector<Variable::pointer> paras_;
@@ -86,7 +85,7 @@ class Function : public Value{
     using pointer = Function *;
 
     Function(const SourceLocation &Srcloc) : Value(Srcloc) {
-      paras_ = std::vector<Variable::pointer>();
+        paras_ = std::vector<Variable::pointer>();
     };
     ~Function() { paras_.clear(); };
     inline pointer
@@ -96,7 +95,7 @@ class Function : public Value{
 
     virtual TOKEN Type() { return TOKEN::UNKNOW; };
     virtual u32 getParamSize() { return paras_.size(); };
-    void addPara(Variable::pointer var){paras_.push_back(var);}
+    void addPara(Variable::pointer var) { paras_.push_back(var); }
 };
 
 template <typename ty>
@@ -126,13 +125,13 @@ typedef struct SymbolTable {
     }
     // Variables.insert(std::make_pair(name, var)); }
     inline Variable::pointer
-    getVar(const std::string_view& name) {
+    getVar(const std::string_view &name) {
         if (varExist(name))
             return Variables.at(name);
         return nullptr;
     }
     inline Function::pointer
-    getFunc(const std::string_view& name) {
+    getFunc(const std::string_view &name) {
         if (funcExist(name))
             return functions.at(name);
         return nullptr;
@@ -159,7 +158,7 @@ typedef struct range_t {
     u32 end; //[start, end) preprocessed_tokens[start] to
              // preprocessed_tokens[end-1]
 
-//some are here just because I'm lazy to check which is no longer needed
+    // some are here just because I'm lazy to check which is no longer needed
     range_t() : start(0), end(0){};
     inline const range_t &
     operator=(range_t &&other) {
@@ -201,7 +200,7 @@ class Scope {
     Scope(pointer parent, range_t &&r)
         : parent_(parent), r_(r), st_(), children_(){};
 
-    void addVar(const std::string_view &, Variable::pointer );
+    void addVar(const std::string_view &, Variable::pointer);
     void addFunc(const std::string_view &, Function::pointer);
     Variable::pointer getVar(const std::string_view &);
     Function::pointer getFunc(const std::string_view &);
@@ -213,7 +212,10 @@ class Scope {
     range_t findRange(u32);
     // range_t getNextRangeBetweenChildren(); //this is too stupid, I won't do that
     void setBreakable(bool);
-    inline void reSet() { idchild_ = 0; };
+    inline void reSet() { 
+        idchild_ = 0;
+        for(auto& child:children_) child->reSet();
+    };
 
     // for test
     const decltype(children_) &getChildren();

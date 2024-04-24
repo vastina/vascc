@@ -376,14 +376,16 @@ lexer::Next() {
                 TOKEN::UNKNOW, Falser);
             if (res == RESULT::SUCCESS)
                 break;
-            else res = ParseKeyWord(
-                ">>", TOKEN::RSHIFT, Truer,
-                TOKEN::UNKNOW, Falser);
+            else
+                res = ParseKeyWord(
+                    ">>", TOKEN::RSHIFT, Truer,
+                    TOKEN::UNKNOW, Falser);
             if (res == RESULT::SUCCESS)
                 break;
-            else res = ParseKeyWord(
-                ">>=", TOKEN::RSHIFTE, Truer,
-                TOKEN::UNKNOW, Falser);
+            else
+                res = ParseKeyWord(
+                    ">>=", TOKEN::RSHIFTE, Truer,
+                    TOKEN::UNKNOW, Falser);
             if (res == RESULT::SUCCESS)
                 break;
             else
@@ -396,14 +398,16 @@ lexer::Next() {
                 TOKEN::UNKNOW, Falser);
             if (res == RESULT::SUCCESS)
                 break;
-            else res = ParseKeyWord(
-                "<<", TOKEN::LSHIFT, Truer,
-                TOKEN::UNKNOW, Falser);
+            else
+                res = ParseKeyWord(
+                    "<<", TOKEN::LSHIFT, Truer,
+                    TOKEN::UNKNOW, Falser);
             if (res == RESULT::SUCCESS)
                 break;
-            else res = ParseKeyWord(
-                "<<=", TOKEN::LSHIFTE, Truer,
-                TOKEN::UNKNOW, Falser);
+            else
+                res = ParseKeyWord(
+                    "<<=", TOKEN::LSHIFTE, Truer,
+                    TOKEN::UNKNOW, Falser);
             if (res == RESULT::SUCCESS)
                 break;
             else
@@ -426,9 +430,10 @@ lexer::Next() {
                 TOKEN::UNKNOW, Falser);
             if (res == RESULT::SUCCESS)
                 break;
-            else res = ParseKeyWord(
-                "&=", TOKEN::ANDE, Truer,
-                TOKEN::UNKNOW, Falser);
+            else
+                res = ParseKeyWord(
+                    "&=", TOKEN::ANDE, Truer,
+                    TOKEN::UNKNOW, Falser);
             if (res == RESULT::SUCCESS)
                 break;
             else
@@ -441,16 +446,17 @@ lexer::Next() {
                 TOKEN::UNKNOW, Falser);
             if (res == RESULT::SUCCESS)
                 break;
-            else res = ParseKeyWord(
-                "|=", TOKEN::ORE, Truer,
-                TOKEN::UNKNOW, Falser);
+            else
+                res = ParseKeyWord(
+                    "|=", TOKEN::ORE, Truer,
+                    TOKEN::UNKNOW, Falser);
             if (res == RESULT::SUCCESS)
                 break;
             else
                 forSingelWord("|", TOKEN::OR);
             break;
         }
-        case '+':{
+        case '+': {
             RESULT res = ParseKeyWord(
                 "+=", TOKEN::SUM, Truer,
                 TOKEN::UNKNOW, Falser);
@@ -460,7 +466,7 @@ lexer::Next() {
                 forSingelWord("+", TOKEN::ADD);
             break;
         }
-        case '-':{
+        case '-': {
             RESULT res = ParseKeyWord(
                 "-=", TOKEN::DIFF, Truer,
                 TOKEN::UNKNOW, Falser);
@@ -470,7 +476,7 @@ lexer::Next() {
                 forSingelWord("-", TOKEN::NEG);
             break;
         }
-        case '*':{
+        case '*': {
             RESULT res = ParseKeyWord(
                 "*=", TOKEN::MULTIE, Truer,
                 TOKEN::UNKNOW, Falser);
@@ -483,19 +489,21 @@ lexer::Next() {
         case '/': {
             if (buffer[offset + 1] == '/')
                 NextLine(); //
-            else{
+            else {
                 RESULT res = ParseKeyWord(
-                "/=", TOKEN::DIVE, Truer,
-                TOKEN::UNKNOW, Falser);
-                if (res == RESULT::SUCCESS) break;
-                else forSingelWord("/", TOKEN::DIV);
+                    "/=", TOKEN::DIVE, Truer,
+                    TOKEN::UNKNOW, Falser);
+                if (res == RESULT::SUCCESS)
+                    break;
+                else
+                    forSingelWord("/", TOKEN::DIV);
             }
             break;
         }
         case '~':
             forSingelWord("~", TOKEN::OPS);
             break;
-        case '^':{
+        case '^': {
             RESULT res = ParseKeyWord(
                 "^=", TOKEN::XORE, Truer,
                 TOKEN::UNKNOW, Falser);
@@ -505,7 +513,7 @@ lexer::Next() {
                 forSingelWord("~", TOKEN::XOR);
             break;
         }
-        case '%':{
+        case '%': {
             RESULT res = ParseKeyWord(
                 "%=", TOKEN::MODE, Truer,
                 TOKEN::UNKNOW, Falser);

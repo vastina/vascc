@@ -36,9 +36,9 @@ class Stmt {
     inline pointer getParent() { return parent_; }
     // CompoundStmt
     virtual void addChildren(Stmt::pointer, i32 = -1){};
-    virtual const Stmts& getChildren(){ 
-      constexpr static Stmts s{};
-      return s; 
+    virtual const Stmts &getChildren() {
+        constexpr static Stmts s{};
+        return s;
     };
     // CondStmt
     virtual void setCondition(Stmt::pointer){};
@@ -46,6 +46,8 @@ class Stmt {
     virtual void InitWithStmt(Stmt::pointer){};
     // BinStmt
     virtual void Parse(const std::vector<token_t> &, range_t) {};
+    // RetStmt
+    virtual pointer getResult() { return {}; };
 
     // for test
     virtual std::string_view getName() { return "Stmt"; };
@@ -65,7 +67,7 @@ class CompoundStmt : public Stmt {
     void addChildren(Stmt::pointer, i32) override;
     inline Stmt::pointer getChildat(u32 pos) { return children_.at(pos); }
     inline u32 getStmtSize() { return children_.size(); }
-    inline const Stmts& getChildren() override {return children_;}
+    inline const Stmts &getChildren() override { return children_; }
 
     inline std::string_view getName() override { return "CompoundStmt"; };
 };
@@ -88,6 +90,7 @@ class FdeclStmt : public CompoundStmt {
 
 //--------------binary statement---------------------------------------------------------------------------------------
 class BinStmt : public Stmt {
+    // make it BnExpr maybe better
   public:
     using pointer = BinStmt *;
 
@@ -101,10 +104,10 @@ class BinStmt : public Stmt {
     // typename TreeNode<Expression::pointer>::pointer
     // doParse(const std::vector<token_t> &primary_tokens, u32 end, u32 &offset);
     // void Parse(const std::vector<token_t> &, range_t) override;
-    inline void setRoot(typename TreeNode<Expression::pointer>::pointer root){root_ = root;}
-  
+    inline void setRoot(typename TreeNode<Expression::pointer>::pointer root) { root_ = root; }
+
     static Expression::pointer Creator(const token_t &, const Scope::pointer);
-  
+
     static typename TreeNode<Expression::pointer>::pointer
     nodeCreator(const token_t &, Scope::pointer);
 
@@ -136,6 +139,7 @@ class CondStmt : public CompoundStmt {
 
   public:
     CondStmt(Stmt::pointer parent) : CompoundStmt(parent){};
+    CondStmt(Stmt::pointer parent, BinStmt::pointer cond) : CompoundStmt(parent), condition_(cond){};
     void setCondition(Stmt::pointer) override;
 
     inline std::string_view getName() override { return "CondStmt"; };
@@ -146,9 +150,9 @@ class CondStmt : public CompoundStmt {
 class LoopStmt : public CondStmt {
 
   protected:
-
   public:
     LoopStmt(Stmt::pointer parent) : CondStmt(parent){};
+    LoopStmt(Stmt::pointer parent, BinStmt::pointer cond) : CondStmt(parent, cond){};
 
     inline std::string_view getName() override { return "LoopStmt"; };
 };
@@ -158,9 +162,9 @@ class LoopStmt : public CondStmt {
 class IfStmt : public CondStmt {
 
   protected:
-
   public:
     IfStmt(Stmt::pointer parent) : CondStmt(parent){};
+    IfStmt(Stmt::pointer parent, BinStmt::pointer cond) : CondStmt(parent, cond){};
 
     inline std::string_view getName() override { return "IfStmt"; };
 };
@@ -172,6 +176,9 @@ class RetStmt : public Stmt {
     Stmt::pointer result_;
 
   public:
+    RetStmt(Stmt::pointer parent, Stmt::pointer res) : Stmt(parent), result_(res){};
+    inline pointer getResult() override { return result_; };
+
     inline std::string_view getName() override { return "RetStmt"; };
 };
 //--------------retrun statement---------------------------------------------------------------------------------------
@@ -180,10 +187,12 @@ class RetStmt : public Stmt {
 class CallStmt : public Stmt {
   public:
     using pointer = CallStmt *;
+
   protected:
     Expression::pointer callee_;
+
   public:
-    CallStmt(Stmt::pointer parent, Expression::pointer callee) : Stmt(parent), callee_(callee) {};
+    CallStmt(Stmt::pointer parent, Expression::pointer callee) : Stmt(parent), callee_(callee){};
 };
 
 }; // namespace vastina

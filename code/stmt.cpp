@@ -16,6 +16,12 @@ void CompoundStmt::addChildren(Stmt::pointer child, i32 pos = -1) {
 
 void CondStmt::setCondition(Stmt::pointer condtion) { condition_ = dynamic_cast<BinStmt::pointer>(condtion); }
 
+#define REPORT_MSG(msg)                                                \
+    {                                                                  \
+        LEAVE_MSG(msg);                                                \
+        print("token name: {} at line: {}\n", token.name, token.line); \
+        RETURN_NULL;                                                   \
+    }
 Expression::pointer BinStmt::Creator(const token_t &token, const Scope::pointer scope) {
     auto tk = token.token;
     switch (token_type(tk)) {
@@ -27,25 +33,21 @@ Expression::pointer BinStmt::Creator(const token_t &token, const Scope::pointer 
     case TOKEN_TYPE::VALUE:
         if (TOKEN::SYMBOL == tk) {
             if (!scope->varExist(token.name)) {
-                LEAVE_MSG("var not exist");
-                return nullptr;
+                REPORT_MSG("var not exist");
             } else {
                 return new ValExpr(scope->getVar(token.name), token);
             }
-        } else if(TOKEN::SYMBOLF == tk){
+        } else if (TOKEN::SYMBOLF == tk) {
             if (!scope->funcExist(token.name)) {
-                LEAVE_MSG("func not exist");
-                return nullptr;
+                REPORT_MSG("func not exist");
             } else {
                 return new ValExpr(scope->getFunc(token.name), token);
             }
         } else {
-            return new ValExpr(new literal(token) ,token);
+            return new ValExpr(new literal(token), token);
         }
     default:
-        LEAVE_MSG("no match token_type");
-        print("token name: {} at line: {}\n", token.name, token.line);
-        return nullptr;
+        REPORT_MSG("no match token_type");
     }
 }
 
@@ -56,6 +58,6 @@ BinStmt::nodeCreator(const token_t &tk, Scope::pointer scope) {
     return new TreeNode<Expression::pointer>(data);
 }
 
-//do not modify this even you know what you are doing: commit name is parser_2 and the following one, hash is bd1c425 and b6ba847
+// do not modify this even you know what you are doing: commit name is parser_2 and the following one, hash is bd1c425 and b6ba847
 
 } // namespace vastina
