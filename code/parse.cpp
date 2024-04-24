@@ -88,7 +88,7 @@ i32 Parser::Parse() {
         }
 
         Next();
-print("\np_offset: {}, end{}\n", p_offset_, scope_->getRange().end);
+//print("\np_offset: {}, end{}\n", p_offset_, scope_->getRange().end);
         if (p_offset_ >= scope_->getRange().end) {
             // should avoid fall nullptr here?
             if (scope_->getParent() != nullptr)
@@ -165,7 +165,7 @@ i32 Parser::Loop() {
     auto lstmt = new LoopStmt(current_stmt_, Binary({CurrentToken().start, CurrentToken().end}));
     current_stmt_->addChildren(lstmt);
     current_stmt_ = lstmt;
-print("\npppppppp_offset: {}, start:{}, end{}\n", p_offset_, scope_->getRange().start ,scope_->getRange().end);
+//print("\npppppppp_offset: {}, start:{}, end{}\n", p_offset_, scope_->getRange().start ,scope_->getRange().end);
     scope_ = scope_->getNextChild();
 
     return 0;
@@ -204,7 +204,7 @@ Parser::Binary(range_t r) {
 typename TreeNode<Expression::pointer>::pointer
 Parser::ParseBinary(u32 &offset, u32 end) {
     auto root = BinStmt::nodeCreator(primary_tokens_.at(offset), scope_);
-    if (offset >= end)
+    if (offset+1 >= end)
         return root;
 
     static u32 counter = 1;

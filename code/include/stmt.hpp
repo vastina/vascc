@@ -90,7 +90,7 @@ class FdeclStmt : public CompoundStmt {
 
 //--------------binary statement---------------------------------------------------------------------------------------
 class BinStmt : public Stmt {
-    // make it BnExpr maybe better
+    // make it BinExpr maybe better
   public:
     using pointer = BinStmt *;
 

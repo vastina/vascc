@@ -258,6 +258,7 @@ i32 Preprocess::Process() {
     // it should be the global scope now
     current_scope->setRange(0, getSize());
     // this is bad
+    //4/24/24, yeah, this is bad and cause a bug, I fix it today
     current_scope->reSet();
     return 0;
 }
