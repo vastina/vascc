@@ -2,7 +2,7 @@
 #include "base/String.hpp"
 #include "base/log.hpp"
 #include "base/vasdef.hpp"
-#include "symbol.hpp" //todo
+#include "symbol.hpp"
 
 #include <fstream>
 #include <string_view>
@@ -95,10 +95,9 @@ void lexer::forSingelWord(const std::string_view &target, TOKEN target_type) {
 }
 
 void lexer::ParseNumber() {
-    // todo
 }
 
-inline const folly::Function<bool(char)> SymbolEndJudge = [flag = true](char ch) mutable {
+inline const folly::Function<bool(char)> SymbolEndJudge = [flag {true}](char ch) mutable {
     if (flag) { // 第一个字符不能是数字
         flag = false;
         return (CHARTYPE::CHAR == CharType(ch));
@@ -137,8 +136,13 @@ lexer::Next() {
             break;
         }
         case 'c': {
-            ParseKeyWord("char", TOKEN::BOOL, NormalEnd, TOKEN::SYMBOL,
-                         SymbolEndJudge);
+            RESULT res = ParseKeyWord("continue", TOKEN::CONTINUE, NormalEnd, TOKEN::UNKNOW,
+                                      Truer);
+            if (res == RESULT::SUCCESS)
+                break;
+            else
+                ParseKeyWord("char", TOKEN::BOOL, NormalEnd, TOKEN::SYMBOL,
+                             SymbolEndJudge);
             break;
         }
         case 'd': {
@@ -304,9 +308,18 @@ lexer::Next() {
             break;
         }
         case '_': {
-            (void)ParseKeyWord(
-                "?", TOKEN::UNKNOW, Falser,
-                TOKEN::SYMBOL, SymbolEndJudge);
+            RESULT res = ParseKeyWord("__LINE__", TOKEN::LINE, NormalEnd, TOKEN::UNKNOW,
+                                      Falser);
+            if (res == RESULT::SUCCESS)
+                break;
+            else
+                res = ParseKeyWord("__FILE__", TOKEN::FILE, NormalEnd, TOKEN::UNKNOW,
+                                   Falser);
+            if (res == RESULT::SUCCESS)
+                break;
+            else
+                ParseKeyWord("__asm__", TOKEN::ASM, NormalEnd, TOKEN::SYMBOL,
+                             SymbolEndJudge);
             break;
         }
         default:

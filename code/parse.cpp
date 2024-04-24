@@ -3,14 +3,10 @@
 #include "base/Tree.hpp"
 #include "base/log.hpp"
 #include "base/vasdef.hpp"
-#include "expr.hpp"
-#include "stmt.hpp"
-#include <cstdio>
+
 #include <queue>
 
 namespace vastina {
-
-#define LOG_ERROR print(""); // so todo
 
 inline P_TOKEN
 Parser::Current() {
@@ -88,7 +84,7 @@ i32 Parser::Parse() {
         }
 
         Next();
-//print("\np_offset: {}, end{}\n", p_offset_, scope_->getRange().end);
+        // print("\np_offset: {}, end{}\n", p_offset_, scope_->getRange().end);
         if (p_offset_ >= scope_->getRange().end) {
             // should avoid fall nullptr here?
             if (scope_->getParent() != nullptr)
@@ -98,10 +94,13 @@ i32 Parser::Parse() {
         }
     }
 
-    return {};
+    while (scope_->getParent() != nullptr)
+        scope_ = scope_->getParent();
+    scope_->reSet();
+
+    return 0;
 }
 
-// I know using new directly is bad
 
 i32 Parser::Vdecl() {
     auto var = scope_->getVar(primary_tokens_.at(CurrentToken().start).name);
@@ -165,7 +164,7 @@ i32 Parser::Loop() {
     auto lstmt = new LoopStmt(current_stmt_, Binary({CurrentToken().start, CurrentToken().end}));
     current_stmt_->addChildren(lstmt);
     current_stmt_ = lstmt;
-//print("\npppppppp_offset: {}, start:{}, end{}\n", p_offset_, scope_->getRange().start ,scope_->getRange().end);
+    // print("\npppppppp_offset: {}, start:{}, end{}\n", p_offset_, scope_->getRange().start ,scope_->getRange().end);
     scope_ = scope_->getNextChild();
 
     return 0;
@@ -185,6 +184,7 @@ CallExpr::pointer Parser::Callee(u32 pos) {
     for (auto i{1u}; i <= func->getParamSize(); i++) {
         auto start{Peekat(pos + i).start};
         callexpr->addPara(ParseBinary(start, Peekat(pos + i).end));
+        Next();
     }
     return callexpr;
 }
@@ -204,11 +204,10 @@ Parser::Binary(range_t r) {
 typename TreeNode<Expression::pointer>::pointer
 Parser::ParseBinary(u32 &offset, u32 end) {
     auto root = BinStmt::nodeCreator(primary_tokens_.at(offset), scope_);
-    if (offset+1 >= end)
+    if (offset + 1 >= end)
         return root;
 
     static u32 counter = 1;
-    auto last_offset{offset};
     while (true) {
         auto current = BinStmt::nodeCreator(primary_tokens_.at(offset), scope_);
         offset++;
@@ -221,13 +220,14 @@ Parser::ParseBinary(u32 &offset, u32 end) {
             } else {
                 if (TOKEN_TYPE::BRAC == token_type(root->data->getToken())) {
                     root = ParseBinary(offset, end);
-                    break;
-                } else
+                } else {
                     current = ParseBinary(offset, end);
+                    goto I_DONOT_LIKE_THIS;
+                }
             }
-            // break; so let it fall to `case TOKEN_TYPE::OPERATOR`, 
-            //in some case like ...+(call())..., it fall to `case TOKEN_TYPE::VALUE`, so I don't use tk at the judge below
+            break;
         }
+        I_DONOT_LIKE_THIS:
         case TOKEN_TYPE::VALUE: {
             if (current->data->getToken() == TOKEN::SYMBOLF) {
                 auto pos{p_offset_ + counter};
@@ -238,10 +238,10 @@ Parser::ParseBinary(u32 &offset, u32 end) {
                 offset++;
                 current->data = Callee(pos);
                 counter += parasize + 1;
-                if (offset == last_offset) {
-                    root = current;
-                    break;
-                }
+            }
+            if (token_type(root->data->getToken()) == TOKEN_TYPE::VALUE) {
+                root = current;
+                break;
             }
             auto temp = root->FindChildR(
                 [](const typename TreeNode<Expression::pointer>::pointer _node) { return nullptr == _node->right; });

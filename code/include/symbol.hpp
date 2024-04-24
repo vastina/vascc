@@ -150,7 +150,8 @@ typedef struct SymbolTable {
         // functions[name] = fc;
     }
 
-    // inline Variable::pointer getVar( `the source-location` ) todo
+    // inline Variable::pointer getVar( `the source-location` ) to-do
+    // this to-do seems a little impossible now
 } SymbolTable;
 
 typedef struct range_t {
@@ -212,9 +213,10 @@ class Scope {
     range_t findRange(u32);
     // range_t getNextRangeBetweenChildren(); //this is too stupid, I won't do that
     void setBreakable(bool);
-    inline void reSet() { 
+    inline void reSet() {
         idchild_ = 0;
-        for(auto& child:children_) child->reSet();
+        for (auto &child : children_)
+            child->reSet();
     };
 
     // for test

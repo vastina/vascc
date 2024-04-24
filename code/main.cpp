@@ -1,7 +1,5 @@
-#include "base/String.hpp"
 #include "lexer.hpp"
 #include "parse.hpp"
-#include "stmt.hpp"
 #include "symbol.hpp"
 
 #include <iostream>
@@ -9,6 +7,7 @@
 #include <queue>
 
 // const static before_main_t before_main = before_main_t();
+// I know using new directly is bad
 
 using namespace vastina;
 int main(int argc, char *argv[]) {

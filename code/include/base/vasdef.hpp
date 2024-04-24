@@ -56,7 +56,6 @@ enum class TOKEN_TYPE{
     SEPERATOR //seperator, like comma, semicolon
 };
 
-//I don't see ~= at https://zh.cppreference.com/w/c/language/operator_precedence
 inline static constexpr TOKEN_TYPE token_type(TOKEN tk){
     switch (tk)
     {
@@ -132,7 +131,7 @@ enum class STMT{
     RET,
 };
 
-//todo but not cpp https://zh.cppreference.com/w/c/language/operator_precedence
+//https://zh.cppreference.com/w/c/language/operator_precedence
 inline static constexpr u32 Level(TOKEN tk){
     switch (tk){
         case TOKEN::ANDE: 

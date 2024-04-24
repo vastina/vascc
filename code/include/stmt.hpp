@@ -193,6 +193,8 @@ class CallStmt : public Stmt {
 
   public:
     CallStmt(Stmt::pointer parent, Expression::pointer callee) : Stmt(parent), callee_(callee){};
+
+    inline std::string_view getName() override { return "CallStmt"; };
 };
 
 }; // namespace vastina

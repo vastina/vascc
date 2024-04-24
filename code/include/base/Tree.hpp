@@ -112,10 +112,10 @@ class TreeNode : public std::enable_shared_from_this<TreeNode<ty>> {
 
     inline void
     InsertByCompare(
-        pointer new_node, folly::Function<bool(const ty &a, const ty &b)> compare = [](const ty &a, const ty &b) { return a < b; }) {
+        pointer new_node, const folly::Function<bool(const ty &a, const ty &b)>& compare = [](const ty &a, const ty &b) { return a < b; }) {
         auto root = this;
         while (true) {
-            if (compare(new_node->data, root->data)) {
+            if (const_cast<folly::Function<bool(const pointer _node)>&>(compare)(new_node->data, root->data)) {
                 if (root->left == nullptr) {
                     root->InsertLeft(new_node);
                     return;
@@ -132,23 +132,23 @@ class TreeNode : public std::enable_shared_from_this<TreeNode<ty>> {
     }
     inline void
     InsertByCompare(
-        const ty &data_, folly::Function<bool(const ty &a, const ty &b)> compare = [](const ty &a, const ty &b) { return a < b; }) {
+        const ty &data_, const folly::Function<bool(const ty &a, const ty &b)>& compare = [](const ty &a, const ty &b) { return a < b; }) {
         auto new_node = new node(data_);
         InsertByCompare(new_node, compare);
     }
     // This function can cause crash if the judge function is not correct
     inline pointer
-    FindChildR(std::function<bool(const pointer _node)> judge) {
+    FindChildR(const folly::Function<bool(const pointer _node)>& judge) {
         auto root = this;
-        while (!judge(root)) {
+        while (!const_cast<folly::Function<bool(const pointer _node)>&>(judge)(root)) {
             root = root->right;
         }
         return root;
     }
     inline pointer
-    FindChildL(std::function<bool(const pointer _node)> judge) {
+    FindChildL(const std::function<bool(const pointer _node)>& judge) {
         auto root = this;
-        while (!judge(root)) {
+        while (!const_cast<std::function<bool(const pointer _node)>&>(judge)(root)) {
             root = root->left;
         }
         return root;

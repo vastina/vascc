@@ -25,11 +25,10 @@ class Parser {
            const ptokens &processed_tokens,
            const Scope::pointer scope) : primary_tokens_(primary_tokens),
                                          processed_tokens_(processed_tokens),
-                                         //      result_(),
                                          current_stmt_(new CompoundStmt(nullptr)),
                                          scope_(scope){};
 
-  private:
+  protected:
     inline P_TOKEN Current();
     inline const p_token_t &CurrentToken();
     inline P_TOKEN Peek();
@@ -56,7 +55,7 @@ class Parser {
     BinStmt::pointer Binary(range_t);
     CallExpr::pointer Callee(u32);
 
-  private:
+  protected:
     typename TreeNode<Expression::pointer>::pointer ParseBinary(u32 &, u32);
 };
 

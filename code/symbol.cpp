@@ -258,7 +258,7 @@ i32 Preprocess::Process() {
     // it should be the global scope now
     current_scope->setRange(0, getSize());
     // this is bad
-    //4/24/24, yeah, this is bad and cause a bug, I fix it today
+    // 4/24/24, yeah, this is bad and cause a bug, I fix it today
     current_scope->reSet();
     return 0;
 }
@@ -426,13 +426,14 @@ i32 Preprocess::Ifer() {
     return 0;
 }
 
-i32 Preprocess::Callee(Function::pointer) {
+i32 Preprocess::Callee(Function::pointer func) {
     results.push_back({P_TOKEN::CALL, offset, offset + 1});
     // nothing done here actually
     trySkip(TOKEN::NLBRAC, true);
     if (Current() == TOKEN::NRBRAC)
         return 0;
 
+    u32 count = 0;
     while (true) {
         if (Binary([this] {
                 return (Current() == TOKEN::COMMA) || (Current() == TOKEN::NRBRAC);
@@ -444,7 +445,8 @@ i32 Preprocess::Callee(Function::pointer) {
         else
             Next();
 
-        // todo fc
+        if (++count > func->getParamSize())
+            RETURN_ERROR;
     }
 
     return 0;
@@ -463,8 +465,7 @@ i32 Preprocess::Paras(Function::pointer func) {
         if (Declare([this, func, counter{0u}]() mutable {
                 if (results.size() > counter) {
                     counter = results.size();
-                    auto name = primary_tokens.at(results.at(counter - 1).start).name;
-                    func->addPara(current_scope->getVar(name));
+                    func->addPara(current_scope->getVar(primary_tokens.at(results.at(counter - 1).start).name));
                 }
                 return ((Current() == TOKEN::COMMA) ||
                         ((Current() == TOKEN::NRBRAC) && ((Peek() == TOKEN::SEMICOLON) || (Peek() == TOKEN::OBRACE))));
@@ -476,8 +477,6 @@ i32 Preprocess::Paras(Function::pointer func) {
         else {
             Next();
         }
-
-        // todo fc
     }
     return 0;
 }

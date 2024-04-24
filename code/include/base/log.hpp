@@ -49,7 +49,7 @@ namespace vastina {
 // make sure your interface named Next() and Peek()
 //  last==true means if this is last case and don't match, stop and return error
 #define Except(excepted, last, res) \
-    do {                            \
+    {                               \
         if (Peek() != excepted) {   \
             if (last) {             \
                 EXIT_ERROR          \
@@ -59,18 +59,18 @@ namespace vastina {
         } else {                    \
             res = 0;                \
         }                           \
-    } while (0);
+    }
 
 #define tryNext(excepted, last)                                     \
-    do {                                                            \
+    {                                                               \
         Except(excepted, last, result) if (0 == result) { Next(); } \
         else if (last) {                                            \
             RETURN_ERROR                                            \
         }                                                           \
-    } while (0)
+    }
 
 #define trySkip(excepted, last)                           \
-    do {                                                  \
+    {                                                     \
         Except(excepted, last, result) if (0 == result) { \
             Next();                                       \
             Next();                                       \
@@ -78,7 +78,7 @@ namespace vastina {
         else if (last) {                                  \
             RETURN_ERROR                                  \
         }                                                 \
-    } while (0)
+    }
 
 // template<class fn, class... Args>
 // auto tryCall(fn&& func, Args&& ...){
