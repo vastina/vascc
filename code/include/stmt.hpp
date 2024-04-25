@@ -83,11 +83,7 @@ class FdeclStmt : public CompoundStmt {
     Function::pointer func_;
 
   public:
-    FdeclStmt(Stmt::pointer parent, Function::pointer func) : CompoundStmt(parent) {
-      //std::cout << std::hex << (unsigned long)(func);
-      func_ = func;
-      std::cout << std::hex << (unsigned long)(func_) <<'\n' ;
-    };
+    FdeclStmt(Stmt::pointer parent, Function::pointer func) : CompoundStmt(parent), func_{func} {};
 
     inline std::string_view getName() const override { return "FdeclStmt"; };
     inline void walk() const override{ print("function name: {}\n", func_->getName()); };
