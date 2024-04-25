@@ -3,6 +3,7 @@
 #include "base/Tree.hpp"
 #include "base/log.hpp"
 #include "base/vasdef.hpp"
+#include "symbol.hpp"
 
 #include <queue>
 
@@ -118,11 +119,12 @@ i32 Parser::Fdecl() {
     // todo, if there's only declare, no body
     // and this is so stupid
     auto func = scope_->getFunc(primary_tokens_.at(CurrentToken().start + 1).name);
-    auto fstmt = new FdeclStmt(func, current_stmt_);
+    if(nullptr == func)
+        RETURN_ERROR
+    auto fstmt = new FdeclStmt(current_stmt_, func);
     current_stmt_->addChildren(fstmt);
     current_stmt_ = fstmt;
     scope_ = scope_->getNextChild();
-    /*...*/
 
     return 0;
 }
@@ -282,6 +284,7 @@ void Parser::Walk() {
         auto level = quee.front();
         quee.pop();
         print("level:{}, name:{}\n", level, stmt->getName());
+        stmt->walk();
         for (auto &&child : stmt->getChildren()) {
             que.push(child);
             quee.push(level + 1);

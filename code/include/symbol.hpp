@@ -39,7 +39,7 @@ class Value {
     using pointer = Value *;
     Value(const SourceLocation &srcloc) : Srcloc_(srcloc){};
     ~Value() = default;
-    virtual std::string_view getName() { return Srcloc_.name; };
+    virtual std::string_view getName() const { return Srcloc_.name; };
 };
 
 class literal : public Value { // compile time values like "Hello World",114514,3.14
@@ -110,43 +110,47 @@ class func : public Function {
 };
 
 typedef struct SymbolTable {
-    std::unordered_map<std::string_view, Variable::pointer> Variables;
-    std::unordered_map<std::string_view, Function::pointer> functions;
+    using pointer = SymbolTable *;
 
-    SymbolTable() : Variables{}, functions{} {}
+    std::unordered_map<std::string_view, Variable::pointer>* Variables;
+    std::unordered_map<std::string_view, Function::pointer>* functions;
+
+    SymbolTable() : Variables{new std::unordered_map<std::string_view, Variable::pointer>()}, functions{new std::unordered_map<std::string_view, Function::pointer>} {}
 
     inline bool
     varExist(const std::string_view &name) const {
-        return static_cast<bool>(Variables.count(name));
+        return Variables->contains(name);
+        //return static_cast<bool>(Variables->count(name));
     }
     inline bool
     funcExist(const std::string_view &name) const {
-        return static_cast<bool>(functions.count(name));
+      return functions->contains(name);
+        //return static_cast<bool>(functions->count(name));
     }
     // Variables.insert(std::make_pair(name, var)); }
     inline Variable::pointer
-    getVar(const std::string_view &name) {
+    getVar(const std::string_view &name) const {
         if (varExist(name))
-            return Variables.at(name);
+            return Variables->at(name);
         return nullptr;
     }
     inline Function::pointer
-    getFunc(const std::string_view &name) {
+    getFunc(const std::string_view &name) const {
         if (funcExist(name))
-            return functions.at(name);
+            return functions->at(name);
         return nullptr;
     }
 
     // always override
     inline void addVar(const std::string_view &name, Variable::pointer var) {
-        Variables.erase(name);
-        Variables.insert(std::make_pair(name, var));
+        Variables->erase(name);
+        Variables->insert(std::make_pair(name, var));
         // Variables[name] = var;
     }
     // always override
     inline void addFunc(const std::string_view &name, Function::pointer fc) {
-        functions.erase(name);
-        functions.insert(std::make_pair(name, fc));
+        functions->erase(name);
+        functions->insert(std::make_pair(name, fc));
         // functions[name] = fc;
     }
 
@@ -190,16 +194,16 @@ class Scope {
   private:
     pointer parent_; // if can't find symbol, ask parent
     range_t r_;
-    SymbolTable st_; // so decl a samename-var in child scope is acceptable
+    SymbolTable::pointer st_; // so decl a samename-var in child scope is acceptable
     std::vector<pointer> children_;
 
     bool isBreakable_{false}; // for loop, who else need this?
 
   public:
     Scope() = delete;
-    Scope(range_t &&r) : parent_(nullptr), r_(r), st_(), children_(){};
+    Scope(range_t &&r) : parent_(nullptr), r_(r), st_(new SymbolTable()), children_(){};
     Scope(pointer parent, range_t &&r)
-        : parent_(parent), r_(r), st_(), children_(){};
+        : parent_(parent), r_(r), st_(new SymbolTable()), children_(){};
 
     void addVar(const std::string_view &, Variable::pointer);
     void addFunc(const std::string_view &, Function::pointer);
@@ -221,7 +225,7 @@ class Scope {
 
     // for test
     const decltype(children_) &getChildren();
-    SymbolTable &getSymbolTable();
+    const SymbolTable::pointer &getSymbolTable();
 
     pointer CreateChild(range_t &&);
     pointer getNextChild();

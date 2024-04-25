@@ -50,10 +50,10 @@ int main(int argc, char *argv[]) {
         st.pop();
         auto &&table = scope->getSymbolTable();
         print("start:\t {}\nend:\t {}\nvars: ", scope->getRange().start, scope->getRange().end);
-        for (auto &&var : table.Variables)
+        for (auto &&var : *(table->Variables))
             print("{}, ", var.first);
         print("\nfuns: ");
-        for (auto &&fc : table.functions)
+        for (auto &&fc : *(table->functions))
             print("{}, ", fc.first);
         print("\n");
         for (auto &&child : scope->getChildren())

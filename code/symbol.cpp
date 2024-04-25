@@ -31,37 +31,37 @@ Scope::getRoot() {
     return root;
 }
 void Scope::addVar(const std::string_view &name, Variable::pointer var) {
-    st_.addVar(name, var);
+    st_->addVar(name, var);
 }
 void Scope::addFunc(const std::string_view &name, Function::pointer fc) {
-    st_.addFunc(name, fc);
+    st_->addFunc(name, fc);
 }
 Variable::pointer
 Scope::getVar(const std::string_view &name) {
     auto node = this;
     do {
-        auto res = node->st_.getVar(name);
+        auto res = node->st_->getVar(name);
         if (nullptr != res)
             return res;
         node = node->parent_;
     } while (nullptr != node);
-    return nullptr;
+    RETURN_NULL
 }
 Function::pointer
 Scope::getFunc(const std::string_view &name) {
     auto node = this;
     do {
-        auto res = node->st_.getFunc(name);
+        auto res = node->st_->getFunc(name);
         if (nullptr != res)
             return res;
         node = node->parent_;
     } while (nullptr != node);
-    return nullptr;
+    RETURN_NULL
 }
 bool Scope::varExist(const std::string_view &name) {
     auto node = this;
     do {
-        if (node->st_.varExist(name)) {
+        if (node->st_->varExist(name)) {
             return true;
         }
         node = node->parent_;
@@ -73,7 +73,7 @@ bool Scope::varExist(const std::string_view &name) {
 bool Scope::funcExist(const std::string_view &name) {
     auto node = this;
     do {
-        if (node->st_.funcExist(name)) {
+        if (node->st_->funcExist(name)) {
             return true;
         }
         node = node->parent_;
@@ -120,7 +120,8 @@ Scope::getRange() {
     return r_;
 }
 const decltype(Scope::children_) &Scope::getChildren() { return children_; }
-SymbolTable &
+
+const SymbolTable::pointer &
 Scope::getSymbolTable() {
     return st_;
 }
@@ -488,7 +489,8 @@ i32 Preprocess::FuncDecl() {
     auto last_offset = offset;
     Next();
 
-    auto func_token = CurrentToken();
+    auto&& func_token = CurrentToken();
+    //4/25/24 remove `&&` will cause a bug, you can't get func->getName() out of lambda or and scope(when add instead of adder)
     if (Current() == TOKEN::MAIN) {
     } // todo
     trySkip(TOKEN::COLON, true);
