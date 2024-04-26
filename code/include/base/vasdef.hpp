@@ -35,8 +35,8 @@ enum TOKEN {
     STRUCT, // struct
     ENUM,   // enum
 
-    CONST, // const
-    STATIC,// static
+    CONST,  // const
+    STATIC, // static
 
     NUMBER, // number
     STRING, // string

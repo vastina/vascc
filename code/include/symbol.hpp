@@ -1,11 +1,9 @@
 #ifndef _SYMBOL_H_
 #define _SYMBOL_H_
 
-#include "base/String.hpp"
 #include "base/vasdef.hpp" //for the fucking stupid and smart clangd, includeit directly
 
 #include <memory>
-#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -34,12 +32,14 @@ class Value {
 
   protected:
     const SourceLocation &Srcloc_;
+    TOKEN type{}; // so todo
 
   public:
     using pointer = Value *;
     Value(const SourceLocation &srcloc) : Srcloc_(srcloc){};
     ~Value() = default;
     virtual string_view getName() const { return Srcloc_.name; };
+    virtual inline pointer self() { return this; }
 };
 
 class literal : public Value { // compile time values like "Hello World",114514,3.14
@@ -64,16 +64,10 @@ class Variable : public Value {
 
   public:
     Variable() = delete;
-    Variable(const SourceLocation &srcloc) : Value(srcloc){};
+    Variable(const SourceLocation &srcloc) : Value(srcloc) {}
     ~Variable() = default;
     inline bool
-    isConst() {
-        return isConstexpr_;
-    };
-    inline pointer
-    self() {
-        return this;
-    }
+    isConst() { return isConstexpr_; }
 };
 
 class Function : public Value {
@@ -84,20 +78,15 @@ class Function : public Value {
   public:
     using pointer = Function *;
 
-    Function(const SourceLocation &Srcloc) : Value(Srcloc) {
-        paras_ = std::vector<Variable::pointer>();
-    };
-    ~Function() { paras_.clear(); };
-    inline pointer
-    self() {
-        return this;
-    }
+    Function(const SourceLocation &Srcloc) : Value(Srcloc), paras_{} {}
+    ~Function() { paras_.clear(); }
 
-    virtual TOKEN Type() { return TOKEN::UNKNOW; };
-    virtual u32 getParamSize() { return paras_.size(); };
+    virtual TOKEN Type() { return TOKEN::UNKNOW; }
+    virtual u32 getParamSize() { return paras_.size(); }
     void addPara(Variable::pointer var) { paras_.push_back(var); }
 };
 
+/*
 template <typename ty>
 class func : public Function {
   public:
@@ -108,6 +97,7 @@ class func : public Function {
   private:
     ;
 };
+*/
 
 typedef struct SymbolTable {
     using pointer = SymbolTable *;
@@ -125,7 +115,6 @@ typedef struct SymbolTable {
     inline bool
     funcExist(const string_view &name) const {
         return functions->contains(name);
-        // return static_cast<bool>(functions->count(name));
     }
     // Variables.insert(std::make_pair(name, var)); }
     inline Variable::pointer
@@ -147,11 +136,9 @@ typedef struct SymbolTable {
         Variables->insert(std::make_pair(name, var));
         // Variables[name] = var;
     }
-    // always override
     inline void addFunc(const string_view &name, Function::pointer fc) {
         functions->erase(name);
         functions->insert(std::make_pair(name, fc));
-        // functions[name] = fc;
     }
 
     // inline Variable::pointer getVar( `the source-location` ) to-do
@@ -174,14 +161,14 @@ typedef struct range_t {
     range_t(u32 st, u32 ed) : start(st), end(ed){};
     range_t(range_t &&other) : start(other.start), end(other.end){};
     range_t(const range_t &other) : start(other.start), end(other.end){};
-    inline bool
-    isInRange(u32 index) {
-        return index >= start && index < end;
-    }
-    inline bool
-    isInRange(range_t *r) {
-        return r->start >= start && r->end <= end;
-    }
+    // inline bool
+    // isInRange(u32 index) {
+    //     return index >= start && index < end;
+    // }
+    // inline bool
+    // isInRange(range_t *r) {
+    //     return r->start >= start && r->end <= end;
+    // }
 
 } range_t;
 
@@ -225,7 +212,7 @@ class Scope {
 
     // for test
     const decltype(children_) &getChildren();
-    const SymbolTable::pointer &getSymbolTable();
+    const decltype(st_) &getSymbolTable();
 
     pointer CreateChild(range_t &&);
     pointer getNextChild();
@@ -271,7 +258,7 @@ class Preprocess {
         : primary_tokens(tks), offset() {
         current_scope = self;
     };
-    ~Preprocess() = default;
+    ~Preprocess() { results.clear(); };
 
   private:
     // Getter and Setter----------------------------------------------------

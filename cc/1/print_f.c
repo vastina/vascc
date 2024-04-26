@@ -1,4 +1,4 @@
-#include <stdio.h>
+extern int printf(const char*, ...);
 
 #define print_f(...) printf(__VA_ARGS__)
 

@@ -1,3 +1,4 @@
+#include "base/String.hpp"
 #include "lexer.hpp"
 #include "parse.hpp"
 #include "symbol.hpp"

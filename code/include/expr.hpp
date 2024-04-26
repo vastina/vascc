@@ -1,13 +1,13 @@
 #ifndef _EXPRESSION_H_
 #define _EXPRESSION_H_
 
+#include "base/String.hpp"
 #include "base/Tree.hpp"
 #include "base/vasdef.hpp"
 #include "symbol.hpp"
 
 #include <memory>
-#include <string_view>
-#include <type_traits>
+// #include <type_traits>
 #include <vector>
 
 namespace vastina {
@@ -15,10 +15,8 @@ namespace vastina {
 using std::make_shared;
 using std::shared_ptr;
 
-// some classes here should be deleted
-
-template <typename ty>
-concept NotVoid = !std::is_same_v<ty, void>;
+// template <typename ty>
+// concept NotVoid = !std::is_same_v<ty, void>;
 
 class Expression {
   protected:

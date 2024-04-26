@@ -38,3 +38,18 @@ runtime polymorphism is awesome and terrible
 
 ## 4/25/24
 compare to preprocess, there's seldom crash at parse, however that add diffculty at debug.
+
+
+## 4/26/24
+A idea about symbol.cpp:Preprocess::offset, pull it back from the given offset at the begin of certain ParseFunc
+```c++
+void findExcept(u32 offst, TOKEN except){
+    u32 current_offset = offset;
+    for(u32 i = current_offset - offst, i <= current_offset + offst; i++){
+        if(primary_tokens[i].token == except){
+            offset = i;
+            break;
+        }
+    }
+}
+```

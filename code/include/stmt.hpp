@@ -1,8 +1,8 @@
 #ifndef _STATEMENT_H_
 #define _STATEMENT_H_
 
-#include "base/vasdef.hpp"
 #include "base/Tree.hpp"
+#include "base/vasdef.hpp"
 #include "expr.hpp"
 #include "symbol.hpp"
 
@@ -129,16 +129,16 @@ class VdeclStmt : public Stmt {
   public:
     VdeclStmt(Stmt::pointer parent, Variable::pointer var) : Stmt(parent), var_(var){};
     // override but not impl will cause a link error
-    void InitWithStmt(Stmt::pointer stmt) override{ Initer = dynamic_cast<BinStmt::pointer>(stmt); };
+    void InitWithStmt(Stmt::pointer stmt) override { Initer = dynamic_cast<BinStmt::pointer>(stmt); };
 
     inline string_view getName() const override { return "VdeclStmt"; };
-    inline void walk() const override { 
-      print("Vdecl, var-name: {}\n", var_->getName());
-      if(Initer){
-        print("init with val, walk initer\n");
-        Initer->walk();
-      } 
-      else print("not init with val\n");
+    inline void walk() const override {
+        print("Vdecl, var-name: {}\n", var_->getName());
+        if (Initer) {
+            print("init with val, walk initer\n");
+            Initer->walk();
+        } else
+            print("not init with val\n");
     }
 };
 //--------------variable declare statement-----------------------------------------------------------------------------

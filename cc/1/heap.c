@@ -1,4 +1,5 @@
 #include <stdlib.h>
+extern int printf(const char*, ...);
 
 int main(){
     int *p = (int*)malloc(sizeof(int)*10);
@@ -10,5 +11,6 @@ int main(){
         count += p[--index];
     }
     free(p);
-    return count;
+    printf("%d\n", count);
+    return 0;
 }

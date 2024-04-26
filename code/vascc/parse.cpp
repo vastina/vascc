@@ -39,6 +39,11 @@ Parser::Next() {
     p_offset_++;
 }
 
+inline const token_t &
+Parser::PeekPrtat(u32 offst) {
+    return primary_tokens_.at(offst);
+}
+
 i32 Parser::Parse() {
     const u32 processed_tokens_size = processed_tokens_.size();
     while (p_offset_ < processed_tokens_size) {
@@ -102,7 +107,7 @@ i32 Parser::Parse() {
 }
 
 i32 Parser::Vdecl() {
-    auto var = scope_->getVar(primary_tokens_.at(CurrentToken().start).name);
+    auto var = scope_->getVar(PeekPrtat(CurrentToken().start).name);
     auto vstmt = new VdeclStmt(current_stmt_, var);
 
     current_stmt_->addChildren(vstmt);
@@ -118,7 +123,7 @@ i32 Parser::Vdecl() {
 i32 Parser::Fdecl() {
     // todo, if there's only declare, no body
     // and this is so stupid
-    auto func = scope_->getFunc(primary_tokens_.at(CurrentToken().start + 1).name);
+    auto func = scope_->getFunc(PeekPrtat(CurrentToken().start + 1).name);
     if (nullptr == func)
         RETURN_ERROR
     auto fstmt = new FdeclStmt(current_stmt_, func);
@@ -178,7 +183,7 @@ i32 Parser::Binary() {
 
 // pos: p_token func name lies
 CallExpr::pointer Parser::Callee(u32 pos) {
-    auto &token = primary_tokens_.at(Peekat(pos).start);
+    auto &token = PeekPrtat(Peekat(pos).start);
     auto func = scope_->getFunc(token.name);
     auto callexpr = new class CallExpr(func, token);
     for (auto i{1u}; i <= func->getParamSize(); i++) {
@@ -203,13 +208,13 @@ Parser::Binary(range_t r) {
 
 typename TreeNode<Expression::pointer>::pointer
 Parser::ParseBinary(u32 &offset, u32 end) {
-    auto root = BinStmt::nodeCreator(primary_tokens_.at(offset), scope_);
+    auto root = BinStmt::nodeCreator(PeekPrtat(offset), scope_);
     if (offset + 1 >= end)
         return root;
 
     u32 last_offset = offset;
     while (true) {
-        auto current = BinStmt::nodeCreator(primary_tokens_.at(offset), scope_);
+        auto current = BinStmt::nodeCreator(PeekPrtat(offset), scope_);
         offset++;
         auto tk = current->data->getToken();
         switch (token_type(tk)) {
@@ -244,7 +249,7 @@ Parser::ParseBinary(u32 &offset, u32 end) {
             break;
         }
         case TOKEN_TYPE::OPERATOR: {
-            if (last_offset == offset)
+            if (last_offset + 1 == offset)
                 break;
             if (current->data->getLevel() >= root->data->getLevel()) {
                 root->ReplaceByL(current);

@@ -35,6 +35,8 @@ class Parser {
     inline const p_token_t &PeekToken();
     inline const p_token_t &Peekat(u32);
     inline void Next();
+    // peek PRimary_Tokens at
+    inline const token_t &PeekPrtat(u32);
 
   public:
     void Walk();

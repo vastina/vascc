@@ -8,8 +8,7 @@ int sl(int a, int b){
 
 /*
 gcc -S shift.c
-gcc -fdump-tree-gimple shift.c
--fdump-tree-all is too long to show
+gcc -fdump-tree-all shift.c
 */
 
 

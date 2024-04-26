@@ -11,14 +11,12 @@ int While(int a){
 int Loop(int a){
 
 IF:
-    if(a>5) goto STMT;
+    if(a>5) {goto STMT;}
     //else goto DONE;
-    else return a;
-    {
+    else {return a;}
 STMT:
-        a -= 5;
-        goto IF;
-    }
+    a -= 5;
+    goto IF;
 // DONE:
 //     return a;
 }

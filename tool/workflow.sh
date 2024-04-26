@@ -2,10 +2,10 @@
 
 cmake -Bbuild .
 cmake --build ./build
-./testcase/run.sh
+./testcase/script/run.sh
 rm -f vcc
 xmake build
-./testcase/run.sh
+./testcase/script/run.sh
 ./llvm/cf.sh
 git add -A
-git commit
+# git commit
