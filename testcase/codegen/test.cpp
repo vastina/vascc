@@ -12,16 +12,18 @@ int main(int argc, char* argv[]) {
     std::string greet {"hello "};
     if(1 == argc) greet.append("world");
     else{
-        for(auto i {1}; i <= argc; i++){
+        for(auto i {1}; i < argc; i++){
             greet.append(argv[i]);
         }
     }
 
     writer->PushBack(x86::file_start("hello"));
-    writer->PushBack(x86::rodata(0, "string", std::format("\"{}\"", greet)));
+    u32 count {0};
+    writer->PushBack(x86::rodata(count, "string", std::format("\"{}\"", greet)));
     writer->PushBack(x86::func_declare_start("main"));
     writer->PushBack(x86::func_start("main", 0));
-    writer->PushBack(x86::Threer(x86::leaq, x86::regIndirect(".LC0", x86::rip), x86::rax));
+    writer->PushBack(x86::Threer(x86::leaq, 
+        x86::regIndirect(std::format(".LC{}", count), x86::rip), x86::rax));
     writer->PushBack(x86::Threer(x86::movq, x86::rax, x86::rdi));
     writer->PushBack(x86::make_call("puts@PLT"));
     writer->PushBack(x86::Threer(x86::movl, "$0", x86::eax));
