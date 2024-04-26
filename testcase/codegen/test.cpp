@@ -1,15 +1,30 @@
+#include "base/vasdef.hpp"
 #include "base/io.hpp"
 #include "codegen.hpp"
+#include <format>
 
 using namespace vastina;
-int main() {
+int main(int argc, char* argv[]) {
+    (void)system("rm -f hello.s");
     (void)system("touch hello.s");
     auto writer{new Writer("hello.s")};
 
+    std::string greet {"hello "};
+    if(1 == argc) greet.append("world");
+    else{
+        for(auto i {1}; i <= argc; i++){
+            greet.append(argv[i]);
+        }
+    }
+
     writer->PushBack(x86::file_start("hello"));
+    writer->PushBack(x86::rodata(0, "string", std::format("\"{}\"", greet)));
     writer->PushBack(x86::func_declare_start("main"));
     writer->PushBack(x86::func_start("main", 0));
-    writer->PushBack(std::string("\tmovl\t$0, %eax\n"));
+    writer->PushBack(x86::Threer(x86::leaq, x86::regIndirect(".LC0", x86::rip), x86::rax));
+    writer->PushBack(x86::Threer(x86::movq, x86::rax, x86::rdi));
+    writer->PushBack(x86::make_call("puts@PLT"));
+    writer->PushBack(x86::Threer(x86::movl, "$0", x86::eax));
     writer->PushBack(x86::main_func_end);
     writer->PushBack(x86::func_declare_end(0, "main"));
     writer->PushBack(x86::asm_end_str);

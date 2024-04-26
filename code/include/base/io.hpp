@@ -21,8 +21,7 @@ class Buffer {
     }
     inline u32 PushBack(const string_view &str) {
         std::string s{str};
-        buffer_queue_.push_back(s);
-        return buffer_queue_.size() - 1;
+        return PushBack(s);
     }
     inline void Insert(u32 pos, const std::string &str) {
         buffer_queue_.insert(buffer_queue_.begin() + pos, str);
@@ -71,8 +70,7 @@ class Writer : public Buffer {
     inline void WriteOne() { fs_ << PopFront(); }
     inline void WriteAll() {
         while (!buffer_queue_.empty()) {
-            fs_ << buffer_queue_.front();
-            buffer_queue_.pop_front();
+            WriteOne();
         }
     }
 };
