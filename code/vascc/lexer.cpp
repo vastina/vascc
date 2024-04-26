@@ -10,10 +10,10 @@
 
 namespace vastina {
 
-token_t::token_t(TOKEN tk) : token(tk){};
+token_t::token_t(TOKEN tk) : token(tk) {}
 token_t::token_t(TOKEN tk, const string_view &sv)
-    : token(tk), name(sv){};
-token_t::token_t(TOKEN tk, string_view &&sv) : token(tk), name(sv){};
+    : token(tk), name(sv) {}
+token_t::token_t(TOKEN tk, string_view &&sv) : token(tk), name(sv) {}
 token_t::token_t(TOKEN tk, const string_view &sv, u32 _line)
     : token(tk), name(sv), line(_line) {
 }
@@ -22,9 +22,9 @@ token_t::token_t(TOKEN tk, string_view &&sv, u32 _line)
 }
 
 token_t::token_t(const token_t &tk)
-    : token(tk.token), name(tk.name), line(tk.line){};
+    : token(tk.token), name(tk.name), line(tk.line) {}
 token_t::token_t(token_t &&tk)
-    : token(tk.token), name(std::move(tk.name)), line(tk.line){};
+    : token(tk.token), name(std::move(tk.name)), line(tk.line) {}
 
 // just read file into buffer
 lexer::lexer(const char *filename)

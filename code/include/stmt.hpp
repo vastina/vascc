@@ -21,6 +21,20 @@ using pTokenPtr = shared_ptr<ptokens>;
 class Stmt;
 using Stmts = std::vector<Stmt *>;
 
+enum class STMTTYPE {
+    UNKNOW = -1,
+    Stmt,
+    Compound,
+    Fdecl,
+    Vdecl,
+    Binary,
+    Cond,
+    If,
+    Loop,
+    Return,
+    Call
+};
+
 // base statements
 class Stmt {
   public:
@@ -30,27 +44,29 @@ class Stmt {
     pointer parent_;
 
   public:
-    Stmt(pointer parent) : parent_(parent){};
+    Stmt(pointer parent) : parent_(parent) {}
     virtual ~Stmt() = default;
     inline pointer getParent() const { return parent_; }
+    virtual STMTTYPE StmtType() const { return STMTTYPE::Stmt; }
+
     // CompoundStmt
-    virtual void addChildren(Stmt::pointer, i32 = -1){};
+    virtual void addChildren(Stmt::pointer, i32 = -1) {}
     virtual const Stmts &getChildren() const {
         constexpr static Stmts s{};
         return s;
     };
     // CondStmt
-    virtual void setCondition(Stmt::pointer){};
+    virtual void setCondition(Stmt::pointer) {}
     // VdeclStmt
-    virtual void InitWithStmt(Stmt::pointer){};
+    virtual void InitWithStmt(Stmt::pointer) {}
     // BinStmt
-    virtual void Parse(const std::vector<token_t> &, range_t) {};
+    virtual void Parse(const std::vector<token_t> &, range_t) {}
     // RetStmt
     virtual pointer getResult() const { return {}; };
 
     // for test
     virtual string_view getName() const { return "Stmt"; };
-    virtual void walk() const {};
+    virtual void walk() const {}
 };
 
 //--------------compound statements------------------------------------------------------------------------------------
@@ -62,13 +78,14 @@ class CompoundStmt : public Stmt {
     Stmts children_;
 
   public:
-    CompoundStmt(Stmt::pointer parent) : Stmt(parent), children_{} {};
+    CompoundStmt(Stmt::pointer parent) : Stmt(parent), children_{} {}
     virtual ~CompoundStmt() { children_.clear(); }
     void addChildren(Stmt::pointer, i32) override;
     inline Stmt::pointer getChildat(u32 pos) { return children_.at(pos); }
     inline u32 getStmtSize() { return children_.size(); }
     inline const Stmts &getChildren() const override { return children_; }
 
+    inline STMTTYPE StmtType() const override { return STMTTYPE::Compound; }
     inline string_view getName() const override { return "CompoundStmt"; };
 };
 //--------------compound statements------------------------------------------------------------------------------------
@@ -82,8 +99,9 @@ class FdeclStmt : public CompoundStmt {
     Function::pointer func_;
 
   public:
-    FdeclStmt(Stmt::pointer parent, Function::pointer func) : CompoundStmt(parent), func_{func} {};
+    FdeclStmt(Stmt::pointer parent, Function::pointer func) : CompoundStmt(parent), func_{func} {}
 
+    inline STMTTYPE StmtType() const override { return STMTTYPE::Fdecl; }
     inline string_view getName() const override { return "FdeclStmt"; };
     inline void walk() const override { print("function name: {}\n", func_->getName()); };
 };
@@ -101,8 +119,8 @@ class BinStmt : public Stmt {
     BinExpr::pointer data_;
 
   public:
-    BinStmt(Stmt::pointer parent) : Stmt(parent), data_(nullptr){};
-    BinStmt(Stmt::pointer parent, Scope::pointer scope) : Stmt(parent), data_(new BinExpr(scope)){};
+    BinStmt(Stmt::pointer parent) : Stmt(parent), data_(nullptr) {}
+    BinStmt(Stmt::pointer parent, Scope::pointer scope) : Stmt(parent), data_(new BinExpr(scope)) {}
     // typename TreeNode<Expression::pointer>::pointer
     // doParse(const std::vector<token_t> &primary_tokens, u32 end, u32 &offset);
     // void Parse(const std::vector<token_t> &, range_t) override;
@@ -111,6 +129,7 @@ class BinStmt : public Stmt {
     static Expression::pointer Creator(const token_t &, const Scope::pointer);
     static BinExpr::Node::pointer nodeCreator(const token_t &, Scope::pointer);
 
+    inline STMTTYPE StmtType() const override { return STMTTYPE::Binary; }
     inline string_view getName() const override { return "BinStmt"; };
     inline void walk() const override {
         print("binary walk\n");
@@ -127,10 +146,11 @@ class VdeclStmt : public Stmt {
     BinStmt::pointer Initer{nullptr};
 
   public:
-    VdeclStmt(Stmt::pointer parent, Variable::pointer var) : Stmt(parent), var_(var){};
+    VdeclStmt(Stmt::pointer parent, Variable::pointer var) : Stmt(parent), var_(var) {}
     // override but not impl will cause a link error
     void InitWithStmt(Stmt::pointer stmt) override { Initer = dynamic_cast<BinStmt::pointer>(stmt); };
 
+    inline STMTTYPE StmtType() const override { return STMTTYPE::Vdecl; }
     inline string_view getName() const override { return "VdeclStmt"; };
     inline void walk() const override {
         print("Vdecl, var-name: {}\n", var_->getName());
@@ -150,10 +170,11 @@ class CondStmt : public CompoundStmt {
     BinStmt::pointer condition_{nullptr};
 
   public:
-    CondStmt(Stmt::pointer parent) : CompoundStmt(parent){};
-    CondStmt(Stmt::pointer parent, BinStmt::pointer cond) : CompoundStmt(parent), condition_(cond){};
+    CondStmt(Stmt::pointer parent) : CompoundStmt(parent) {}
+    CondStmt(Stmt::pointer parent, BinStmt::pointer cond) : CompoundStmt(parent), condition_(cond) {}
     void setCondition(Stmt::pointer) override;
 
+    inline STMTTYPE StmtType() const override { return STMTTYPE::Cond; }
     inline string_view getName() const override { return "CondStmt"; };
     inline void walk() const override {
         print("CondStmt, walk condition\n");
@@ -167,9 +188,10 @@ class LoopStmt : public CondStmt {
 
   protected:
   public:
-    LoopStmt(Stmt::pointer parent) : CondStmt(parent){};
-    LoopStmt(Stmt::pointer parent, BinStmt::pointer cond) : CondStmt(parent, cond){};
+    LoopStmt(Stmt::pointer parent) : CondStmt(parent) {}
+    LoopStmt(Stmt::pointer parent, BinStmt::pointer cond) : CondStmt(parent, cond) {}
 
+    inline STMTTYPE StmtType() const override { return STMTTYPE::Loop; }
     inline string_view getName() const override { return "LoopStmt"; };
     inline void walk() const override {
         print("LoopStmt, walk condition\n");
@@ -183,9 +205,10 @@ class IfStmt : public CondStmt {
 
   protected:
   public:
-    IfStmt(Stmt::pointer parent) : CondStmt(parent){};
-    IfStmt(Stmt::pointer parent, BinStmt::pointer cond) : CondStmt(parent, cond){};
+    IfStmt(Stmt::pointer parent) : CondStmt(parent) {}
+    IfStmt(Stmt::pointer parent, BinStmt::pointer cond) : CondStmt(parent, cond) {}
 
+    inline STMTTYPE StmtType() const override { return STMTTYPE::If; }
     inline string_view getName() const override { return "IfStmt"; };
     inline void walk() const override {
         print("IfStmt, walk condition\n");
@@ -200,9 +223,10 @@ class RetStmt : public Stmt {
     Stmt::pointer result_;
 
   public:
-    RetStmt(Stmt::pointer parent, Stmt::pointer res) : Stmt(parent), result_(res){};
+    RetStmt(Stmt::pointer parent, Stmt::pointer res) : Stmt(parent), result_(res) {}
     inline pointer getResult() const override { return result_; };
 
+    inline STMTTYPE StmtType() const override { return STMTTYPE::Return; }
     inline string_view getName() const override { return "RetStmt"; };
     inline void walk() const override {
         print("RetStmt, walk result\n");
@@ -220,8 +244,9 @@ class CallStmt : public Stmt {
     Expression::pointer callee_;
 
   public:
-    CallStmt(Stmt::pointer parent, Expression::pointer callee) : Stmt(parent), callee_(callee){};
+    CallStmt(Stmt::pointer parent, Expression::pointer callee) : Stmt(parent), callee_(callee) {}
 
+    inline STMTTYPE StmtType() const override { return STMTTYPE::Call; }
     inline string_view getName() const override { return "CallStmt"; };
     inline void walk() const override {
         print("CallStmt, walk callee\n");

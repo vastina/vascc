@@ -38,7 +38,7 @@ Strcmp(const std::string &buffer, u32 offset,
     return true;
 }
 
-inline static constexpr string_view
+inline const_str_t
 p_token_str(P_TOKEN ptk) {
     switch (ptk) {
     // case P_TOKEN::CAL:
@@ -116,6 +116,11 @@ void print(const string_view fmt_str, Args &&...args) {
     fputs(std::vformat(fmt_str, std::make_format_args(args...)).c_str(), stdout);
 };
 
+template <typename... Args>
+std::string format(const std::string_view &fmt_str, Args &&...args) {
+    return std::vformat(fmt_str, std::make_format_args(args...));
+}
+
 // auth: https://www.zhihu.com/people/guyutongxue
 // link: https://zhuanlan.zhihu.com/p/688324926
 // helps when transform enum to string
@@ -144,7 +149,6 @@ void print(const string_view fmt_str, Args &&...args) {
 //          return value_str;
 //      }
 //  }
-
 // consteval std::unordered_map<TOKEN, string_view> TOKEN_STR;
 // typedef struct before_main_t{
 //     before_main_t(){

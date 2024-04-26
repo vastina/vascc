@@ -30,12 +30,12 @@ class TreeNode : public std::enable_shared_from_this<TreeNode<ty>> {
     pointer right;
     pointer parent;
 
-    TreeNode() : data(), left(nullptr), right(nullptr), parent(nullptr){};
+    TreeNode() : data(), left(nullptr), right(nullptr), parent(nullptr) {}
     TreeNode(const ty &_data)
-        : data(_data), left(nullptr), right(nullptr), parent(nullptr){};
+        : data(_data), left(nullptr), right(nullptr), parent(nullptr) {}
     TreeNode(ty &&_data)
         : data(std::move(_data)), left(nullptr), right(nullptr),
-          parent(nullptr){};
+          parent(nullptr) {}
 
   private:
     inline void

@@ -284,92 +284,101 @@ inline static constexpr u32 SIZEOF(TOKEN) {
 
 namespace x86 {
 
-static constexpr string_view rax{"rax"};
-static constexpr string_view rsp{"rsp"};
-static constexpr string_view rbp{"rbp"};
-static constexpr string_view rip{"rip"};
-static constexpr string_view rdi{"rdi"};
-static constexpr string_view rsi{"rsi"};
-static constexpr string_view rdx{"rdx"};
-static constexpr string_view rcx{"rcx"};
-static constexpr string_view r08{"r8"};
-static constexpr string_view r09{"r9"};
-static constexpr string_view r10{"r10"};
-static constexpr string_view r11{"r11"};
-static constexpr string_view r12{"r12"};
-static constexpr string_view r13{"r13"};
-static constexpr string_view r14{"r14"};
-static constexpr string_view r15{"r15"};
+#define const_str_t static constexpr string_view
 
-static constexpr string_view eax{"eax"};
-static constexpr string_view esp{"esp"};
-static constexpr string_view ebp{"ebp"};
-static constexpr string_view eip{"eip"};
-static constexpr string_view edi{"edi"};
-static constexpr string_view esi{"esi"};
-static constexpr string_view edx{"edx"};
-static constexpr string_view ecx{"ecx"};
-static constexpr string_view e08{"r8d"};
-static constexpr string_view e09{"r9d"};
-static constexpr string_view e10{"r10d"};
-static constexpr string_view e11{"r11d"};
-static constexpr string_view e12{"r12d"};
-static constexpr string_view e13{"r13d"};
-static constexpr string_view e14{"r14d"};
-static constexpr string_view e15{"r15d"};
+const_str_t rax{"rax"};
+const_str_t rsp{"rsp"};
+const_str_t rbp{"rbp"};
+const_str_t rip{"rip"};
+const_str_t rdi{"rdi"};
+const_str_t rsi{"rsi"};
+const_str_t rdx{"rdx"};
+const_str_t rcx{"rcx"};
+const_str_t r08{"r8"};
+const_str_t r09{"r9"};
+const_str_t r10{"r10"};
+const_str_t r11{"r11"};
+const_str_t r12{"r12"};
+const_str_t r13{"r13"};
+const_str_t r14{"r14"};
+const_str_t r15{"r15"};
 
-static constexpr string_view ax{"ax"};
-static constexpr string_view sp{"sp"};
-static constexpr string_view bp{"bp"};
-static constexpr string_view ip{"ip"};
-static constexpr string_view di{"di"};
-static constexpr string_view si{"si"};
-static constexpr string_view dx{"dx"};
-static constexpr string_view cx{"cx"};
-static constexpr string_view r08w{"r8w"};
-static constexpr string_view r09w{"r9w"};
-static constexpr string_view r10w{"r10w"};
-static constexpr string_view r11w{"r11w"};
-static constexpr string_view r12w{"r12w"};
-static constexpr string_view r13w{"r13w"};
-static constexpr string_view r14w{"r14w"};
-static constexpr string_view r15w{"r15w"};
+const_str_t eax{"eax"};
+const_str_t esp{"esp"};
+const_str_t ebp{"ebp"};
+const_str_t eip{"eip"};
+const_str_t edi{"edi"};
+const_str_t esi{"esi"};
+const_str_t edx{"edx"};
+const_str_t ecx{"ecx"};
+const_str_t e08{"r8d"};
+const_str_t e09{"r9d"};
+const_str_t e10{"r10d"};
+const_str_t e11{"r11d"};
+const_str_t e12{"r12d"};
+const_str_t e13{"r13d"};
+const_str_t e14{"r14d"};
+const_str_t e15{"r15d"};
 
-static constexpr string_view al{"al"};
-static constexpr string_view ah{"ah"};
-static constexpr string_view bl{"bl"};
-static constexpr string_view bh{"bh"};
-static constexpr string_view cl{"cl"};
-static constexpr string_view ch{"ch"};
-static constexpr string_view dl{"dl"};
-static constexpr string_view dh{"dh"};
+const_str_t ax{"ax"};
+const_str_t sp{"sp"};
+const_str_t bp{"bp"};
+const_str_t ip{"ip"};
+const_str_t di{"di"};
+const_str_t si{"si"};
+const_str_t dx{"dx"};
+const_str_t cx{"cx"};
+const_str_t r08w{"r8w"};
+const_str_t r09w{"r9w"};
+const_str_t r10w{"r10w"};
+const_str_t r11w{"r11w"};
+const_str_t r12w{"r12w"};
+const_str_t r13w{"r13w"};
+const_str_t r14w{"r14w"};
+const_str_t r15w{"r15w"};
 
-static constexpr string_view mov{"mov"};
-static constexpr string_view movl{"movl"};
-static constexpr string_view movq{"movq"};
+const_str_t al{"al"};
+const_str_t ah{"ah"};
+const_str_t bl{"bl"};
+const_str_t bh{"bh"};
+const_str_t cl{"cl"};
+const_str_t ch{"ch"};
+const_str_t dl{"dl"};
+const_str_t dh{"dh"};
 
-static constexpr string_view add{"add"};
-static constexpr string_view addl{"addl"};
+const_str_t mov{"mov"};
+const_str_t movl{"movl"};
+const_str_t movq{"movq"};
 
-static constexpr string_view sub{"sub"};
-static constexpr string_view Xor{"xor"}; // xor is used
-static constexpr string_view lea{"lea"};
-static constexpr string_view push{"push"};
-static constexpr string_view pop{"pop"};
-static constexpr string_view call{"call"};
-static constexpr string_view ret{"ret"};
+const_str_t add{"add"};
+const_str_t addl{"addl"};
+const_str_t addq{"addq"};
 
-static constexpr string_view cmp{"cmp"};
-static constexpr string_view cmpl{"cmpl"};
+const_str_t sub{"sub"};
+const_str_t subl{"subl"};
+const_str_t subq{"subq"};
 
-static constexpr string_view je{"je"};
-static constexpr string_view jne{"jne"};
-static constexpr string_view jg{"jg"};
-static constexpr string_view jge{"jge"};
-static constexpr string_view jl{"jl"};
-static constexpr string_view jle{"jle"};
-static constexpr string_view jmp{"jmp"};
-static constexpr string_view test{"test"};
+const_str_t Xor{"xor"}; // xor is used
+const_str_t lea{"lea"};
+
+const_str_t push{"push"};
+const_str_t pushq{"pushq"};
+const_str_t pop{"pop"};
+const_str_t popq{"popq"};
+const_str_t call{"call"};
+const_str_t ret{"ret"};
+
+const_str_t cmp{"cmp"};
+const_str_t cmpl{"cmpl"};
+
+const_str_t je{"je"};
+const_str_t jne{"jne"};
+const_str_t jg{"jg"};
+const_str_t jge{"jge"};
+const_str_t jl{"jl"};
+const_str_t jle{"jle"};
+const_str_t jmp{"jmp"};
+const_str_t test{"test"};
 
 } // namespace x86
 

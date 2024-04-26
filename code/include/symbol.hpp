@@ -36,7 +36,7 @@ class Value {
 
   public:
     using pointer = Value *;
-    Value(const SourceLocation &srcloc) : Srcloc_(srcloc){};
+    Value(const SourceLocation &srcloc) : Srcloc_(srcloc) {}
     ~Value() = default;
     virtual string_view getName() const { return Srcloc_.name; };
     virtual inline pointer self() { return this; }
@@ -45,7 +45,7 @@ class Value {
 class literal : public Value { // compile time values like "Hello World",114514,3.14
 
   public:
-    literal(const SourceLocation &Srcloc) : Value(Srcloc){};
+    literal(const SourceLocation &Srcloc) : Value(Srcloc) {}
     ~literal() = default;
 
     // inline string_view
@@ -90,7 +90,7 @@ class Function : public Value {
 template <typename ty>
 class func : public Function {
   public:
-    func(const SourceLocation &Srcloc) : Function(Srcloc){};
+    func(const SourceLocation &Srcloc) : Function(Srcloc){}
 
     inline constexpr TOKEN Type() override { return ::vastina::Type<ty>(); };
 
@@ -151,16 +151,16 @@ typedef struct range_t {
              // preprocessed_tokens[end-1]
 
     // some are here just because I'm lazy to check which is no longer needed
-    range_t() : start(0), end(0){};
+    range_t() : start(0), end(0) {}
     inline const range_t &
     operator=(range_t &&other) {
         start = other.start;
         end = other.end;
         return *this;
     }
-    range_t(u32 st, u32 ed) : start(st), end(ed){};
-    range_t(range_t &&other) : start(other.start), end(other.end){};
-    range_t(const range_t &other) : start(other.start), end(other.end){};
+    range_t(u32 st, u32 ed) : start(st), end(ed) {}
+    range_t(range_t &&other) : start(other.start), end(other.end) {}
+    range_t(const range_t &other) : start(other.start), end(other.end) {}
     // inline bool
     // isInRange(u32 index) {
     //     return index >= start && index < end;
@@ -188,9 +188,9 @@ class Scope {
 
   public:
     Scope() = delete;
-    Scope(range_t &&r) : parent_(nullptr), r_(r), st_(new SymbolTable()), children_(){};
+    Scope(range_t &&r) : parent_(nullptr), r_(r), st_(new SymbolTable()), children_() {}
     Scope(pointer parent, range_t &&r)
-        : parent_(parent), r_(r), st_(new SymbolTable()), children_(){};
+        : parent_(parent), r_(r), st_(new SymbolTable()), children_() {}
 
     void addVar(const string_view &, Variable::pointer);
     void addFunc(const string_view &, Function::pointer);
@@ -253,7 +253,7 @@ class Preprocess {
   public:
     Preprocess(std::vector<token_t> &tks)
         : primary_tokens(tks), offset(),
-          current_scope(new Scope({0, 0})){};
+          current_scope(new Scope({0, 0})) {}
     Preprocess(std::vector<token_t> &tks, Scope::pointer self)
         : primary_tokens(tks), offset() {
         current_scope = self;

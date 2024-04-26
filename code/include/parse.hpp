@@ -13,7 +13,7 @@ class Parser {
 
   protected:
     const std::vector<token_t> &primary_tokens_;
-    // u32 offset_{};
+    // u32 offset_{}
     const ptokens &processed_tokens_;
     u32 p_offset_{};
 
@@ -26,7 +26,7 @@ class Parser {
            const Scope::pointer scope) : primary_tokens_(primary_tokens),
                                          processed_tokens_(processed_tokens),
                                          current_stmt_(new CompoundStmt(nullptr)),
-                                         scope_(scope){};
+                                         scope_(scope) {}
 
   protected:
     inline P_TOKEN Current();
