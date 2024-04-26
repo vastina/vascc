@@ -5,20 +5,19 @@
 #include "symbol.hpp"
 
 #include <fstream>
-#include <string_view>
 
 #include <folly/Function.h>
 
 namespace vastina {
 
 token_t::token_t(TOKEN tk) : token(tk){};
-token_t::token_t(TOKEN tk, const std::string_view &sv)
+token_t::token_t(TOKEN tk, const string_view &sv)
     : token(tk), name(sv){};
-token_t::token_t(TOKEN tk, std::string_view &&sv) : token(tk), name(sv){};
-token_t::token_t(TOKEN tk, const std::string_view &sv, u32 _line)
+token_t::token_t(TOKEN tk, string_view &&sv) : token(tk), name(sv){};
+token_t::token_t(TOKEN tk, const string_view &sv, u32 _line)
     : token(tk), name(sv), line(_line) {
 }
-token_t::token_t(TOKEN tk, std::string_view &&sv, u32 _line)
+token_t::token_t(TOKEN tk, string_view &&sv, u32 _line)
     : token(tk), name(sv), line(_line) {
 }
 
@@ -63,7 +62,7 @@ void lexer::NextLine() {
 }
 
 lexer::RESULT
-lexer::ParseKeyWord(const std::string_view &target, TOKEN target_type,
+lexer::ParseKeyWord(const string_view &target, TOKEN target_type,
                     const folly::Function<bool(char)> &endjudge, TOKEN Default,
                     const folly::Function<bool(char)> &DefaultEndjudge) {
     u32 len = target.size();
@@ -79,7 +78,7 @@ lexer::ParseKeyWord(const std::string_view &target, TOKEN target_type,
         while (const_cast<folly::Function<bool(char)> &>(DefaultEndjudge)(buffer[offset])) {
             offset++;
         }
-        std::string_view temp = {buffer.data() + last_offset, offset - last_offset};
+        string_view temp = {buffer.data() + last_offset, offset - last_offset};
         if (!current_scope->funcExist(temp)) {
             tokens.push_back(token_t(Default, temp, line));
         } else {
@@ -89,7 +88,7 @@ lexer::ParseKeyWord(const std::string_view &target, TOKEN target_type,
     }
 }
 
-void lexer::forSingelWord(const std::string_view &target, TOKEN target_type) {
+void lexer::forSingelWord(const string_view &target, TOKEN target_type) {
     tokens.push_back(token_t(target_type, target, line));
     ++offset;
 }
@@ -379,14 +378,16 @@ lexer::Next() {
                 TOKEN::UNKNOW, Falser);
             if (res == RESULT::SUCCESS)
                 break;
-            else res = ParseKeyWord(
-                "=<", TOKEN::LESSEQUAL, Truer,
-                TOKEN::UNKNOW, Falser);
+            else
+                res = ParseKeyWord(
+                    "=<", TOKEN::LESSEQUAL, Truer,
+                    TOKEN::UNKNOW, Falser);
             if (res == RESULT::SUCCESS)
                 break;
-            else res = ParseKeyWord(
-                "=>", TOKEN::GREATEREQUAL, Truer,
-                TOKEN::UNKNOW, Falser);
+            else
+                res = ParseKeyWord(
+                    "=>", TOKEN::GREATEREQUAL, Truer,
+                    TOKEN::UNKNOW, Falser);
             if (res == RESULT::SUCCESS)
                 break;
             else
@@ -486,7 +487,7 @@ lexer::Next() {
             if (res == RESULT::SUCCESS)
                 break;
             else
-                forSingelWord("+", TOKEN::ADD);
+                forSingelWord("+", TOKEN::PLUS);
             break;
         }
         case '-': {
@@ -580,7 +581,7 @@ lexer::getTokens() {
     return tokens;
 }
 
-const std::string_view
+const string_view
 lexer::getBuffer() {
     return {buffer.data(), buffer.size()};
 }

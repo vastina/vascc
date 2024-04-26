@@ -29,7 +29,7 @@ class Expression {
     virtual void Walk() const {};
     // ValExpr and OpExpr
     virtual TOKEN getToken() { return {}; }
-    virtual std::string_view getName() { return {}; };
+    virtual string_view getName() { return {}; };
     // CallExpr
     virtual Function::pointer getFunc() { return nullptr; };
     virtual void Parse(const std::vector<token_t> &, u32, u32 &) {};
@@ -55,9 +55,9 @@ class OpExpr : public Expression {
 
   public:
     inline TOKEN getToken() override { return op_.token; };
-    inline std::string_view getName() override { return op_.name; };
+    inline string_view getName() override { return op_.name; };
 
-    inline void Walk() const override {print("opexpr, data: {}\n", op_.name);}
+    inline void Walk() const override { print("opexpr, data: {}\n", op_.name); }
 };
 
 class ValExpr : public Expression {
@@ -68,30 +68,33 @@ class ValExpr : public Expression {
   public:
     ValExpr(Value::pointer val, const token_t &tk) : value_(val), val_(tk){};
     inline TOKEN getToken() override { return val_.token; };
-    inline std::string_view getName() override { return val_.name; };
+    inline string_view getName() override { return val_.name; };
 
-    inline void Walk() const override {print("valexpr, data: {}\n", val_.name);}
+    inline void Walk() const override { print("valexpr, data: {}\n", val_.name); }
 };
 
 class BinExpr : public Expression {
   public:
     using pointer = BinExpr *;
     using Node = TreeNode<Expression::pointer>;
+
   protected:
     Node::pointer root_;
     Scope::pointer scope_;
-  
+
   public:
     BinExpr(Node::pointer root) : root_{root} {};
     BinExpr(Scope::pointer scope) : root_{nullptr}, scope_{scope} {};
-    BinExpr(Node::pointer root ,Scope::pointer scope) : root_{root}, scope_{scope} {};
+    BinExpr(Node::pointer root, Scope::pointer scope) : root_{root}, scope_{scope} {};
 
     inline void setRoot(Node::pointer root) { root_ = root; }
 
-    //static Expression::pointer Creator(const token_t &, const Scope::pointer);
-    //static Node::pointer nodeCreator(const token_t &, Scope::pointer);
-    inline void Walk() const override {root_->Walk(PREORDER, 
-      [](const Expression::pointer &_data) { _data->Walk();}) ; }
+    // static Expression::pointer Creator(const token_t &, const Scope::pointer);
+    // static Node::pointer nodeCreator(const token_t &, Scope::pointer);
+    inline void Walk() const override {
+        root_->Walk(PREORDER,
+                    [](const Expression::pointer &_data) { _data->Walk(); });
+    }
 };
 
 class CallExpr : public ValExpr {
@@ -107,10 +110,11 @@ class CallExpr : public ValExpr {
     inline Function::pointer getFunc() override { return dynamic_cast<Function::pointer>(value_); };
     inline void addPara(typename TreeNode<Expression::pointer>::pointer val) { paras_.push_back(new BinExpr(val)); };
 
-    inline std::string_view getName() override { return val_.name; };
+    inline string_view getName() override { return val_.name; };
     inline void Walk() const override {
-      print("call expr, walk params\n");
-      for(auto&& para: paras_) para->Walk();
+        print("call expr, walk params\n");
+        for (auto &&para : paras_)
+            para->Walk();
     }
 };
 

@@ -14,15 +14,15 @@
 namespace vastina {
 struct token_t {
     TOKEN token;
-    std::string_view name;
+    string_view name;
     u32 line;
 
     // some were here just because I am lazy to delete them
     token_t(TOKEN tk);
-    token_t(TOKEN tk, const std::string_view &sv);
-    token_t(TOKEN tk, std::string_view &&sv);
-    token_t(TOKEN tk, const std::string_view &sv, u32 _line);
-    token_t(TOKEN tk, std::string_view &&sv, u32 _line);
+    token_t(TOKEN tk, const string_view &sv);
+    token_t(TOKEN tk, string_view &&sv);
+    token_t(TOKEN tk, const string_view &sv, u32 _line);
+    token_t(TOKEN tk, string_view &&sv, u32 _line);
 
     token_t(const token_t &tk);
     token_t(token_t &&tk);
@@ -39,7 +39,7 @@ class Value {
     using pointer = Value *;
     Value(const SourceLocation &srcloc) : Srcloc_(srcloc){};
     ~Value() = default;
-    virtual std::string_view getName() const { return Srcloc_.name; };
+    virtual string_view getName() const { return Srcloc_.name; };
 };
 
 class literal : public Value { // compile time values like "Hello World",114514,3.14
@@ -48,7 +48,7 @@ class literal : public Value { // compile time values like "Hello World",114514,
     literal(const SourceLocation &Srcloc) : Value(Srcloc){};
     ~literal() = default;
 
-    // inline std::string_view
+    // inline string_view
     // Typename() {
     //     return typeid(ty).name();
     // }
@@ -112,43 +112,43 @@ class func : public Function {
 typedef struct SymbolTable {
     using pointer = SymbolTable *;
 
-    std::unordered_map<std::string_view, Variable::pointer>* Variables;
-    std::unordered_map<std::string_view, Function::pointer>* functions;
+    std::unordered_map<string_view, Variable::pointer> *Variables;
+    std::unordered_map<string_view, Function::pointer> *functions;
 
-    SymbolTable() : Variables{new std::unordered_map<std::string_view, Variable::pointer>()}, functions{new std::unordered_map<std::string_view, Function::pointer>} {}
+    SymbolTable() : Variables{new std::unordered_map<string_view, Variable::pointer>()}, functions{new std::unordered_map<string_view, Function::pointer>} {}
 
     inline bool
-    varExist(const std::string_view &name) const {
+    varExist(const string_view &name) const {
         return Variables->contains(name);
-        //return static_cast<bool>(Variables->count(name));
+        // return static_cast<bool>(Variables->count(name));
     }
     inline bool
-    funcExist(const std::string_view &name) const {
-      return functions->contains(name);
-        //return static_cast<bool>(functions->count(name));
+    funcExist(const string_view &name) const {
+        return functions->contains(name);
+        // return static_cast<bool>(functions->count(name));
     }
     // Variables.insert(std::make_pair(name, var)); }
     inline Variable::pointer
-    getVar(const std::string_view &name) const {
+    getVar(const string_view &name) const {
         if (varExist(name))
             return Variables->at(name);
         return nullptr;
     }
     inline Function::pointer
-    getFunc(const std::string_view &name) const {
+    getFunc(const string_view &name) const {
         if (funcExist(name))
             return functions->at(name);
         return nullptr;
     }
 
     // always override
-    inline void addVar(const std::string_view &name, Variable::pointer var) {
+    inline void addVar(const string_view &name, Variable::pointer var) {
         Variables->erase(name);
         Variables->insert(std::make_pair(name, var));
         // Variables[name] = var;
     }
     // always override
-    inline void addFunc(const std::string_view &name, Function::pointer fc) {
+    inline void addFunc(const string_view &name, Function::pointer fc) {
         functions->erase(name);
         functions->insert(std::make_pair(name, fc));
         // functions[name] = fc;
@@ -205,12 +205,12 @@ class Scope {
     Scope(pointer parent, range_t &&r)
         : parent_(parent), r_(r), st_(new SymbolTable()), children_(){};
 
-    void addVar(const std::string_view &, Variable::pointer);
-    void addFunc(const std::string_view &, Function::pointer);
-    Variable::pointer getVar(const std::string_view &);
-    Function::pointer getFunc(const std::string_view &);
-    bool varExist(const std::string_view &);
-    bool funcExist(const std::string_view &);
+    void addVar(const string_view &, Variable::pointer);
+    void addFunc(const string_view &, Function::pointer);
+    Variable::pointer getVar(const string_view &);
+    Function::pointer getFunc(const string_view &);
+    bool varExist(const string_view &);
+    bool funcExist(const string_view &);
 
     void setRange(u32, u32);
     const range_t &getRange();
@@ -277,7 +277,7 @@ class Preprocess {
     // Getter and Setter----------------------------------------------------
     inline TOKEN Current();
     inline const token_t &CurrentToken();
-    inline const std::string_view &CurrentTokenName();
+    inline const string_view &CurrentTokenName();
     inline TOKEN Peek();
     void Next();
     void reset();

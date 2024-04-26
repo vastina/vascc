@@ -2,6 +2,9 @@
 
 filename="$1"
 outputname="$2"
+
+as "$filename" -o "$outputname.o"
+
 ld -plugin /usr/libexec/gcc/x86_64-linux-gnu/13/liblto_plugin.so    \
 -plugin-opt=/usr/libexec/gcc/x86_64-linux-gnu/13/lto-wrapper        \
 -plugin-opt=-pass-through=-lgcc_s                                   \
@@ -25,5 +28,7 @@ ld -plugin /usr/libexec/gcc/x86_64-linux-gnu/13/liblto_plugin.so    \
 -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc                                 \
 /usr/lib/gcc/x86_64-linux-gnu/13/crtend.o                           \
 /usr/lib/x86_64-linux-gnu/crtn.o                                    \
-"$filename"                                                         \
+"$outputname.o"                                                     \
 -o $outputname
+
+rm -f "$outputname.o"

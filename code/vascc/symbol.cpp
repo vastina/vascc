@@ -30,14 +30,14 @@ Scope::getRoot() {
     }
     return root;
 }
-void Scope::addVar(const std::string_view &name, Variable::pointer var) {
+void Scope::addVar(const string_view &name, Variable::pointer var) {
     st_->addVar(name, var);
 }
-void Scope::addFunc(const std::string_view &name, Function::pointer fc) {
+void Scope::addFunc(const string_view &name, Function::pointer fc) {
     st_->addFunc(name, fc);
 }
 Variable::pointer
-Scope::getVar(const std::string_view &name) {
+Scope::getVar(const string_view &name) {
     auto node = this;
     do {
         auto res = node->st_->getVar(name);
@@ -48,7 +48,7 @@ Scope::getVar(const std::string_view &name) {
     RETURN_NULL
 }
 Function::pointer
-Scope::getFunc(const std::string_view &name) {
+Scope::getFunc(const string_view &name) {
     auto node = this;
     do {
         auto res = node->st_->getFunc(name);
@@ -58,7 +58,7 @@ Scope::getFunc(const std::string_view &name) {
     } while (nullptr != node);
     RETURN_NULL
 }
-bool Scope::varExist(const std::string_view &name) {
+bool Scope::varExist(const string_view &name) {
     auto node = this;
     do {
         if (node->st_->varExist(name)) {
@@ -70,7 +70,7 @@ bool Scope::varExist(const std::string_view &name) {
     return false;
 }
 
-bool Scope::funcExist(const std::string_view &name) {
+bool Scope::funcExist(const string_view &name) {
     auto node = this;
     do {
         if (node->st_->funcExist(name)) {
@@ -145,7 +145,7 @@ Preprocess::CurrentToken() {
     return primary_tokens[offset];
 }
 
-inline const std::string_view &
+inline const string_view &
 Preprocess::CurrentTokenName() {
     return primary_tokens[offset].name;
 }
@@ -319,7 +319,7 @@ i32 Preprocess::Binary(const folly::Function<bool()> &EndJudge) {
         case TOKEN_TYPE::OPERATOR: {
             auto peek = Peek();
             if (token_type(peek) == TOKEN_TYPE::OPERATOR) {
-                if (peek != TOKEN::ASSIGN && peek != TOKEN::NEG && peek != TOKEN::ADD && peek != TOKEN::OPS && peek != TOKEN::LOGNOT) {
+                if (peek != TOKEN::ASSIGN && peek != TOKEN::NEG && peek != TOKEN::PLUS && peek != TOKEN::OPS && peek != TOKEN::LOGNOT) {
                     TEMP_LOG;
                     RETURN_ERROR
                 }
@@ -489,8 +489,8 @@ i32 Preprocess::FuncDecl() {
     auto last_offset = offset;
     Next();
 
-    auto&& func_token = CurrentToken();
-    //4/25/24 remove `&&` will cause a bug, you can't get func->getName() out of lambda or and scope(when add instead of adder)
+    auto &&func_token = CurrentToken();
+    // 4/25/24 remove `&&` will cause a bug, you can't get func->getName() out of lambda or the scope(when add instead of adder)
     if (Current() == TOKEN::MAIN) {
     } // todo
     trySkip(TOKEN::COLON, true);

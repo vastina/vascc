@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
         print("offset:{}, \ttoken:{}, \tline:{}\n",
               i, tks->at(i).name, tks->at(i).line);
     }
-    std::cout << "--------------------------preprocess------------------------"
+    std::cout << "--------------------------preprocess-result-----------------"
                  "--------\n";
     Preprocess *pp = new Preprocess(*tks, lx.getScope());
     pp->Process();
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
         }
         std::cout << "\"\n";
     }
-    std::cout << "--------------------------preprocess-result-----------------"
+    std::cout << "--------------------------symboltable--scope----------------"
                  "--------\n";
 
     std::queue<decltype(pp->CurrentScope())> st;
@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
             st.push(child);
     }
 
-    std::cout << "------------------------------------------------------------"
+    std::cout << "--------------------------Parser----------------------------"
                  "--------\n";
 
     auto psr = new Parser(*tks.get(), pp->getResult(), pp->CurrentScope());

@@ -3,9 +3,5 @@
 clang-format -i code/*.cpp
 clang-format -i code/vascc/*.cpp
 clang-format -i code/include/*.hpp
-
-#vasdef
-clang-format -i code/include/base/log.hpp
-clang-format -i code/include/base/String.hpp
-clang-format -i code/include/base/Tree.hpp
-clang-format -i code/include/base/io.hpp
+clang-format -i testcase/codegen/*.cpp
+clang-format -i code/include/base/*

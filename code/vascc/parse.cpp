@@ -119,7 +119,7 @@ i32 Parser::Fdecl() {
     // todo, if there's only declare, no body
     // and this is so stupid
     auto func = scope_->getFunc(primary_tokens_.at(CurrentToken().start + 1).name);
-    if(nullptr == func)
+    if (nullptr == func)
         RETURN_ERROR
     auto fstmt = new FdeclStmt(current_stmt_, func);
     current_stmt_->addChildren(fstmt);
@@ -230,9 +230,9 @@ Parser::ParseBinary(u32 &offset, u32 end) {
         I_DONOT_LIKE_THIS:
         case TOKEN_TYPE::VALUE: {
             if (current->data->getToken() == TOKEN::SYMBOLF) {
-                offset += Peekat(p_offset_).end - Peekat(p_offset_).start + 1 +1;//skip ')', the last char of fun call
+                offset += Peekat(p_offset_).end - Peekat(p_offset_).start + 1 + 1; // skip ')', the last char of fun call
                 Next();
-                current->data = Callee(p_offset_ );
+                current->data = Callee(p_offset_);
             }
             if (token_type(root->data->getToken()) == TOKEN_TYPE::VALUE) {
                 root = current;
@@ -244,7 +244,8 @@ Parser::ParseBinary(u32 &offset, u32 end) {
             break;
         }
         case TOKEN_TYPE::OPERATOR: {
-            if(last_offset == offset) break;
+            if (last_offset == offset)
+                break;
             if (current->data->getLevel() >= root->data->getLevel()) {
                 root->ReplaceByL(current);
                 root = current;

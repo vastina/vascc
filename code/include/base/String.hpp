@@ -29,7 +29,7 @@ isWhiteSpace(char ch) {
 
 inline bool
 Strcmp(const std::string &buffer, u32 offset,
-       const std::string_view &temp) {
+       const string_view &temp) {
     u32 len = temp.size();
     for (u32 i = 0; i < len; i++) {
         if (buffer.at(i + offset) != temp.at(i))
@@ -38,7 +38,7 @@ Strcmp(const std::string &buffer, u32 offset,
     return true;
 }
 
-inline static constexpr std::string_view
+inline static constexpr string_view
 p_token_str(P_TOKEN ptk) {
     switch (ptk) {
     // case P_TOKEN::CAL:
@@ -68,7 +68,7 @@ p_token_str(P_TOKEN ptk) {
 }
 
 inline constexpr TOKEN
-_TypeToken(std::string_view sv) {
+_TypeToken(string_view sv) {
     if (sv.size() == 0)
         return TOKEN::UNKNOW;
 
@@ -110,7 +110,7 @@ Type() {
 }
 
 template <typename... Args>
-void print(const std::string_view fmt_str, Args &&...args) {
+void print(const string_view fmt_str, Args &&...args) {
     // auto fmt_args{ std::make_format_args(args...) };
     // std::string outstr{ std::vformat(fmt_str, fmt_args) };
     fputs(std::vformat(fmt_str, std::make_format_args(args...)).c_str(), stdout);
@@ -122,7 +122,7 @@ void print(const std::string_view fmt_str, Args &&...args) {
 //  namespace detail {
 //  template <auto V>
 //  constexpr auto print() {
-//      return std::string_view(std::source_location::current().function_name());
+//      return string_view(std::source_location::current().function_name());
 //  }
 //  consteval auto find_name_pos() {
 //      const auto result = print<nullptr>();
@@ -138,14 +138,14 @@ void print(const std::string_view fmt_str, Args &&...args) {
 //      const auto [l, r] = detail::find_name_pos();
 //      const auto value_str = function_str.substr(l, function_str.size() - l - r);
 //      if (const auto scope_idx = value_str.rfind("::");
-//          scope_idx != std::string_view::npos) {
+//          scope_idx != string_view::npos) {
 //          return value_str.substr(scope_idx + 2);
 //      } else {
 //          return value_str;
 //      }
 //  }
 
-// consteval std::unordered_map<TOKEN, std::string_view> TOKEN_STR;
+// consteval std::unordered_map<TOKEN, string_view> TOKEN_STR;
 // typedef struct before_main_t{
 //     before_main_t(){
 //         for(i32 i = UNKNOW; i < ASM; i++){

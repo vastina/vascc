@@ -36,12 +36,12 @@ class lexer {
     Scope::pointer current_scope;
 
     STATE ParseWhiteSpace();
-    RESULT ParseKeyWord(const std::string_view &, TOKEN,
+    RESULT ParseKeyWord(const string_view &, TOKEN,
                         const folly::Function<bool(char)> &, TOKEN Default,
                         const folly::Function<bool(char)> &);
     // todo: parse number
     void ParseNumber();
-    void forSingelWord(const std::string_view &target, TOKEN target_type);
+    void forSingelWord(const string_view &target, TOKEN target_type);
 
   public:
     lexer() = default;
@@ -55,7 +55,7 @@ class lexer {
     i32 reScan(); // todo, for non-func func declare
 
     const std::vector<token_t> &getTokens();
-    const std::string_view getBuffer();
+    const string_view getBuffer();
 
     // this is not good
     Scope::pointer getScope();
