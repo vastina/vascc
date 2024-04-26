@@ -19,12 +19,12 @@ int main(int argc, char *argv[]) {
     lexer lx = lexer(argv[1]);
     std::cout << "--------------------------lexer-----------------------------"
                  "--------\n";
-    while (lexer::STATE::END != lx.Next())
-        ;
+    lx.Parse();
+
     auto tks = std::make_unique<std::vector<token_t>>(lx.getTokens());
     for (u32 i = 0; i < tks->size(); i++) {
-        print("offset:{}, \ttoken:{}, \tline:{}\n",
-              i, tks->at(i).name, tks->at(i).line);
+        print("offset:{}, \ttoken:{} \ttokenid:{}, \tline:{}\n",
+              i, tks->at(i).name, (i32)tks->at(i).token, tks->at(i).line);
     }
     std::cout << "--------------------------preprocess-result-----------------"
                  "--------\n";

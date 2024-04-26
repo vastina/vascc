@@ -24,6 +24,7 @@ class lexer {
         SUCCESS,
         FAIL
     };
+    // todo: this should be removed in serval commits
 
   private:
     std::vector<token_t> tokens;
@@ -44,7 +45,6 @@ class lexer {
     void forSingelWord(const string_view &target, TOKEN target_type);
 
   public:
-    lexer() = default;
     lexer(const char *filename);
     ~lexer();
 

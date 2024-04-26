@@ -555,11 +555,29 @@ lexer::Next() {
     default:
         break;
     }
+
+    u32 size = tokens.size();
+    if(tokens.back().token == TOKEN::NLBRAC){
+        auto &&func_token = tokens.at(size - 2);
+        if(func_token.token == TOKEN::SYMBOL && token_type(tokens.at(size - 3).token) == TOKEN_TYPE::TYPE){
+            func_token.token = TOKEN::SYMBOLF;
+            current_scope->addFunc(func_token.name, new Function(func_token));
+        }
+    }
+
     return STATE::NORMAL;
 }
 
 i32 lexer::reScan() {
-
+    // for(u32 offst{0u}; auto&& token:tokens){
+    //     if(token_type(token.token) == TOKEN_TYPE::TYPE){
+    //         if(tokens.at(offst+1).token == TOKEN::SYMBOL && tokens.at(offst+2).token == TOKEN::NLBRAC){
+    //             tokens.at(offst+1).token = TOKEN::SYMBOLF;
+                
+    //         }
+    //     }
+    //     offst++;
+    // }
     return {};
 }
 

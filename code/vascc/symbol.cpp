@@ -237,8 +237,14 @@ i32 Preprocess::Process() {
         default: {
             switch (token_type(Current())) {
             case TOKEN_TYPE::TYPE: {
-                Except(TOKEN::SYMBOL, true, result);
-                EXCEPT_ZERO(Declare, [this]() { return Current() == TOKEN::SEMICOLON; });
+                if(Peek() == TOKEN::SYMBOL)
+                    EXCEPT_ZERO(Declare, [this]() { return Current() == TOKEN::SEMICOLON; })
+                else if(Peek() == TOKEN::SYMBOLF || Peek() == TOKEN::MAIN)
+                    EXCEPT_ZERO(FuncDecl)
+                else{
+                    print("peek token: {}\n", (i32)Peek());
+                    EXIT_ERROR;
+                } 
                 break;
             }
             case TOKEN_TYPE::VALUE: {
@@ -487,16 +493,22 @@ i32 Preprocess::Paras(Function::pointer func) {
 }
 i32 Preprocess::FuncDecl() {
     auto last_offset = offset;
-    Next();
+    TOKEN type = Current();
+    auto flag {token_type(type) == TOKEN_TYPE::TYPE};
 
+    Next();
     auto &&func_token = CurrentToken();
     // 4/25/24 remove `&&` will cause a bug, you can't get func->getName() out of lambda or the scope(when add instead of adder)
     if (Current() == TOKEN::MAIN) {
     } // todo
-    trySkip(TOKEN::COLON, true);
+
+    if(!flag){
+        trySkip(TOKEN::COLON, true);
+        type = Current();
+    }
 
     folly::Function<void()> adder;
-    switch (Current()) {
+    switch (type) {
     case TOKEN::INT:
         adder = [this, &func_token]() { current_scope->addFunc(func_token.name, new Function(func_token)); };
         break;
