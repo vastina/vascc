@@ -1,9 +1,9 @@
-func fac:int(int n){
+int fac(int n){
     if(n==1) {return 1;}
     return n*fac(n-1);
 }
 
-func main:int(){
+int main(){
     int a = fac(4) ;
     return 1-(a==24) ;
 }

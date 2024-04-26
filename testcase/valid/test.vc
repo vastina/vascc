@@ -1,11 +1,11 @@
 
 int global = 114514;
 
-func fc:int(){
+int fc (){
   return 1919810;
 }
 
-func main :int(){
+int main  (){
   int ans =9, abcdefg=0;
   if(ans == 1)    
     { ans =abcdefg = (((2+8)|5) + 3*7/ 4 -9 & 6) -5 +fc();}

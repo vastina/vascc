@@ -262,9 +262,8 @@ lexer::Next() {
             break;
         }
         case 's': {
-            (void)ParseKeyWord(
-                "?", TOKEN::UNKNOW, Falser,
-                TOKEN::SYMBOL, SymbolEndJudge);
+            ParseKeyWord("static", TOKEN::STATIC, NormalEnd, TOKEN::SYMBOL,
+                         SymbolEndJudge);
             break;
         }
         case 't': {

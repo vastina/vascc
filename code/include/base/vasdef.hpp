@@ -36,7 +36,7 @@ enum TOKEN {
     ENUM,   // enum
 
     CONST, // const
-    // STATIC,      // static
+    STATIC,// static
 
     NUMBER, // number
     STRING, // string

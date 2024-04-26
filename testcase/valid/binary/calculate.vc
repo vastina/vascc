@@ -1,4 +1,4 @@
-func main:int(){
+int main(){
     int o = 42;
 
     int a, b =0, c= b;
