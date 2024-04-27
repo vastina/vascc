@@ -1,6 +1,9 @@
 extern int printf(const char*, ...);
 
 int main(){
-    printf("Hello World\n");
-    return 0;
+    int res = 0;
+    printf("Hello World%u, %d, %x, %f, %lld, %p, %s, %c, %ld, %a, %n, %g, %d\n", 
+        114514, 1919810, 2048, 3.1415926, (long long)1<<62, &main, 
+        "main", 'v', 0x7ffffffff, 2.7182818, &res, 0.0, 27182818);
+    return res;
 }

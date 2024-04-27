@@ -112,7 +112,7 @@ i32 Parser::Vdecl() {
 
     current_stmt_->addChildren(vstmt);
 
-    if (Peek() == P_TOKEN::BINARY) { // if with literal or sth to init
+    if (Peek() == P_TOKEN::BINARY) { // if with sth to init
         Next();
         vstmt->InitWithStmt(Binary({CurrentToken().start, CurrentToken().end}));
     }
@@ -169,7 +169,6 @@ i32 Parser::Loop() {
     auto lstmt = new LoopStmt(current_stmt_, Binary({CurrentToken().start, CurrentToken().end}));
     current_stmt_->addChildren(lstmt);
     current_stmt_ = lstmt;
-    // print("\npppppppp_offset: {}, start:{}, end{}\n", p_offset_, scope_->getRange().start ,scope_->getRange().end);
     scope_ = scope_->getNextChild();
 
     return 0;
@@ -186,6 +185,7 @@ CallExpr::pointer Parser::Callee(u32 pos) {
     auto &token = PeekPrtat(Peekat(pos).start);
     auto func = scope_->getFunc(token.name);
     auto callexpr = new class CallExpr(func, token);
+    callexpr->setLevel(Level(token.token));
     for (auto i{1u}; i <= func->getParamSize(); i++) {
         auto start{Peekat(pos + i).start};
         callexpr->addPara(ParseBinary(start, Peekat(pos + i).end));
@@ -200,14 +200,11 @@ Parser::Binary(range_t r) {
     auto start = r.start;
     auto root{ParseBinary(start, r.end)};
     bstmt->setRoot(root);
-    // print("poffset: {}\n", p_offset_);
-    // root->Walk(PREORDER, [](const Expression::pointer &_data) { print("token : {}\n", _data->getName()); });
-    // putchar('\n');
     return bstmt;
 }
 
 typename TreeNode<Expression::pointer>::pointer
-Parser::ParseBinary(u32 &offset, u32 end) {
+Parser::ParseBinary(u32 &offset, const u32 end) {
     auto root = BinStmt::nodeCreator(PeekPrtat(offset), scope_);
     if (offset + 1 >= end)
         return root;
@@ -235,9 +232,12 @@ Parser::ParseBinary(u32 &offset, u32 end) {
         I_DONOT_LIKE_THIS:
         case TOKEN_TYPE::VALUE: {
             if (current->data->getToken() == TOKEN::SYMBOLF) {
-                offset += Peekat(p_offset_).end - Peekat(p_offset_).start + 1 + 1; // skip ')', the last char of fun call
                 Next();
+                u32 last_offset{p_offset_};
                 current->data = Callee(p_offset_);
+                for (auto i{last_offset}; i <= p_offset_; i++)
+                    offset += Peekat(i).end - Peekat(i).start + 1;
+                offset--;
             }
             if (token_type(root->data->getToken()) == TOKEN_TYPE::VALUE) {
                 root = current;
@@ -274,12 +274,10 @@ Parser::ParseBinary(u32 &offset, u32 end) {
         if (offset >= end)
             break;
     }
-    // root->Walk(PREORDER, [](const Expression::pointer &_data) { print("token : {}\n", _data->getName()); });
-    // putchar('\n');
     return root;
 }
 
-void Parser::Walk() {
+void Parser::BfsWalk() {
     std::queue<Stmt::pointer> que;
     std::queue<u32> quee;
     que.push(current_stmt_);
@@ -295,6 +293,21 @@ void Parser::Walk() {
             que.push(child);
             quee.push(level + 1);
         }
+    }
+}
+
+void Parser::DfsWalk() {
+    doDfsWalk(current_stmt_);
+}
+
+void Parser::doDfsWalk(Stmt::pointer stmt, u32 level) {
+    print("stmt_name: {}\n", stmt->getName());
+    stmt->walk();
+    print("children_size: {}\n", stmt->getChildren().size());
+    auto count{1u};
+    for (auto &&child : stmt->getChildren()) {
+        print("{}.{}:\n", level, count++);
+        doDfsWalk(child, level + 1);
     }
 }
 

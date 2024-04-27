@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
 
     auto psr = new Parser(*tks.get(), pp->getResult(), pp->CurrentScope());
     (void)psr->Parse();
-    psr->Walk();
+    psr->DfsWalk();
 
     return 0;
 }

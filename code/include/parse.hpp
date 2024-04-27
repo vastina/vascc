@@ -39,7 +39,13 @@ class Parser {
     inline const token_t &PeekPrtat(u32);
 
   public:
-    void Walk();
+    void BfsWalk();
+    void DfsWalk();
+
+  private:
+    void doDfsWalk(Stmt::pointer, u32 = 1);
+
+  public:
     inline Stmt::pointer getStmtRoot() { return current_stmt_; }
 
   public:
@@ -53,12 +59,11 @@ class Parser {
     i32 Loop();
     i32 Binary();
 
-    // should this?
     BinStmt::pointer Binary(range_t);
     CallExpr::pointer Callee(u32);
 
   protected:
-    typename TreeNode<Expression::pointer>::pointer ParseBinary(u32 &, u32);
+    typename TreeNode<Expression::pointer>::pointer ParseBinary(u32 &, const u32);
 };
 
 } // namespace vastina

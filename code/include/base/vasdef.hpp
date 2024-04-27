@@ -31,12 +31,15 @@ enum TOKEN {
     SYMBOL,  // symbol
     FUNC,    // func
     SYMBOLF, // symbol
+    MAIN,    // main
+    RETURN,  // return
 
     STRUCT, // struct
     ENUM,   // enum
 
     CONST,  // const
     STATIC, // static
+    EXTERN, // extern
 
     NUMBER, // number
     STRING, // string
@@ -52,9 +55,6 @@ enum TOKEN {
     COLON,     // :
     DQUOTE,    // "
     SQUOTE,    // '
-
-    MAIN,   // main
-    RETURN, // return
 
     GREATER, // >
     LOGNOT,  // !
@@ -294,8 +294,8 @@ const_str_t rdi{"%rdi"};
 const_str_t rsi{"%rsi"};
 const_str_t rdx{"%rdx"};
 const_str_t rcx{"%rcx"};
-const_str_t r08{"%r8"};
-const_str_t r09{"%r9"};
+const_str_t r8{"%r8"};
+const_str_t r9{"%r9"};
 const_str_t r10{"%r10"};
 const_str_t r11{"%r11"};
 const_str_t r12{"%r12"};
@@ -328,8 +328,8 @@ const_str_t di{"%di"};
 const_str_t si{"%si"};
 const_str_t dx{"%dx"};
 const_str_t cx{"%cx"};
-const_str_t r08w{"%r8w"};
-const_str_t r09w{"%r9w"};
+const_str_t r8w{"%r8w"};
+const_str_t r9w{"%r9w"};
 const_str_t r10w{"%r10w"};
 const_str_t r11w{"%r11w"};
 const_str_t r12w{"%r12w"};
@@ -349,6 +349,7 @@ const_str_t dh{"%dh"};
 const_str_t mov{"mov"};
 const_str_t movl{"movl"};
 const_str_t movq{"movq"};
+const_str_t movss{"movss"};
 
 const_str_t add{"add"};
 const_str_t addl{"addl"};
@@ -368,7 +369,7 @@ const_str_t pushq{"pushq"};
 const_str_t pop{"pop"};
 const_str_t popq{"popq"};
 const_str_t call{"call"};
-const_str_t ret{"%ret"};
+const_str_t ret{"ret"};
 
 const_str_t cmp{"cmp"};
 const_str_t cmpl{"cmpl"};

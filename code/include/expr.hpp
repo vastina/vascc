@@ -110,7 +110,7 @@ class CallExpr : public ValExpr {
 
     inline string_view getName() override { return val_.name; };
     inline void Walk() const override {
-        print("call expr, walk params\n");
+        print("call expr, callee name:{}, walk params\n", val_.name);
         for (auto &&para : paras_)
             para->Walk();
     }

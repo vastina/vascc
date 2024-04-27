@@ -499,8 +499,8 @@ i32 Preprocess::FuncDecl() {
     Next();
     auto &&func_token = CurrentToken();
     // 4/25/24 remove `&&` will cause a bug, you can't get func->getName() out of lambda or the scope(when add instead of adder)
-    if (Current() == TOKEN::MAIN) {
-    } // todo
+
+    // if (Current() == TOKEN::MAIN) {} // seems nothing to-do, error `undefined ref to _start` happen at ld time
 
     if (!flag) {
         trySkip(TOKEN::COLON, true);

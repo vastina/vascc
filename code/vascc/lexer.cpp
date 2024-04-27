@@ -150,8 +150,13 @@ lexer::Next() {
             break;
         }
         case 'e': {
-            ParseKeyWord("else", TOKEN::ELSE, NormalEnd, TOKEN::SYMBOL,
-                         SymbolEndJudge);
+            RESULT res = ParseKeyWord("else", TOKEN::ELSE, NormalEnd, TOKEN::SYMBOL,
+                                      SymbolEndJudge);
+            if (res == RESULT::SUCCESS)
+                break;
+            else
+                res = ParseKeyWord("extern", TOKEN::EXTERN, NormalEnd,
+                                   TOKEN::UNKNOW, Truer);
             break;
         }
         case 'f': {

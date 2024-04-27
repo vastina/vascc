@@ -23,8 +23,14 @@ class Buffer {
         std::string s{str};
         return PushBack(s);
     }
+    // override the origin one
     inline void Insert(u32 pos, const std::string &str) {
+        buffer_queue_.erase(buffer_queue_.begin() + pos);
         buffer_queue_.insert(buffer_queue_.begin() + pos, str);
+    }
+    // get and be able to modify
+    inline std::string &Peekat(u32 pos) {
+        return buffer_queue_.at(pos);
     }
     inline std::string PopBack() {
         auto str = buffer_queue_.at(buffer_queue_.size() - 1);
@@ -52,21 +58,6 @@ class Writer : public Buffer {
     }
     inline void Open() { fs_.open(file_name_); }
     inline void Close() { fs_.close(); }
-    inline void WriteLine() {
-        auto flag{false};
-        while (true) {
-            for (auto &&ch : buffer_queue_.front()) {
-                if ('\n' == ch) {
-                    flag = true;
-                    break;
-                }
-                fs_ << ch;
-            }
-            if (flag)
-                break;
-            buffer_queue_.pop_front();
-        }
-    }
     inline void WriteOne() { fs_ << PopFront(); }
     inline void WriteAll() {
         while (!buffer_queue_.empty()) {
