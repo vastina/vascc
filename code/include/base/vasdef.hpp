@@ -311,14 +311,15 @@ const_str_t edi{"%edi"};
 const_str_t esi{"%esi"};
 const_str_t edx{"%edx"};
 const_str_t ecx{"%ecx"};
-const_str_t e08{"%e8d"};
-const_str_t e09{"%e9d"};
-const_str_t e10{"%e10d"};
-const_str_t e11{"%e11d"};
-const_str_t e12{"%e12d"};
-const_str_t e13{"%e13d"};
-const_str_t e14{"%e14d"};
-const_str_t e15{"%e15d"};
+// const_str_t e08{"%e8d"};
+// const_str_t e09{"%e9d"};
+// const_str_t e10{"%e10d"};
+// const_str_t e11{"%e11d"};
+// const_str_t e12{"%e12d"};
+// const_str_t e13{"%e13d"};
+// const_str_t e14{"%e14d"};
+// const_str_t e15{"%e15d"};
+//so I was cheated by copilot
 
 const_str_t ax{"%ax"};
 const_str_t sp{"%sp"};
@@ -346,10 +347,15 @@ const_str_t ch{"%ch"};
 const_str_t dl{"%dl"};
 const_str_t dh{"%dh"};
 
+const_str_t sete{"sete"};
+
 const_str_t mov{"mov"};
-const_str_t movl{"movl"};
+const_str_t movw{"movw"};
 const_str_t movq{"movq"};
+const_str_t movl{"movl"};
+const_str_t movb{"movb"};
 const_str_t movss{"movss"};
+const_str_t movzbl{"movzbl"};
 
 const_str_t add{"add"};
 const_str_t addl{"addl"};

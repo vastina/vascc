@@ -35,17 +35,19 @@ Expression::pointer BinStmt::Creator(const token_t &token, const Scope::pointer 
             if (!scope->varExist(token.name)) {
                 REPORT_MSG("var not exist");
             } else {
-                return new ValExpr(scope->getVar(token.name), token);
+                return new ValExpr(scope->getVar(token.name));
             }
         } else if (TOKEN::SYMBOLF == tk) {
             if (!scope->funcExist(token.name)) {
                 REPORT_MSG("func not exist");
             } else {
-                return new ValExpr(scope->getFunc(token.name), token);
+                return new ValExpr(scope->getFunc(token.name));
             }
         } else {
-            return new ValExpr(new literal(token), token);
+            return new ValExpr(new literal(token));
         }
+
+        break;
     default:
         REPORT_MSG("no match token_type");
     }

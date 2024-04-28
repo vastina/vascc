@@ -86,6 +86,8 @@ void Scope::setRange(u32 start, u32 end) {
     r_.start = start;
     r_.end = end;
 }
+
+/*
 range_t Scope::findRange(u32 start) {
     auto node = this;
 
@@ -111,6 +113,7 @@ range_t Scope::findRange(u32 start) {
 
     return node->r_;
 }
+*/
 
 void Scope::setBreakable(bool breakable) {
     isBreakable_ = breakable;
@@ -376,13 +379,9 @@ i32 Preprocess::Declare(const folly::Function<bool()> &EndJudge) {
     folly::Function<void()> adder;
     switch (Current()) {
     case TOKEN::INT:
-        adder = [this]() {
-            current_scope->addVar(CurrentTokenName(), new Variable(CurrentToken()));
-        };
-        break;
     case TOKEN::FLOAT:
         adder = [this]() {
-            current_scope->addVar(CurrentTokenName(), new Variable(CurrentToken()));
+            current_scope->addVar(CurrentTokenName(), new Variable(CurrentToken(), Current()));
         };
         break;
     case TOKEN::DOUBLE:
@@ -510,11 +509,10 @@ i32 Preprocess::FuncDecl() {
     folly::Function<void()> adder;
     switch (type) {
     case TOKEN::INT:
-        adder = [this, &func_token]() { current_scope->addFunc(func_token.name, new Function(func_token)); };
-        break;
     case TOKEN::FLOAT:
     case TOKEN::CHAR:
-    // todo
+        adder = [this, &func_token]() { current_scope->addFunc(func_token.name, new Function(func_token, Current())); };
+        break;
     default:
         THIS_NOT_SUPPORT(CurrentTokenName());
     }

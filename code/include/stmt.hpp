@@ -62,7 +62,7 @@ class Stmt {
     // BinStmt
     virtual void Parse(const std::vector<token_t> &, range_t) {}
     // RetStmt
-    virtual pointer getResult() const { return {}; };
+    virtual pointer getResult() const { return nullptr; };
 
     // for test
     virtual string_view getName() const { return "Stmt"; };

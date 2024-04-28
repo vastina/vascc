@@ -23,6 +23,9 @@ class Buffer {
         std::string s{str};
         return PushBack(s);
     }
+    inline void PushFront(const std::string &str) {
+        return buffer_queue_.push_front(str);
+    }
     // override the origin one
     inline void Insert(u32 pos, const std::string &str) {
         buffer_queue_.erase(buffer_queue_.begin() + pos);
@@ -50,6 +53,7 @@ class Writer : public Buffer {
     std::fstream fs_; // file stream is not something nice
 
   public:
+    using pointer = Writer *;
     Writer(const string_view &file_name) : Buffer(), file_name_(file_name), fs_{} {}
     ~Writer() {
         if (fs_.is_open())

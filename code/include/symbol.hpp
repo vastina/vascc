@@ -1,7 +1,9 @@
 #ifndef _SYMBOL_H_
 #define _SYMBOL_H_
 
-#include "base/vasdef.hpp" //for the fucking stupid and smart clangd, includeit directly
+// so, this file contains information from lexer to asmCodeGen
+
+#include "base/vasdef.hpp"
 
 #include <memory>
 #include <unordered_map>
@@ -25,33 +27,47 @@ struct token_t {
     token_t(const token_t &tk);
     token_t(token_t &&tk);
 };
-// "create symbol tables for every scope"
 
 using SourceLocation = token_t;
+typedef struct Location { //.LC${count}
+    u32 count_;
+} Location;
+typedef struct sLoc { //stack location
+    u32 offset_;
+    bool isPointer_;
+    u32 size_;
+} sLocation;
+
 class Value {
 
   protected:
     const SourceLocation &Srcloc_;
-    TOKEN type{}; // so todo
+    TOKEN type_{}; // so todo
 
   public:
     using pointer = Value *;
-    Value(const SourceLocation &srcloc) : Srcloc_(srcloc) {}
+    Value(const SourceLocation &srcloc, TOKEN type) : Srcloc_(srcloc), type_(type) {}
     ~Value() = default;
-    virtual string_view getName() const { return Srcloc_.name; };
-    virtual inline pointer self() { return this; }
+    virtual const string_view& getName() const { return Srcloc_.name; }
+    virtual const SourceLocation &getSrcloc() const {return Srcloc_; }
+    
+    inline pointer self() { return this; }
+    inline TOKEN getType() { return type_; }
 };
 
-class literal : public Value { // compile time values like "Hello World",114514,3.14
+
+class literal : public Value { // compile time values like "Hello World",(114514,3.14) -> Trivial
+
+  protected:
+    Location loc_;
 
   public:
-    literal(const SourceLocation &Srcloc) : Value(Srcloc) {}
-    ~literal() = default;
+    literal(const SourceLocation &Srcloc) : Value(Srcloc, {}) {}
+    literal(const SourceLocation &Srcloc, TOKEN type) : Value(Srcloc, type) {}
+    ~literal() {}
 
-    // inline string_view
-    // Typename() {
-    //     return typeid(ty).name();
-    // }
+    inline void setLocation() {}
+    inline const Location& getLocation() { return loc_; }
 };
 
 class Variable : public Value {
@@ -59,15 +75,16 @@ class Variable : public Value {
     using pointer = Variable *;
 
   protected:
-    bool isConstexpr_{};
+    sLoc stack_location_;
+    bool isConst_{};
     bool isTrivial_{};
 
   public:
     Variable() = delete;
-    Variable(const SourceLocation &srcloc) : Value(srcloc) {}
-    ~Variable() = default;
+    Variable(const SourceLocation &srcloc, TOKEN type) : Value(srcloc, type) {}
+    ~Variable() {}
     inline bool
-    isConst() { return isConstexpr_; }
+    isConst() { return isConst_; }
 };
 
 class Function : public Value {
@@ -78,26 +95,14 @@ class Function : public Value {
   public:
     using pointer = Function *;
 
-    Function(const SourceLocation &Srcloc) : Value(Srcloc), paras_{} {}
+    Function(const SourceLocation &Srcloc) : Value(Srcloc, {}), paras_{} {}// for lexer
+    Function(const SourceLocation &Srcloc, TOKEN type) : Value(Srcloc, type), paras_{} {}
     ~Function() { paras_.clear(); }
 
-    virtual TOKEN Type() { return TOKEN::UNKNOW; }
     virtual u32 getParamSize() { return paras_.size(); }
     void addPara(Variable::pointer var) { paras_.push_back(var); }
 };
 
-/*
-template <typename ty>
-class func : public Function {
-  public:
-    func(const SourceLocation &Srcloc) : Function(Srcloc){}
-
-    inline constexpr TOKEN Type() override { return ::vastina::Type<ty>(); };
-
-  private:
-    ;
-};
-*/
 
 typedef struct SymbolTable {
     using pointer = SymbolTable *;
@@ -106,6 +111,7 @@ typedef struct SymbolTable {
     std::unordered_map<string_view, Function::pointer> *functions;
 
     SymbolTable() : Variables{new std::unordered_map<string_view, Variable::pointer>()}, functions{new std::unordered_map<string_view, Function::pointer>} {}
+    ~SymbolTable() { Variables->clear(); functions->clear(); }
 
     inline bool
     varExist(const string_view &name) const {
@@ -161,18 +167,9 @@ typedef struct range_t {
     range_t(u32 st, u32 ed) : start(st), end(ed) {}
     range_t(range_t &&other) : start(other.start), end(other.end) {}
     range_t(const range_t &other) : start(other.start), end(other.end) {}
-    // inline bool
-    // isInRange(u32 index) {
-    //     return index >= start && index < end;
-    // }
-    // inline bool
-    // isInRange(range_t *r) {
-    //     return r->start >= start && r->end <= end;
-    // }
 
 } range_t;
 
-// "create symbol tables for every scope"
 class Scope {
   public:
     using pointer = Scope *;
@@ -181,6 +178,7 @@ class Scope {
   private:
     pointer parent_; // if can't find symbol, ask parent
     range_t r_;
+    // "create symbol tables for every scope"
     SymbolTable::pointer st_; // so decl a samename-var in child scope is acceptable
     std::vector<pointer> children_;
 
@@ -201,7 +199,7 @@ class Scope {
 
     void setRange(u32, u32);
     const range_t &getRange();
-    range_t findRange(u32);
+    // range_t findRange(u32);
     // range_t getNextRangeBetweenChildren(); //this is too stupid, I won't do that
     void setBreakable(bool);
     inline void reSet() {
@@ -234,7 +232,7 @@ typedef struct p_token_t {
         end = _end;
     }
 } p_token_t;
-//[start, end)
+//[start, end) -> primary_tokens_
 // use rang_t here maybe better
 
 class Preprocess {

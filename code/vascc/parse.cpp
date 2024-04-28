@@ -182,10 +182,10 @@ i32 Parser::Binary() {
 
 // pos: p_token func name lies
 CallExpr::pointer Parser::Callee(u32 pos) {
-    auto &token = PeekPrtat(Peekat(pos).start);
-    auto func = scope_->getFunc(token.name);
-    auto callexpr = new class CallExpr(func, token);
-    callexpr->setLevel(Level(token.token));
+    //auto &token = (PeekPrtat(Peekat(pos).start));
+    auto func = scope_->getFunc((PeekPrtat(Peekat(pos).start)).name);
+    auto callexpr = new class CallExpr(func);
+    callexpr->setLevel(Level(func->getSrcloc().token));
     for (auto i{1u}; i <= func->getParamSize(); i++) {
         auto start{Peekat(pos + i).start};
         callexpr->addPara(ParseBinary(start, Peekat(pos + i).end));
