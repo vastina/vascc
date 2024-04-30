@@ -2,4 +2,6 @@
 
 namespace vastina {
 
+namespace x86 {}
+
 };

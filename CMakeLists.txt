@@ -17,9 +17,10 @@ set(CMAKE_BUILD_TYPE Debug)
 
 set(project_dir "./code")
 include_directories("${project_dir}/include")
-file(GLOB SOURCES "${project_dir}/vascc/*.cpp")
 
+file(GLOB SOURCES "${project_dir}/vascc/*.cpp")
 add_library(code_objects OBJECT ${SOURCES})
+
 add_executable(${project_name} ${project_dir}/main.cpp)
 target_link_libraries(${project_name} code_objects)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/)

@@ -1,5 +1,3 @@
 #include "vm.hpp"
 
-namespace vastina {
-
-};
+namespace vastina {};
