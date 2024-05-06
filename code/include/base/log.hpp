@@ -24,7 +24,7 @@ namespace vastina {
 
 #define THIS_NOT_SUPPORT( sth )                                                                                    \
   {                                                                                                                \
-    print( sth );                                                                                                  \
+    ::vastina::print( sth );                                                                                       \
     LEAVE_MSG( " this not suppored now" )                                                                          \
     exit( -1 );                                                                                                    \
   }

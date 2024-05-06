@@ -212,7 +212,7 @@ BinStmt::pointer Parser::Binary( range_t r )
   return bstmt;
 }
 
-typename TreeNode<Expression::pointer>::pointer Parser::ParseBinary( u32& offset, const u32 end )
+BinExpr::Node::pointer Parser::ParseBinary( u32& offset, const u32 end )
 {
   auto root = BinStmt::nodeCreator( PeekPrtat( offset ), scope_ );
   if ( offset + 1 >= end )

@@ -238,7 +238,7 @@ inline std::string Threer( const string_view& op, const string_view& _1, const s
 // {} -> op, {} -> sth
 const_str_t Two_1 { "\t{}\t{}\n" };
 const_str_t Two_2 { "\t{} {}\n" };
-inline std::string Twoer_1( const string_view& op, const string_view& _1 )
+inline std::string Twoer( const string_view& op, const string_view& _1 )
 {
   return format( Two_1, op, _1 );
 }
@@ -249,12 +249,12 @@ inline std::string Twoer_2( const string_view& op, const string_view& _1 )
 
 inline std::string make_call( const string_view& func_name )
 {
-  return Twoer_1( call, func_name );
+  return Twoer( call, func_name );
 }
 
 inline std::string make_jump( const string_view& op, const string_view& location )
 {
-  return Twoer_1( op, location );
+  return Twoer( op, location );
 }
 
 // {} -> value, {} -> register

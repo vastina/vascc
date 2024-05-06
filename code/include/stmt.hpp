@@ -135,7 +135,8 @@ public:
   // typename TreeNode<Expression::pointer>::pointer
   // doParse(const std::vector<token_t> &primary_tokens, u32 end, u32 &offset);
   // void Parse(const std::vector<token_t> &, range_t) override;
-  inline void setRoot( typename TreeNode<Expression::pointer>::pointer root ) { data_->setRoot( root ); }
+  inline void setRoot( BinExpr::Node::pointer root ) { data_->setRoot( root ); }
+  inline BinExpr::pointer getData() const { return data_; }
 
   static Expression::pointer Creator( const token_t&, const Scope::pointer );
   static BinExpr::Node::pointer nodeCreator( const token_t&, Scope::pointer );

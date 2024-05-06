@@ -27,8 +27,8 @@ public:
   using pointer = Expression*;
   virtual void Walk() const {}
   // ValExpr and OpExpr
-  virtual TOKEN getToken() { return {}; }
-  virtual const string_view& getName()
+  virtual TOKEN getToken() const { return {}; }
+  virtual const string_view& getName() const
   {
     const_str_t sss {};
     return sss;
@@ -56,8 +56,8 @@ public:
   static inline pointer Create( TOKEN tk ) { return new OpExpr( tk ); }
 
 public:
-  inline TOKEN getToken() override { return op_.token; };
-  inline const string_view& getName() override { return op_.name; };
+  inline TOKEN getToken() const override { return op_.token; };
+  inline const string_view& getName() const override { return op_.name; };
 
   inline void Walk() const override { print( "opexpr, data: {}\n", op_.name ); }
 };
@@ -71,8 +71,8 @@ protected:
 public:
   ValExpr( Value::pointer val ) : value_( val ) {}
   // ValExpr(Value::pointer val, const token_t &tk) : value_(val), val_(tk) {}
-  inline TOKEN getToken() override { return value_->getSrcloc().token; };
-  inline const string_view& getName() override { return value_->getName(); };
+  inline TOKEN getToken() const override { return value_->getSrcloc().token; }
+  inline const string_view& getName() const override { return value_->getName(); }
 
   inline void Walk() const override { print( "valexpr, data: {}\n", value_->getName() ); }
 };
@@ -116,13 +116,12 @@ public:
   CallExpr( Value::pointer val ) : ValExpr( val ), paras_ {} {}
   // CallExpr(Value::pointer val, const token_t &tk) : ValExpr(val, tk), paras_{} {}
   void Parse( const std::vector<token_t>&, u32, u32& ) override {}
-  inline Function::pointer getFunc() override { return dynamic_cast<Function::pointer>( value_ ); };
+  inline Function::pointer getFunc() override { return dynamic_cast<Function::pointer>( value_ ); }
   inline void addPara( typename TreeNode<Expression::pointer>::pointer val )
   {
     paras_.push_back( new BinExpr( val ) );
-  };
+  }
 
-  // inline string_view getName() override { return val_.name; };
   inline void Walk() const override
   {
     print( "call expr, callee name:{}, walk params\n", value_->getName() );
