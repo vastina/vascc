@@ -73,15 +73,23 @@ public:
   using pointer = CallGen*;
 };
 
+
+
+
 class Generator
 {
+public:
+  typedef struct counter {
+    u32 rsp{};
+    u32 loc{};  //.LC
+    u32 lfbe{}; //.LFB .LFE
+  } counter;
 
 protected:
   Stmt::pointer current_stmt_;
   Scope::pointer scope_;
 
-  u32 rsp_use_counter_ {}; // the number subl {}, %rsp
-  u32 lc_use_counter_ {};  //.LC{}
+  counter counter_{};
 
   CodeGen::pointer current_gener_;
 
