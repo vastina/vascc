@@ -4,6 +4,8 @@
 #include "base/vasdef.hpp"
 #include "symbol.hpp"
 
+#include <cstdlib>
+#include <exception>
 #include <fstream>
 
 #include <folly/Function.h>
@@ -470,10 +472,15 @@ lexer::STATE lexer::Next()
 
   u32 size = tokens.size();
   if ( tokens.back().token == TOKEN::NLBRAC ) {
-    auto&& func_token = tokens.at( size - 2 );
-    if ( func_token.token == TOKEN::SYMBOL && token_type( tokens.at( size - 3 ).token ) == TOKEN_TYPE::TYPE ) {
-      func_token.token = TOKEN::SYMBOLF;
-      current_scope->addFunc( func_token.name, new Function( func_token ) );
+    try {
+      auto&& func_token = tokens.at( size - 2 );
+      if ( func_token.token == TOKEN::SYMBOL && token_type( tokens.at( size - 3 ).token ) == TOKEN_TYPE::TYPE ) {
+        func_token.token = TOKEN::SYMBOLF;
+        current_scope->addFunc( func_token.name, new Function( func_token ) );
+      }
+    } catch ( const std::exception& e ) {
+      LEAVE_MSG( e.what() );
+      std::exit( -1 );
     }
   }
 

@@ -6,6 +6,9 @@
 #include <format>
 #include <string_view>
 
+#define FMT_HEADER_ONLY
+#include <fmt/format.h>
+
 namespace vastina {
 
 enum class CHARTYPE
@@ -41,8 +44,6 @@ inline bool Strcmp( const std::string& buffer, u32 offset, const string_view& te
 inline const_str_t p_token_str( P_TOKEN ptk )
 {
   switch ( ptk ) {
-    // case P_TOKEN::CAL:
-    //     return "calculate";
     case P_TOKEN::BINARY:
       return "binary";
     case P_TOKEN::FDECL:
@@ -110,7 +111,7 @@ inline constexpr TOKEN Type()
 }
 
 template<typename... Args>
-void print( const string_view fmt_str, Args&&... args )
+void print( const string_view& fmt_str, Args&&... args )
 {
   // auto fmt_args{ std::make_format_args(args...) };
   // std::string outstr{ std::vformat(fmt_str, fmt_args) };
@@ -123,45 +124,6 @@ std::string format( const std::string_view& fmt_str, Args&&... args )
   return std::vformat( fmt_str, std::make_format_args( args... ) );
 }
 
-// auth: https://www.zhihu.com/people/guyutongxue
-// link: https://zhuanlan.zhihu.com/p/688324926
-// helps when transform enum to string
-//  namespace detail {
-//  template <auto V>
-//  constexpr auto print() {
-//      return string_view(std::source_location::current().function_name());
-//  }
-//  consteval auto find_name_pos() {
-//      const auto result = print<nullptr>();
-//      const auto left_omitted = result.find("nullptr");
-//      const auto right_omitted = result.size() - left_omitted - 7;
-//      return std::pair(left_omitted, right_omitted);
-//  }
-//  }
-//  template <auto V>
-//      requires (std::is_enum_v<decltype(V)>)
-//  consteval auto enum_name() {
-//      const auto function_str = detail::print<V>();
-//      const auto [l, r] = detail::find_name_pos();
-//      const auto value_str = function_str.substr(l, function_str.size() - l - r);
-//      if (const auto scope_idx = value_str.rfind("::");
-//          scope_idx != string_view::npos) {
-//          return value_str.substr(scope_idx + 2);
-//      } else {
-//          return value_str;
-//      }
-//  }
-// consteval std::unordered_map<TOKEN, string_view> TOKEN_STR;
-// typedef struct before_main_t{
-//     before_main_t(){
-//         for(i32 i = UNKNOW; i < ASM; i++){
-//             TOKEN_STR.insert(std::make_pair(static_cast<TOKEN>(i),
-//                 enum_name<static_cast<TOKEN>(i)>()));
-//         }
-//     }
-//     ~before_main_t() = default;
-// } before_main_t;
-
 namespace x86 {
 
 using vastina::format;
@@ -170,6 +132,7 @@ const_str_t file_start_ { "\t.file\t\"{}\"\n"
                           "\t.text\n" };
 inline std::string file_start( const string_view& filename )
 {
+  return fmt::format( file_start_, filename ); // so this works too
   return format( file_start_, filename );
 }
 

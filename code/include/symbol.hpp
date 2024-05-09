@@ -148,22 +148,19 @@ typedef struct SymbolTable
   // always override
   inline void addVar( const string_view& name, Variable::pointer var )
   {
-    Variables->insert_or_assign(name, var);
+    Variables->insert_or_assign( name, var );
     // Variables->erase( name );
     // Variables->insert( std::make_pair( name, var ) );
     // Variables[name] = var;
   }
-  inline void addFunc( const string_view& name, Function::pointer fc )
-  {
-    functions->insert_or_assign(name, fc);
-  }
+  inline void addFunc( const string_view& name, Function::pointer fc ) { functions->insert_or_assign( name, fc ); }
 
   // inline Variable::pointer getVar( `the source-location` ) to-do
   // this to-do seems a little impossible now
 } SymbolTable;
 
-
-typedef struct TypeTable {
+typedef struct TypeTable
+{
 } TypeTable;
 
 typedef struct range_t

@@ -214,6 +214,9 @@ BinStmt::pointer Parser::Binary( range_t r )
 
 BinExpr::Node::pointer Parser::ParseBinary( u32& offset, const u32 end )
 {
+  // this method has bug in some expr with single op like `2+ ~3` and `- !3`,
+  // however, you can use `()` to avoid this in other testcase which only cares result from ParseBinary
+
   auto root = BinStmt::nodeCreator( PeekPrtat( offset ), scope_ );
   if ( offset + 1 >= end )
     return root;
@@ -249,6 +252,7 @@ BinExpr::Node::pointer Parser::ParseBinary( u32& offset, const u32 end )
           offset--;
         }
         if ( token_type( root->data->getToken() ) == TOKEN_TYPE::VALUE ) {
+          // for binexpr starts with value
           root = current;
           break;
         }

@@ -100,7 +100,7 @@ public:
   // static Node::pointer nodeCreator(const token_t &, Scope::pointer);
   inline void Walk() const override
   {
-    root_->Walk( PREORDER, []( const Expression::pointer& _data ) { _data->Walk(); } );
+    root_->Walk( walk_order::PREORDER, []( const Expression::pointer& _data ) { _data->Walk(); } );
   }
 };
 

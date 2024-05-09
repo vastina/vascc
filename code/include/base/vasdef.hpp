@@ -387,13 +387,13 @@ const_str_t sub { "sub" };
 const_str_t subl { "subl" };
 const_str_t subq { "subq" };
 
-const_str_t mul {"mul"};
-const_str_t imulq {"imulq"};
+const_str_t mul { "mul" };
+const_str_t imulq { "imulq" };
 
-const_str_t cqo {"cqo"};
-const_str_t cqto {"cqto"};
-const_str_t idiv {"idiv"};
-const_str_t idivq {"idivq"};
+const_str_t cqo { "cqo" };
+const_str_t cqto { "cqto" };
+const_str_t idiv { "idiv" };
+const_str_t idivq { "idivq" };
 
 const_str_t Xor { "xor" }; // xor is used
 

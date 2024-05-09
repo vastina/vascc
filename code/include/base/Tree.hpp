@@ -6,15 +6,14 @@
 
 #include <folly/Function.h>
 
-using std::make_shared;
-using std::shared_ptr;
-
-enum walk_order
+enum class walk_order
 {
   PREORDER,
   INORDER,
   POSTORDER
 };
+
+namespace vastina {
 
 template<typename ty>
 // it's actually just a binary tree
@@ -24,7 +23,7 @@ class TreeNode : public std::enable_shared_from_this<TreeNode<ty>>
 public:
   using node = TreeNode<ty>;
   using pointer = TreeNode<ty>*;
-  using nodeptr = shared_ptr<TreeNode<ty>>;
+  using nodeptr = std::shared_ptr<TreeNode<ty>>;
 
 public:
   ty data;
@@ -95,13 +94,13 @@ public:
   inline void Walk( walk_order order, void visit( const ty& data_ ) )
   {
     switch ( order ) {
-      case PREORDER:
+      case walk_order::PREORDER:
         PreOrder( visit, this );
         break;
-      case INORDER:
+      case walk_order::INORDER:
         InOrder( visit, this );
         break;
-      case POSTORDER:
+      case walk_order::POSTORDER:
         PostOrder( visit, this );
         break;
       default:
@@ -211,5 +210,7 @@ public:
 // public:
 
 // };
+
+}; //namespace vastina
 
 #endif
