@@ -1,24 +1,19 @@
 # ignored in project dir
-*.out
 vcc
-perf.data
 .vscode/
 build/
 .xmake/
 test/
 .cache/
 
-# temp main sometimes
-code/test.cpp
-
 # ignored in llvm/ and gcc/ dir
-**/*.ll
-**/*.bc
-**/*.asm
-**/*.ast
-**/*.S
-**/*.s
-**/*.o
-**/*.out
-**/*.yy.c
-**/*.yy.cc
+*.ll
+*.bc
+*.asm
+*.ast
+*.S
+*.s
+*.o
+*.out
+*.yy.c
+*.yy.cc
