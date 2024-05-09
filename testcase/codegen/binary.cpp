@@ -8,6 +8,7 @@
 #include "parse.hpp"
 #include "symbol.hpp"
 
+#include <folly/Function.h>
 #include <iostream>
 #include <memory>
 #include <queue>
@@ -20,6 +21,7 @@ auto tlr { x86::r15 }; // temp left reg
 auto trr { x86::r14 }; //      right
 
 void binary( BinStmt::pointer );
+void doBinary( BinExpr::Node::pointer node );
 
 int main( int argc, char* argv[] )
 {
@@ -64,35 +66,89 @@ int main( int argc, char* argv[] )
   return 0;
 }
 
+constexpr auto helper { []( BinExpr::Node::pointer node, const folly::Function<void()>& details ) {
+  doBinary( node->left );
+  doBinary( node->right );
+  writer->PushBack( x86::Twoer( x86::popq, trr ) );
+  writer->PushBack( x86::Twoer( x86::popq, tlr ) );
+
+  const_cast<folly::Function<void()>&>( details )();
+
+  return (void)writer->PushBack( x86::Twoer( x86::pushq, x86::rax ) );
+} };
+
 void doBinary( BinExpr::Node::pointer node )
 {
   auto tk { node->data->getToken() };
   switch ( token_type( tk ) ) {
     case TOKEN_TYPE::OPERATOR: {
       switch ( tk ) {
+        case TOKEN::XOR: {
+          return helper( node, [] {
+            writer->PushBack( x86::Threer( x86::xorq, trr, tlr ) );
+            writer->PushBack( x86::Threer( x86::movq, tlr, x86::rax ) );
+          } );
+        }
+        case TOKEN::LSHIFT: {
+          return helper( node, [] {
+            writer->PushBack( x86::Threer( x86::shlq, trr, tlr ) );
+            writer->PushBack( x86::Threer( x86::movq, tlr, x86::rax ) );
+          } );
+        }
+        case TOKEN::RSHIFT: {
+          return helper( node, [] {
+            writer->PushBack( x86::Threer( x86::shrq, trr, tlr ) );
+            writer->PushBack( x86::Threer( x86::movq, tlr, x86::rax ) );
+          } );
+        }
+        case TOKEN::OR: {
+          return helper( node, [] {
+            writer->PushBack( x86::Threer( x86::orq, trr, tlr ) );
+            writer->PushBack( x86::Threer( x86::movq, tlr, x86::rax ) );
+          } );
+        }
+        case TOKEN::LOGOR: {
+          return helper( node, [] {
+            writer->PushBack( x86::Threer( x86::orq, trr, tlr ) );
+            writer->PushBack( x86::Threer( x86::movq, tlr, x86::rax ) );
+            writer->PushBack( x86::Twoer( x86::test, x86::rax ) );
+          } );
+        }
+        case TOKEN::LOGAND: {
+          return helper( node, [] {
+            writer->PushBack( x86::Threer( x86::andq, trr, tlr ) );
+            writer->PushBack( x86::Threer( x86::movq, tlr, x86::rax ) );
+          } );
+        }
+        case TOKEN::EQUAL: {
+          return helper( node, [] {
+            writer->PushBack( x86::Threer( x86::cmpq, tlr, trr ) );
+            writer->PushBack( x86::Threer( x86::movq, std::format( "${}", 0 ), x86::rax ) );
+            writer->PushBack( x86::Twoer( x86::sete, x86::al ) );
+          } );
+        }
+        case TOKEN::NOTEQUAL: {
+          return helper( node, [] {
+            writer->PushBack( x86::Threer( x86::cmpq, tlr, trr ) );
+            writer->PushBack( x86::Threer( x86::movq, std::format( "${}", 0 ), x86::rax ) );
+            writer->PushBack( x86::Twoer( x86::setne, x86::al ) );
+          } );
+        }
         case TOKEN::PLUS: {
-          if ( nullptr == node->left ) {
-            return doBinary( node->right );
+          if ( nullptr == node->left or nullptr == node->right ) {
+            // so todo
           }
-          doBinary( node->left );
-          doBinary( node->right );
-          writer->PushBack( x86::Twoer( x86::popq, trr ) );
-          writer->PushBack( x86::Twoer( x86::popq, tlr ) );
-          writer->PushBack( x86::Threer( x86::addq, tlr, trr ) );
-          writer->PushBack( x86::Threer( x86::movq, trr, x86::rax ) );
-          return (void)writer->PushBack( x86::Twoer( x86::pushq, x86::rax ) );
+          return helper( node, [] {
+            writer->PushBack( x86::Threer( x86::addq, trr, tlr ) );
+            writer->PushBack( x86::Threer( x86::movq, tlr, x86::rax ) );
+          } );
         }
         case TOKEN::NEG: {
-          if ( nullptr == node->left ) {
-            doBinary( node->right );
-          }
-          doBinary( node->left );
-          doBinary( node->right );
-          writer->PushBack( x86::Twoer( x86::popq, trr ) );
-          writer->PushBack( x86::Twoer( x86::popq, tlr ) );
-          writer->PushBack( x86::Threer( x86::subq, trr, tlr ) );
-          writer->PushBack( x86::Threer( x86::movq, tlr, x86::rax ) );
-          return (void)writer->PushBack( x86::Twoer( x86::pushq, x86::rax ) );
+          if ( nullptr == node->left or nullptr == node->right ) {}
+          return helper( node, [] {
+            writer->PushBack( x86::Threer( x86::subq, trr, tlr ) );
+            writer->PushBack( x86::Threer( x86::movq, tlr, x86::rax ) );
+          } );
         }
         case TOKEN::ASSIGN: {
           // should be replaced by data location
@@ -102,22 +158,34 @@ void doBinary( BinExpr::Node::pointer node )
           return (void)writer->PushBack( x86::Threer( x86::movq, x86::rax, "-8(%rsp)" ) );
         }
         case TOKEN::MULTI: {
-          doBinary( node->left );
-          doBinary( node->right );
-          writer->PushBack( x86::Twoer( x86::popq, trr ) );
-          writer->PushBack( x86::Twoer( x86::popq, tlr ) );
-          writer->PushBack( x86::Threer( x86::imulq, tlr, trr ) );
-          writer->PushBack( x86::Threer( x86::movq, trr, x86::rax ) );
-          return (void)writer->PushBack( x86::Twoer( x86::pushq, x86::rax ) );
+          return helper( node, [] {
+            writer->PushBack( x86::Threer( x86::imulq, trr, tlr ) );
+            writer->PushBack( x86::Threer( x86::movq, tlr, x86::rax ) );
+          } );
         }
         case TOKEN::DIV: {
-          doBinary( node->left );
-          doBinary( node->right );
-          writer->PushBack( x86::Twoer( x86::popq, trr ) );
-          writer->PushBack( x86::Twoer( x86::popq, tlr ) );
-          writer->PushBack( x86::Threer( x86::movq, tlr, x86::rax ) );
-          writer->PushBack( x86::single( x86::cqto ) );
-          writer->PushBack( x86::Twoer( x86::idivq, trr ) );
+          return helper( node, [] {
+            writer->PushBack( x86::Threer( x86::movq, tlr, x86::rax ) );
+            writer->PushBack( x86::single( x86::cqto ) );
+            writer->PushBack( x86::Twoer( x86::idivq, trr ) );
+          } );
+        }
+        case TOKEN::MOD: {
+          return helper( node, [] {
+            writer->PushBack( x86::Threer( x86::movq, tlr, x86::rax ) );
+            writer->PushBack( x86::Threer( x86::xorq, x86::rdx, x86::rdx ) );
+            writer->PushBack( x86::single( x86::cqto ) );
+            writer->PushBack( x86::Twoer( x86::idivq, trr ) );
+            writer->PushBack( x86::Threer( x86::movq, x86::rdx, x86::rax ) );
+          } );
+        }
+        case TOKEN::OPS: {
+          if ( nullptr == node->left )
+            doBinary( node->right );
+          else
+            doBinary( node->left );
+          writer->PushBack( x86::Twoer( x86::popq, x86::rax ) );
+          writer->PushBack( x86::Twoer( x86::notq, x86::rax ) );
           return (void)writer->PushBack( x86::Twoer( x86::pushq, x86::rax ) );
         }
         default:

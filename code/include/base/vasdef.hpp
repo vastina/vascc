@@ -291,7 +291,7 @@ inline static constexpr u32 SIZEOF( TOKEN )
 
 namespace x86 {
 
-#define const_str_t static constexpr string_view
+#define const_str_t static constexpr string_view const
 
 const_str_t rsp { "%rsp" };
 const_str_t rbp { "%rbp" };
@@ -371,6 +371,7 @@ const_str_t r14b { "%r14b" };
 const_str_t r15b { "%r15b" };
 
 const_str_t sete { "sete" };
+const_str_t setne { "setne" };
 
 const_str_t mov { "mov" };
 const_str_t movw { "movw" };
@@ -396,7 +397,18 @@ const_str_t cqto { "cqto" };
 const_str_t idiv { "idiv" };
 const_str_t idivq { "idivq" };
 
+const_str_t Not { "not" }; // not is used
+const_str_t notq { "notq" };
+
 const_str_t Xor { "xor" }; // xor is used
+const_str_t xorq { "xorq" };
+
+const_str_t orq { "orq" };
+
+const_str_t andq { "andq" };
+
+const_str_t shlq { "shlq" };
+const_str_t shrq { "shrq" };
 
 const_str_t lea { "lea" };
 const_str_t leaq { "leaq" };
@@ -410,6 +422,7 @@ const_str_t ret { "ret" };
 
 const_str_t cmp { "cmp" };
 const_str_t cmpl { "cmpl" };
+const_str_t cmpq { "cmpq" };
 
 const_str_t je { "je" };
 const_str_t jne { "jne" };
