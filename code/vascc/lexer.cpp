@@ -9,6 +9,7 @@
 #include <fstream>
 
 #include <folly/Function.h>
+#include <string_view>
 
 namespace vastina {
 
@@ -320,11 +321,29 @@ lexer::STATE lexer::Next()
         case ':':
           forSingelWord( ":", TOKEN::COLON );
           break;
-        case '"':
-          forSingelWord( "\"", TOKEN::DQUOTE );
+        case '"': {
+          auto last_offset { offset++ };
+          try { // may out if range here
+            while ( '"' != buffer[offset] )
+              offset++;
+          } catch ( const std::exception& e ) {
+            LEAVE_MSG( e.what() );
+            std::exit( -1 );
+          }
+          offset++;
+          string_view data { buffer.data() + last_offset, offset - last_offset };
+          tokens.push_back( token_t( TOKEN::STRING, data, line ) );
           break;
+        }
         case '\'':
-          forSingelWord( "'", TOKEN::SQUOTE );
+          if ( '\'' == buffer.at( offset + 2 ) ) {
+            string_view data { buffer.data() + offset, 3 };
+            tokens.push_back( token_t( TOKEN::LCHAR, data, line ) );
+            offset += 3;
+          } else {
+            LEAVE_MSG( "\'xx\' not supported(which will be warned) or you have wrong grammar" );
+            std::exit( -1 );
+          }
           break;
         case '=': {
           RESULT res = ParseKeyWord( "==", TOKEN::EQUAL, Truer, TOKEN::UNKNOW, Falser );

@@ -43,6 +43,7 @@ enum TOKEN
   EXTERN, // extern
 
   NUMBER, // number
+  LCHAR,  // literal char while char is a type
   STRING, // string
   TRUE,   // true
   FALSE,  // false
