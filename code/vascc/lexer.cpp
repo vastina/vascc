@@ -151,6 +151,10 @@ lexer::STATE lexer::Next()
           if ( res == RESULT::SUCCESS )
             break;
           else
+            res = ParseKeyWord( "elif", TOKEN::ELIF, NormalEnd, TOKEN::UNKNOW, Truer );
+          if ( res == RESULT::SUCCESS )
+            break;
+          else
             res = ParseKeyWord( "extern", TOKEN::EXTERN, NormalEnd, TOKEN::UNKNOW, Truer );
           break;
         }

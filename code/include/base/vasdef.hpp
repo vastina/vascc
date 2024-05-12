@@ -78,6 +78,7 @@ enum TOKEN
 
   IF,       // if
   ELSE,     // else
+  ELIF,     // elif
   FOR,      // for
   WHILE,    // while
   DO,       // do
