@@ -211,6 +211,6 @@ public:
 
 // };
 
-}; //namespace vastina
+}; // namespace vastina
 
 #endif

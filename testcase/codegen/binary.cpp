@@ -1,4 +1,4 @@
-#include "base/String.hpp"
+#include "base/x86.hpp"
 #include "base/io.hpp"
 #include "base/log.hpp"
 #include "base/vasdef.hpp"
@@ -11,7 +11,6 @@
 #include <folly/Function.h>
 #include <iostream>
 #include <memory>
-#include <queue>
 #include <string>
 
 using namespace vastina;

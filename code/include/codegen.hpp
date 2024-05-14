@@ -2,13 +2,11 @@
 #define _CODE_GENERATOR_H_
 
 #include "base/io.hpp"
+#include "base/x86.hpp"
 #include "stmt.hpp"
-#include <string_view>
 #include <vector>
 
 namespace vastina {
-
-namespace x86 {
 
 class CodeGen
 {
@@ -92,8 +90,8 @@ protected:
   CodeGen::pointer current_gener_;
 
 protected:
-  string_view tlr_ { r15 }; // temp left reg
-  string_view trr_ { r14 }; //      right
+  string_view tlr_ { x86::r14 }; // temp left reg
+  string_view trr_ { x86::r15 }; //      right
   // string_view para_reg_ {r13}; // use when walk funciton call parameters
 
 public:
@@ -116,9 +114,7 @@ public:
   CallGen::pointer Callee( CallStmt::pointer );
 };
 
-}; // namespace x86
-
-class CodeGener : public x86::Generator
+class CodeGener : public Generator
 { // the interface
 private:
   Writer::pointer writer_;

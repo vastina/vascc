@@ -47,8 +47,10 @@ protected:
 
 public:
   Stmt( pointer parent ) : parent_( parent ) {}
+  pointer getParent() const;
+
+  // for all
   virtual ~Stmt() = default;
-  inline pointer getParent() const { return parent_; }
   virtual STMTTYPE StmtType() const { return STMTTYPE::Stmt; }
 
   // CompoundStmt
@@ -86,12 +88,12 @@ public:
   CompoundStmt( Stmt::pointer parent ) : Stmt( parent ), children_ {} {}
   virtual ~CompoundStmt() { children_.clear(); }
   void addChildren( Stmt::pointer, i32 ) override;
-  inline Stmt::pointer getChildat( u32 pos ) { return children_.at( pos ); }
-  inline u32 getStmtSize() { return children_.size(); }
-  inline const Stmts& getChildren() const override { return children_; }
+  Stmt::pointer getChildat( u32 );
+  u32 getStmtSize();
+  const Stmts& getChildren() const override;
 
-  inline STMTTYPE StmtType() const override { return STMTTYPE::Compound; }
-  inline string_view getName() const override { return "CompoundStmt"; };
+  STMTTYPE StmtType() const override;
+  string_view getName() const override;
 };
 //--------------compound
 // statements------------------------------------------------------------------------------------
@@ -109,9 +111,9 @@ protected:
 public:
   FdeclStmt( Stmt::pointer parent, Function::pointer func ) : CompoundStmt( parent ), func_ { func } {}
 
-  inline STMTTYPE StmtType() const override { return STMTTYPE::Fdecl; }
-  inline string_view getName() const override { return "FdeclStmt"; };
-  inline void walk() const override { print( "function name: {}\n", func_->getName() ); };
+  STMTTYPE StmtType() const override;
+  string_view getName() const override;
+  void walk() const override;
 };
 //--------------function declare
 // statement-----------------------------------------------------------------------------
@@ -135,19 +137,15 @@ public:
   // typename TreeNode<Expression::pointer>::pointer
   // doParse(const std::vector<token_t> &primary_tokens, u32 end, u32 &offset);
   // void Parse(const std::vector<token_t> &, range_t) override;
-  inline void setRoot( BinExpr::Node::pointer root ) { data_->setRoot( root ); }
-  inline BinExpr::pointer getData() const { return data_; }
+  void setRoot( BinExpr::Node::pointer );
+  BinExpr::pointer getData() const;
 
   static Expression::pointer Creator( const token_t&, const Scope::pointer );
   static BinExpr::Node::pointer nodeCreator( const token_t&, Scope::pointer );
 
-  inline STMTTYPE StmtType() const override { return STMTTYPE::Binary; }
-  inline string_view getName() const override { return "BinStmt"; };
-  inline void walk() const override
-  {
-    print( "binary walk\n" );
-    data_->Walk();
-  }
+  STMTTYPE StmtType() const override;
+  string_view getName() const override;
+  void walk() const override;
 };
 //--------------binary
 // statement---------------------------------------------------------------------------------------
@@ -166,17 +164,9 @@ public:
   // override but not impl will cause a link error
   void InitWithStmt( Stmt::pointer stmt ) override { Initer = dynamic_cast<BinStmt::pointer>( stmt ); };
 
-  inline STMTTYPE StmtType() const override { return STMTTYPE::Vdecl; }
-  inline string_view getName() const override { return "VdeclStmt"; };
-  inline void walk() const override
-  {
-    print( "Vdecl, var-name: {}\n", var_->getName() );
-    if ( Initer ) {
-      print( "init with val, walk initer\n" );
-      Initer->walk();
-    } else
-      print( "not init with val\n" );
-  }
+  STMTTYPE StmtType() const override;
+  string_view getName() const override;
+  void walk() const override;
 };
 //--------------variable declare
 // statement-----------------------------------------------------------------------------
@@ -194,13 +184,9 @@ public:
   CondStmt( Stmt::pointer parent, BinStmt::pointer cond ) : CompoundStmt( parent ), condition_( cond ) {}
   void setCondition( Stmt::pointer ) override;
 
-  inline STMTTYPE StmtType() const override { return STMTTYPE::Cond; }
-  inline string_view getName() const override { return "CondStmt"; };
-  inline void walk() const override
-  {
-    print( "CondStmt, walk condition\n" );
-    condition_->walk();
-  }
+  STMTTYPE StmtType() const override;
+  string_view getName() const override;
+  void walk() const override;
 };
 //--------------condition
 // statement------------------------------------------------------------------------------------
@@ -215,13 +201,9 @@ public:
   LoopStmt( Stmt::pointer parent ) : CondStmt( parent ) {}
   LoopStmt( Stmt::pointer parent, BinStmt::pointer cond ) : CondStmt( parent, cond ) {}
 
-  inline STMTTYPE StmtType() const override { return STMTTYPE::Loop; }
-  inline string_view getName() const override { return "LoopStmt"; };
-  inline void walk() const override
-  {
-    print( "LoopStmt, walk condition\n" );
-    condition_->walk();
-  }
+  STMTTYPE StmtType() const override;
+  string_view getName() const override;
+  void walk() const override;
 };
 //--------------loop
 // statement-----------------------------------------------------------------------------------------
@@ -236,13 +218,9 @@ public:
   IfStmt( Stmt::pointer parent ) : CondStmt( parent ) {}
   IfStmt( Stmt::pointer parent, BinStmt::pointer cond ) : CondStmt( parent, cond ) {}
 
-  inline STMTTYPE StmtType() const override { return STMTTYPE::If; }
-  inline string_view getName() const override { return "IfStmt"; };
-  inline void walk() const override
-  {
-    print( "IfStmt, walk condition\n" );
-    condition_->walk();
-  }
+  STMTTYPE StmtType() const override;
+  string_view getName() const override;
+  void walk() const override;
 };
 //--------------if
 // statement-------------------------------------------------------------------------------------------
@@ -256,15 +234,11 @@ protected:
 
 public:
   RetStmt( Stmt::pointer parent, Stmt::pointer res ) : Stmt( parent ), result_( res ) {}
-  inline pointer getResult() const override { return result_; };
+  Stmt::pointer getResult() const override;
 
-  inline STMTTYPE StmtType() const override { return STMTTYPE::Return; }
-  inline string_view getName() const override { return "RetStmt"; };
-  inline void walk() const override
-  {
-    print( "RetStmt, walk result\n" );
-    result_->walk();
-  }
+  STMTTYPE StmtType() const override;
+  string_view getName() const override;
+  void walk() const override;
 };
 //--------------retrun
 // statement---------------------------------------------------------------------------------------
@@ -281,13 +255,9 @@ protected:
 public:
   CallStmt( Stmt::pointer parent, Expression::pointer callee ) : Stmt( parent ), callee_( callee ) {}
 
-  inline STMTTYPE StmtType() const override { return STMTTYPE::Call; }
-  inline string_view getName() const override { return "CallStmt"; };
-  inline void walk() const override
-  {
-    print( "CallStmt, walk callee\n" );
-    callee_->Walk();
-  }
+  STMTTYPE StmtType() const override;
+  string_view getName() const override;
+  void walk() const override;
 };
 
 }; // namespace vastina

@@ -1,22 +1,17 @@
 #ifndef _EXPRESSION_H_
 #define _EXPRESSION_H_
 
-#include "base/String.hpp"
 #include "base/Tree.hpp"
 #include "base/vasdef.hpp"
 #include "symbol.hpp"
 
 #include <memory>
-// #include <type_traits>
 #include <vector>
 
 namespace vastina {
 
 using std::make_shared;
 using std::shared_ptr;
-
-// template <typename ty>
-// concept NotVoid = !std::is_same_v<ty, void>;
 
 class Expression
 {
@@ -25,23 +20,18 @@ protected:
 
 public:
   using pointer = Expression*;
-  virtual void Walk() const {}
+  virtual void Walk() const = 0;
   // ValExpr and OpExpr
   virtual TOKEN getToken() const { return {}; }
-  virtual const string_view& getName() const
-  {
-    const_str_t sss {};
-    return sss;
-  };
+  virtual const string_view& getName() const;
   // CallExpr
-  virtual Function::pointer getFunc() { return nullptr; };
-  virtual void Parse( const std::vector<token_t>&, u32, u32& ) {}
+  virtual Function::pointer getFunc() { return nullptr; }
 
   virtual ~Expression() = default;
 
 public:
-  inline u32 getLevel() { return level_; };
-  inline void setLevel( u32 level ) { level_ = level; };
+  u32 getLevel();
+  void setLevel( u32 );
 };
 
 class OpExpr : public Expression
@@ -52,29 +42,25 @@ protected:
 public:
   using pointer = OpExpr*;
   OpExpr() = delete;
-  OpExpr( const token_t& op ) : op_( op ) {}
-  static inline pointer Create( TOKEN tk ) { return new OpExpr( tk ); }
+  OpExpr( const token_t& op );
+  static pointer Create( TOKEN tk );
 
 public:
-  inline TOKEN getToken() const override { return op_.token; };
-  inline const string_view& getName() const override { return op_.name; };
-
-  inline void Walk() const override { print( "opexpr, data: {}\n", op_.name ); }
+  TOKEN getToken() const override;
+  const string_view& getName() const override;
+  void Walk() const override;
 };
 
 class ValExpr : public Expression
 {
 protected:
   Value::pointer value_;
-  // const token_t &val_;
 
 public:
-  ValExpr( Value::pointer val ) : value_( val ) {}
-  // ValExpr(Value::pointer val, const token_t &tk) : value_(val), val_(tk) {}
-  inline TOKEN getToken() const override { return value_->getSrcloc().token; }
-  inline const string_view& getName() const override { return value_->getName(); }
-
-  inline void Walk() const override { print( "valexpr, data: {}\n", value_->getName() ); }
+  ValExpr( Value::pointer val );
+  TOKEN getToken() const override;
+  const string_view& getName() const override;
+  void Walk() const override;
 };
 
 class BinExpr : public Expression
@@ -88,20 +74,15 @@ protected:
   Scope::pointer scope_;
 
 public:
-  BinExpr( Node::pointer root ) : root_ { root } {}
-  BinExpr( Scope::pointer scope ) : root_ { nullptr }, scope_ { scope } {}
-  BinExpr( Node::pointer root, Scope::pointer scope ) : root_ { root }, scope_ { scope } {}
+  BinExpr( Node::pointer root );
+  BinExpr( Scope::pointer scope );
+  BinExpr( Node::pointer root, Scope::pointer scope );
 
-  inline void setRoot( Node::pointer root ) { root_ = root; }
-  inline Node::pointer getRoot() const { return root_; }
-  inline Scope::pointer getScope() const { return scope_; }
+  void setRoot( Node::pointer root );
+  Node::pointer getRoot() const;
+  Scope::pointer getScope() const;
 
-  // static Expression::pointer Creator(const token_t &, const Scope::pointer);
-  // static Node::pointer nodeCreator(const token_t &, Scope::pointer);
-  inline void Walk() const override
-  {
-    root_->Walk( walk_order::PREORDER, []( const Expression::pointer& _data ) { _data->Walk(); } );
-  }
+  void Walk() const override;
 };
 
 class CallExpr : public ValExpr
@@ -111,29 +92,17 @@ public:
 
 protected:
   std::vector<BinExpr::pointer> paras_;
-  //    Function::pointer func;
-public:
-  CallExpr( Value::pointer val ) : ValExpr( val ), paras_ {} {}
-  // CallExpr(Value::pointer val, const token_t &tk) : ValExpr(val, tk), paras_{} {}
-  void Parse( const std::vector<token_t>&, u32, u32& ) override {}
-  inline Function::pointer getFunc() override { return dynamic_cast<Function::pointer>( value_ ); }
-  inline void addPara( typename TreeNode<Expression::pointer>::pointer val )
-  {
-    paras_.push_back( new BinExpr( val ) );
-  }
 
-  inline void Walk() const override
-  {
-    print( "call expr, callee name:{}, walk params\n", value_->getName() );
-    for ( auto&& para : paras_ )
-      para->Walk();
-  }
+public:
+  CallExpr( Value::pointer val );
+  Function::pointer getFunc() override;
+  void addPara( typename TreeNode<Expression::pointer>::pointer val );
+  void Walk() const override;
 };
 
 class AddrExpr : public ValExpr
 {};
 
-// 不能被作为值赋值给别的lval 与 不求值表达式 不是一回事, 这里为了方便取的是前者
 class nValExpr : public Expression
 {};
 
@@ -145,4 +114,4 @@ typedef struct BracketCount
 
 } // namespace vastina
 
-#endif
+#endif // _EXPRESSION_H_

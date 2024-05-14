@@ -1,6 +1,6 @@
 #include "base/io.hpp"
 #include "base/vasdef.hpp"
-#include "codegen.hpp"
+#include "base/x86.hpp"
 #include <format>
 
 using namespace vastina;

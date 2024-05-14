@@ -1,7 +1,3 @@
 #include "codegen.hpp"
 
-namespace vastina {
-
-namespace x86 {}
-
-};
+namespace vastina {};

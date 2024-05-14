@@ -19,6 +19,7 @@ struct token_t
   u32 line;
 
   // some were here just because I am lazy to delete them
+  // well, all of them are in use 5/14/24
   token_t( TOKEN tk );
   token_t( TOKEN tk, const string_view& sv );
   token_t( TOKEN tk, string_view&& sv );
@@ -38,7 +39,6 @@ typedef struct sLoc
 { // stack location
   u32 offset_;
   bool isPointer_;
-  u32 size_;
 } sLocation;
 
 class Value

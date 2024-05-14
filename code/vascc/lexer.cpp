@@ -1,6 +1,6 @@
 #include "lexer.hpp"
-#include "base/String.hpp"
 #include "base/log.hpp"
+#include "base/string.hpp"
 #include "base/vasdef.hpp"
 #include "symbol.hpp"
 

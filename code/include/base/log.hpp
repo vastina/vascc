@@ -1,7 +1,7 @@
 #ifndef _LOGGER_H_
 #define _LOGGER_H_
 
-#include "base/String.hpp"
+#include "base/string.hpp"
 
 namespace vastina {
 
