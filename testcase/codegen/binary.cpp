@@ -11,6 +11,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <string_view>
 
 using namespace vastina;
 
@@ -75,6 +76,12 @@ constexpr auto helper { []( BinExpr::Node::pointer node, const std::function<voi
   return (void)writer->PushBack( x86::Twoer( x86::pushq, x86::rax ) );
 } };
 
+constexpr auto single_op { [](BinExpr::Node::pointer toTravel, const std::function<void()> details){
+  doBinary(toTravel);
+  details();
+  return (void)writer->PushBack( x86::Twoer( x86::pushq, x86::rax ) );
+}};
+
 void doBinary( BinExpr::Node::pointer node )
 {
   auto tk { node->data->getToken() };
@@ -105,36 +112,63 @@ void doBinary( BinExpr::Node::pointer node )
             writer->PushBack( x86::Threer( x86::movq, tlr, x86::rax ) );
           } );
         }
-        case TOKEN::LOGOR: {
-          return helper( node, [] {
-            writer->PushBack( x86::Threer( x86::orq, trr, tlr ) );
-            writer->PushBack( x86::Threer( x86::movq, tlr, x86::rax ) );
-            writer->PushBack( x86::Twoer( x86::test, x86::rax ) );
-          } );
-        }
-        case TOKEN::LOGAND: {
+        case TOKEN::AND: {
           return helper( node, [] {
             writer->PushBack( x86::Threer( x86::andq, trr, tlr ) );
             writer->PushBack( x86::Threer( x86::movq, tlr, x86::rax ) );
           } );
         }
+        case TOKEN::LOGNOT: {
+          // not good
+          return nullptr == node->left ? single_op(node->right, []{
+            writer->PushBack( x86::Twoer( x86::popq, trr ) );
+            writer->PushBack( x86::Threer( x86::testq, trr, trr ) );
+            writer->PushBack(x86::to_zero(x86::rax));
+            writer->PushBack( x86::Twoer( x86::sete, x86::al ) );
+          }) : single_op(node->left, []{
+            writer->PushBack( x86::Twoer( x86::popq, tlr ) );
+            writer->PushBack( x86::Threer( x86::testq, tlr, tlr ) );
+            writer->PushBack(x86::to_zero(x86::rax));
+            writer->PushBack( x86::Twoer( x86::sete, x86::al ) );
+          });
+        }
+        case TOKEN::LOGOR: {
+          return helper( node, [] {
+            writer->PushBack( x86::Threer( x86::orq, trr, tlr ) );
+            //writer->PushBack( x86::Threer( x86::movq, tlr, x86::rax ) );
+            writer->PushBack( x86::Threer(x86::testq, tlr, tlr));
+            writer->PushBack(x86::Twoer(x86::setne, x86::al));
+            writer->PushBack(x86::Threer(x86::movzbl, x86::al, x86::eax));
+          } );
+        }
+        case TOKEN::LOGAND: {
+          return helper( node, [] {
+            writer->PushBack( x86::Threer(x86::testq, tlr, tlr));
+            writer->PushBack( x86::Twoer(x86::setne, x86::r8b));
+            writer->PushBack( x86::Threer(x86::testq, trr, trr));
+            writer->PushBack(x86::Twoer(x86::setne, x86::al));
+            writer->PushBack(x86::Threer(x86::movzbl, x86::al, x86::eax));
+            writer->PushBack(x86::Threer(x86::andl, x86::r8d, x86::eax));
+          } );
+        }
         case TOKEN::EQUAL: {
           return helper( node, [] {
             writer->PushBack( x86::Threer( x86::cmpq, tlr, trr ) );
-            writer->PushBack( x86::Threer( x86::movq, std::format( "${}", 0 ), x86::rax ) );
+            writer->PushBack(x86::to_zero(x86::rax));
             writer->PushBack( x86::Twoer( x86::sete, x86::al ) );
           } );
         }
         case TOKEN::NOTEQUAL: {
           return helper( node, [] {
             writer->PushBack( x86::Threer( x86::cmpq, tlr, trr ) );
-            writer->PushBack( x86::Threer( x86::movq, std::format( "${}", 0 ), x86::rax ) );
+            writer->PushBack(x86::to_zero(x86::rax));
             writer->PushBack( x86::Twoer( x86::setne, x86::al ) );
           } );
         }
         case TOKEN::PLUS: {
           if ( nullptr == node->left or nullptr == node->right ) {
-            // so todo
+            constexpr auto donothing {[]{writer->PushBack( x86::Twoer( x86::popq, x86::rax ) );}};
+            return nullptr == node->left ? single_op(node->right, donothing) : single_op(node->left, donothing);
           }
           return helper( node, [] {
             writer->PushBack( x86::Threer( x86::addq, trr, tlr ) );
@@ -142,7 +176,19 @@ void doBinary( BinExpr::Node::pointer node )
           } );
         }
         case TOKEN::NEG: {
-          if ( nullptr == node->left or nullptr == node->right ) {}
+          if ( nullptr == node->left and nullptr != node->right ) {
+            return single_op(node->right, []{
+              writer->PushBack( x86::Twoer( x86::popq, trr ) );
+              writer->PushBack( x86::to_neg(trr));
+              writer->PushBack( x86::Threer(x86::movq, trr, x86::rax));
+            });
+          } else if (nullptr == node->right and nullptr != node->left) {
+            return single_op(node->left, []{
+              writer->PushBack( x86::Twoer( x86::popq, tlr ) );
+              writer->PushBack( x86::to_neg(tlr));
+              writer->PushBack( x86::Threer(x86::movq, tlr, x86::rax));
+            });
+          }
           return helper( node, [] {
             writer->PushBack( x86::Threer( x86::subq, trr, tlr ) );
             writer->PushBack( x86::Threer( x86::movq, tlr, x86::rax ) );
@@ -178,13 +224,11 @@ void doBinary( BinExpr::Node::pointer node )
           } );
         }
         case TOKEN::OPS: {
-          if ( nullptr == node->left )
-            doBinary( node->right );
-          else
-            doBinary( node->left );
-          writer->PushBack( x86::Twoer( x86::popq, x86::rax ) );
-          writer->PushBack( x86::Twoer( x86::notq, x86::rax ) );
-          return (void)writer->PushBack( x86::Twoer( x86::pushq, x86::rax ) );
+          constexpr auto details { []{
+            writer->PushBack( x86::Twoer( x86::popq, x86::rax ) );
+            writer->PushBack( x86::Twoer( x86::notq, x86::rax ) );
+          }};
+          return nullptr == node->right ? single_op(node->left, details) : single_op(node->right, details);
         }
         default:
           THIS_NOT_SUPPORT( node->data->getName() );
@@ -207,7 +251,8 @@ void doBinary( BinExpr::Node::pointer node )
         case TOKEN::FALSE:
 
         default:
-          print( "this not support" );
+          THIS_NOT_SUPPORT( node->data->getName() );
+          print( "\nbye\n" );
           exit( 0 );
       }
     }

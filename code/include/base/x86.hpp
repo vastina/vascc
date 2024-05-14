@@ -123,6 +123,7 @@ public:
 
   const_str_t orq { "orq" };
 
+  const_str_t andl { "andl" };
   const_str_t andq { "andq" };
 
   const_str_t shlq { "shlq" };
@@ -149,7 +150,9 @@ public:
   const_str_t jl { "jl" };
   const_str_t jle { "jle" };
   const_str_t jmp { "jmp" };
+
   const_str_t test { "test" };
+  const_str_t testq { "testq" };
 
   const_str_t file_start_ { "\t.file\t\"{}\"\n"
                             "\t.text\n" };
@@ -238,6 +241,11 @@ public:
   const_str_t to_neg_ { "\tnot\t{}\n"
                         "\tinc\t{}\n" };
   static std::string to_neg( const string_view& reg );
+
+  const_str_t to_not_ {};
+
+  const_str_t to_zero_ { "\txor\t{}, {}\n" };
+  static std::string to_zero( const string_view& reg );
 };
 
 };

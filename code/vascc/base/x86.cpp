@@ -76,4 +76,9 @@ std::string x86::to_neg( const string_view& reg )
   return format( to_neg_, reg, reg );
 }
 
+std::string x86::to_zero( const string_view& reg )
+{
+  return format( to_zero_, reg, reg );
+}
+
 };
