@@ -4,8 +4,7 @@
 #include "expr.hpp"
 
 #include <iostream>
-
-#include <folly/Function.h>
+#include <functional>
 
 namespace vastina {
 
@@ -286,7 +285,7 @@ i32 Preprocess::Process()
   return 0;
 }
 
-i32 Preprocess::Binary( const folly::Function<bool()>& EndJudge )
+i32 Preprocess::Binary( const std::function<bool()>& EndJudge )
 {
 
   BracketCount bc;
@@ -360,7 +359,7 @@ i32 Preprocess::Binary( const folly::Function<bool()>& EndJudge )
       }
     }
     Next();
-    if ( const_cast<folly::Function<bool()>&>( EndJudge )() && ( bc.close == bc.open ) ) {
+    if ( EndJudge() && ( bc.close == bc.open ) ) {
       // results.push_back({P_TOKEN::BINARY, last_offset, offset});
       results.at( __pos__ ).setRange( last_offset, offset );
       // if(Current() == TOKEN::SEMICOLON)
@@ -372,7 +371,7 @@ i32 Preprocess::Binary( const folly::Function<bool()>& EndJudge )
   return 0;
 }
 
-// i32 Preprocess::Assign(folly::Function<bool()> &EndJudge) {
+// i32 Preprocess::Assign(std::function<bool()> &EndJudge) {
 //     u32 last_offset = offset;
 //     while (true) {
 //         if (Current() == TOKEN::SYMBOL && Peek() == TOKEN::ASSIGN) {
@@ -389,10 +388,10 @@ i32 Preprocess::Binary( const folly::Function<bool()>& EndJudge )
 //     return 0;
 // }
 
-i32 Preprocess::Declare( const folly::Function<bool()>& EndJudge )
+i32 Preprocess::Declare( const std::function<bool()>& EndJudge )
 {
 
-  folly::Function<void()> adder;
+  std::function<void()> adder;
   switch ( Current() ) {
     case TOKEN::INT:
     case TOKEN::FLOAT:
@@ -421,7 +420,7 @@ i32 Preprocess::Declare( const folly::Function<bool()>& EndJudge )
       Next();
 
       (void)Binary( [this]() { return Current() == TOKEN::SEMICOLON || Current() == TOKEN::COMMA; } );
-    } else if ( const_cast<folly::Function<bool()>&>( EndJudge )() )
+    } else if ( EndJudge() )
       break;
     else if ( Current() == TOKEN::COMMA ) {
       last_offset = offset + 1;
@@ -432,7 +431,7 @@ i32 Preprocess::Declare( const folly::Function<bool()>& EndJudge )
   return 0;
 }
 
-i32 Preprocess::Address( const folly::Function<bool()>& )
+i32 Preprocess::Address( const std::function<bool()>& )
 {
   return {};
 }
@@ -524,7 +523,7 @@ i32 Preprocess::FuncDecl()
     type = Current();
   }
 
-  folly::Function<void()> adder;
+  std::function<void()> adder;
   switch ( type ) {
     case TOKEN::INT:
     case TOKEN::FLOAT:

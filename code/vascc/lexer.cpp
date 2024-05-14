@@ -7,9 +7,7 @@
 #include <cstdlib>
 #include <exception>
 #include <fstream>
-
-#include <folly/Function.h>
-#include <string_view>
+#include <functional>
 
 namespace vastina {
 
@@ -63,13 +61,13 @@ void lexer::NextLine()
 
 lexer::RESULT lexer::ParseKeyWord( const string_view& target,
                                    TOKEN target_type,
-                                   const folly::Function<bool( char )>& endjudge,
+                                   const std::function<bool( char )>& endjudge,
                                    TOKEN Default,
-                                   const folly::Function<bool( char )>& DefaultEndjudge )
+                                   const std::function<bool( char )>& DefaultEndjudge )
 {
   u32 len = target.size();
   if ( Strcmp( buffer, offset, target )
-       && const_cast<folly::Function<bool( char )>&>( endjudge )( buffer[offset + len] ) ) {
+       && endjudge( buffer[offset + len] ) ) {
     tokens.push_back( token_t( target_type, target, line ) );
     offset += len;
     return lexer::RESULT::SUCCESS;
@@ -77,7 +75,7 @@ lexer::RESULT lexer::ParseKeyWord( const string_view& target,
     return lexer::RESULT::FAIL;
   else {
     u32 last_offset = offset;
-    while ( const_cast<folly::Function<bool( char )>&>( DefaultEndjudge )( buffer[offset] ) ) {
+    while ( DefaultEndjudge( buffer[offset] ) ) {
       offset++;
     }
     string_view temp = { buffer.data() + last_offset, offset - last_offset };
@@ -98,17 +96,17 @@ void lexer::forSingelWord( const string_view& target, TOKEN target_type )
 
 void lexer::ParseNumber() {}
 
-inline const folly::Function<bool( char )> SymbolEndJudge = [flag { true }]( char ch ) mutable {
+inline const std::function<bool( char )> SymbolEndJudge = [flag { true }]( char ch ) mutable {
   if ( flag ) { // 第一个字符不能是数字
     flag = false;
     return ( CHARTYPE::CHAR == CharType( ch ) );
   }
   return ( CHARTYPE::OTHER != CharType( ch ) );
 };
-inline const folly::Function<bool( char )> NormalEnd
+inline const std::function<bool( char )> NormalEnd
   = []( char ch ) { return ( CHARTYPE::OTHER == CharType( ch ) ); };
-inline const folly::Function<bool( char )> Truer = []( char ) { return true; };
-inline const folly::Function<bool( char )> Falser = []( char ) { return false; };
+inline const std::function<bool( char )> Truer = []( char ) { return true; };
+inline const std::function<bool( char )> Falser = []( char ) { return false; };
 
 lexer::STATE lexer::Next()
 {

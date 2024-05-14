@@ -7,8 +7,7 @@
 #include "lexer.hpp"
 #include "parse.hpp"
 #include "symbol.hpp"
-
-#include <folly/Function.h>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -65,13 +64,13 @@ int main( int argc, char* argv[] )
   return 0;
 }
 
-constexpr auto helper { []( BinExpr::Node::pointer node, const folly::Function<void()>& details ) {
+constexpr auto helper { []( BinExpr::Node::pointer node, const std::function<void()>& details ) {
   doBinary( node->left );
   doBinary( node->right );
   writer->PushBack( x86::Twoer( x86::popq, trr ) );
   writer->PushBack( x86::Twoer( x86::popq, tlr ) );
 
-  const_cast<folly::Function<void()>&>( details )();
+  details();
 
   return (void)writer->PushBack( x86::Twoer( x86::pushq, x86::rax ) );
 } };

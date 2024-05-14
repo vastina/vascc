@@ -8,8 +8,7 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
-
-#include <folly/Function.h>
+#include <functional>
 
 namespace vastina {
 struct token_t
@@ -293,10 +292,10 @@ private:
   // someone need custom judge
 
   // return a code to indicate the result
-  i32 Binary( const folly::Function<bool()>& EndJudge );
-  i32 Assign( const folly::Function<bool()>& EndJudge );
-  i32 Declare( const folly::Function<bool()>& EndJudge );
-  i32 Address( const folly::Function<bool()>& EndJudge );
+  i32 Binary( const std::function<bool()>& EndJudge );
+  i32 Assign( const std::function<bool()>& EndJudge );
+  i32 Declare( const std::function<bool()>& EndJudge );
+  i32 Address( const std::function<bool()>& EndJudge );
   i32 Ifer();
   i32 RetType();
 

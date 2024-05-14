@@ -5,7 +5,6 @@ namespace vastina {
 
 std::string x86::file_start( const string_view& filename )
 {
-  return fmt::format( file_start_, filename ); // so this works too
   return format( file_start_, filename );
 }
 

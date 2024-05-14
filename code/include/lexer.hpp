@@ -6,8 +6,7 @@
 
 #include <string>
 #include <vector>
-
-#include <folly/Function.h>
+#include <functional>
 
 namespace vastina {
 
@@ -42,9 +41,9 @@ private:
   STATE ParseWhiteSpace();
   RESULT ParseKeyWord( const string_view&,
                        TOKEN,
-                       const folly::Function<bool( char )>&,
+                       const std::function<bool( char )>&,
                        TOKEN Default,
-                       const folly::Function<bool( char )>& );
+                       const std::function<bool( char )>& );
   // todo: parse number
   void ParseNumber();
   void forSingelWord( const string_view& target, TOKEN target_type );

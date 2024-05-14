@@ -3,8 +3,7 @@
 
 #include <iostream>
 #include <memory>
-
-#include <folly/Function.h>
+#include <functional>
 
 enum class walk_order
 {
@@ -122,12 +121,12 @@ public:
 
   inline void InsertByCompare(
     pointer new_node,
-    const folly::Function<bool( const ty& a, const ty& b )>& compare
+    const std::function<bool( const ty& a, const ty& b )>& compare
     = []( const ty& a, const ty& b ) { return a < b; } )
   {
     auto root = this;
     while ( true ) {
-      if ( const_cast<folly::Function<bool( const pointer _node )>&>( compare )( new_node->data, root->data ) ) {
+      if ( compare( new_node->data, root->data ) ) {
         if ( root->left == nullptr ) {
           root->InsertLeft( new_node );
           return;
@@ -144,17 +143,17 @@ public:
   }
   inline void InsertByCompare(
     const ty& data_,
-    const folly::Function<bool( const ty& a, const ty& b )>& compare
+    const std::function<bool( const ty& a, const ty& b )>& compare
     = []( const ty& a, const ty& b ) { return a < b; } )
   {
     auto new_node = new node( data_ );
     InsertByCompare( new_node, compare );
   }
   // This function can cause crash if the judge function is not correct
-  inline pointer FindChildR( const folly::Function<bool( const pointer _node )>& judge )
+  inline pointer FindChildR( const std::function<bool( const pointer _node )>& judge )
   {
     auto root = this;
-    while ( !const_cast<folly::Function<bool( const pointer _node )>&>( judge )( root ) ) {
+    while ( !judge( root ) ) {
       root = root->right;
     }
     return root;
@@ -162,7 +161,7 @@ public:
   inline pointer FindChildL( const std::function<bool( const pointer _node )>& judge )
   {
     auto root = this;
-    while ( !const_cast<std::function<bool( const pointer _node )>&>( judge )( root ) ) {
+    while ( !judge( root ) ) {
       root = root->left;
     }
     return root;

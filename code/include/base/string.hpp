@@ -6,8 +6,6 @@
 #include <format>
 #include <string_view>
 
-#define FMT_HEADER_ONLY
-#include <fmt/format.h>
 
 namespace vastina {
 
