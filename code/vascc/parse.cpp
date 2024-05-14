@@ -216,11 +216,13 @@ BinExpr::Node::pointer Parser::ParseBinary( u32& offset, const u32 end )
 {
   // this method has bug in some expr with single op like `2+ ~3` and `- !3`,
   // however, you can use `()` to avoid this in other testcase which only cares result from ParseBinary
+  // this comment maybe history now, if no bugs found in the future 5/14/23
 
   auto root = BinStmt::nodeCreator( PeekPrtat( offset ), scope_ );
   if ( offset + 1 >= end )
     return root;
 
+  bool last_is_op { false };
   u32 last_offset = offset;
   while ( true ) {
     auto current = BinStmt::nodeCreator( PeekPrtat( offset ), scope_ );
@@ -239,6 +241,8 @@ BinExpr::Node::pointer Parser::ParseBinary( u32& offset, const u32 end )
             goto I_DONOT_LIKE_THIS;
           }
         }
+
+        last_is_op = false;
         break;
       }
       I_DONOT_LIKE_THIS:
@@ -259,23 +263,40 @@ BinExpr::Node::pointer Parser::ParseBinary( u32& offset, const u32 end )
         auto temp = root->FindChildR(
           []( const typename TreeNode<Expression::pointer>::pointer _node ) { return nullptr == _node->right; } );
         temp->InsertRight( current );
+
+        last_is_op = false;
         break;
       }
       case TOKEN_TYPE::OPERATOR: {
         if ( last_offset + 1 == offset )
           break;
+        if ( last_is_op )
+          current->data->setLevel( Level( TOKEN::SYMBOL ) ); //--
+
         if ( current->data->getLevel() >= root->data->getLevel() ) {
           root->ReplaceByL( current );
           root = current;
         } else {
-          auto temp = root->FindChildR( [&current]( const typename TreeNode<Expression::pointer>::pointer _node ) {
-            return ( nullptr == _node->right ) || ( _node->data->getLevel() <= current->data->getLevel() );
-          } );
-          if ( temp != root )
-            temp->ReplaceByL( current );
-          else
+          bool level_flag { false };
+          auto temp = root->FindChildR(
+            [&current, &level_flag]( const typename TreeNode<Expression::pointer>::pointer _node ) {
+              level_flag = ( _node->data->getLevel() > current->data->getLevel() );
+              return ( nullptr == _node->right ) || ( _node->data->getLevel() <= current->data->getLevel() );
+            } );
+          if ( temp != root ) {
+            if ( level_flag ) {
+              if ( nullptr == temp->left )
+                temp->InsertLeft( current );
+              else
+                temp->InsertRight( current );
+            } else
+              temp->ReplaceByL( current );
+          } else
             temp->InsertRight( current );
         }
+
+        current->data->setLevel( Level( current->data->getToken() ) ); //--
+        last_is_op = true;
         break;
       }
 
@@ -318,7 +339,7 @@ void Parser::doDfsWalk( Stmt::pointer stmt, u32 level )
 {
   print( "stmt_name: {}\n", stmt->getName() );
   stmt->walk();
-  print( "children_size: {}\n", stmt->getChildren().size() );
+  print( stmt->getChildren().size() == 0 ? "" : "children_size: {}\n", stmt->getChildren().size() );
   auto count { 1u };
   for ( auto&& child : stmt->getChildren() ) {
     print( "{}.{}:\n", level, count++ );
