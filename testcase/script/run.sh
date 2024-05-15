@@ -5,6 +5,7 @@ recursive() {
     for file in "$dir"/*; do
         if [[ -d "$file" ]]; then
             # 如果是目录，则递归进入
+            mkdir -p test/parser/"$file"
             recursive "$file"
         elif [[ -f "$file" ]]; then
             # 如果是文件，则输出文件名
