@@ -91,6 +91,34 @@ void doBinary( BinExpr::Node::pointer node )
   switch ( token_type( tk ) ) {
     case TOKEN_TYPE::OPERATOR: {
       switch ( tk ) {
+        case TOKEN::GREATER: {
+          return helper( node, []{
+            writer->PushBack( x86::Threer(x86::cmpq, trr, tlr));
+            writer->PushBack( x86::Twoer(x86::setg, x86::al));
+            writer->PushBack(x86::Threer(x86::movzbl, x86::al, x86::eax));
+          });
+        }
+        case TOKEN::GREATEREQUAL: {
+          return helper( node, []{
+            writer->PushBack( x86::Threer(x86::cmpq, trr, tlr));
+            writer->PushBack( x86::Twoer(x86::setge, x86::al));
+            writer->PushBack(x86::Threer(x86::movzbl, x86::al, x86::eax));
+          });
+        }
+        case TOKEN::LESS: {
+          return helper( node, []{
+            writer->PushBack( x86::Threer(x86::cmpq, trr, tlr));
+            writer->PushBack( x86::Twoer(x86::setl, x86::al));
+            writer->PushBack(x86::Threer(x86::movzbl, x86::al, x86::eax));
+          });
+        }
+        case TOKEN::LESSEQUAL: {
+          return helper( node, []{
+            writer->PushBack( x86::Threer(x86::cmpq, trr, tlr));
+            writer->PushBack( x86::Twoer(x86::setle, x86::al));
+            writer->PushBack(x86::Threer(x86::movzbl, x86::al, x86::eax));
+          });
+        }
         case TOKEN::XOR: {
           return helper( node, [] {
             writer->PushBack( x86::Threer( x86::xorq, trr, tlr ) );

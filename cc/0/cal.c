@@ -1,3 +1,25 @@
-int main(){
-    return ((2+8)|5 + 3*7/4 -(9&6)) -5 == 114514;
+#include <stdlib.h>
+
+long g(){
+    long a = rand();
+    long b = rand();
+    return a > b;
+}
+
+long ge(){
+    long a = rand();
+    long b = rand();
+    return a >= b;
+}
+
+long l(){
+    long a = rand();
+    long b = rand();
+    return a < b;
+}
+
+long le(){
+    long a = rand();
+    long b = rand();
+    return a <= b;
 }
