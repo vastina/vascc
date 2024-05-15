@@ -84,11 +84,11 @@ Expression::pointer BinStmt::Creator( const token_t& token, const Scope::pointer
   }
 }
 
-typename TreeNode<Expression::pointer>::pointer BinStmt::nodeCreator( const token_t& tk, Scope::pointer scope )
+BinExpr::Node::pointer BinStmt::nodeCreator( const token_t& tk, Scope::pointer scope )
 {
   auto data = Creator( tk, scope );
   data->setLevel( Level( tk.token ) );
-  return new TreeNode<Expression::pointer>( data );
+  return new BinExpr::Node( data );
 }
 
 // do not modify this even you know what you are doing: commit name is parser_2 and the following one, hash is
@@ -141,11 +141,10 @@ string_view VdeclStmt::getName() const
 void VdeclStmt::walk() const
 {
   print( "Vdecl, var-name: {}\n", var_->getName() );
-  if ( Initer ) {
+  return nullptr == Initer ? print( "not init with val\n" ) : ( [&] {
     print( "init with val, walk initer\n" );
     Initer->walk();
-  } else
-    print( "not init with val\n" );
+  } )();
 }
 
 STMTTYPE CondStmt::StmtType() const

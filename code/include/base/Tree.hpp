@@ -1,9 +1,9 @@
 #ifndef _BASE_TREE_H_
 #define _BASE_TREE_H_
 
+#include <functional>
 #include <iostream>
 #include <memory>
-#include <functional>
 
 enum class walk_order
 {

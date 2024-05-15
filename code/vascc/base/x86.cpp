@@ -3,6 +3,45 @@
 
 namespace vastina {
 
+std::string x86::to_lower( std::string reg )
+{
+  // r8 -> r15
+  if ( CharType( reg[1] ) == CHARTYPE::NUM ) {
+    if ( reg.size() == 3 )
+      return std::string( reg ).append( "d" );
+    switch ( reg[3] ) {
+      case 'd':
+        return reg.substr( 0, 3 ).append( "w" );
+      case 'w':
+        return reg.substr( 0, 3 ).append( "b" );
+      case 'b':
+      default:
+        LEAVE_MSG( "reg is already the lowest" );
+        return reg;
+    }
+  }
+  // rxx, exx
+  switch ( reg[0] ) {
+    case 'r':
+      return std::string( "e" ).append( ( reg.substr( 1 ) ) );
+    case 'e':
+      return reg.substr( 1 );
+    default:
+      break;
+  }
+  // ax, di, sp -> al, dil, spl
+  switch ( reg[1] ) {
+    case 'x':
+      return reg.substr( 0, 1 ).append( "l" );
+    case 'i':
+    case 'p':
+      return reg.append( "l" );
+    default:
+      break;
+  }
+  throw std::runtime_error( "what the fucking hell reg you sent?" );
+}
+
 std::string x86::file_start( const string_view& filename )
 {
   return format( file_start_, filename );

@@ -62,6 +62,9 @@ int main( int argc, char* argv[] )
   writer->WriteAll();
   writer->Close();
 
+  delete pp;
+  delete psr;
+  delete writer;
   return 0;
 }
 

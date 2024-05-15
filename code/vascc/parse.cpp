@@ -238,6 +238,7 @@ BinExpr::Node::pointer Parser::ParseBinary( u32& offset, const u32 end )
             root = ParseBinary( offset, end );
           } else {
             current = ParseBinary( offset, end );
+            last_is_op = false;
             goto I_DONOT_LIKE_THIS;
           }
         }
@@ -260,8 +261,8 @@ BinExpr::Node::pointer Parser::ParseBinary( u32& offset, const u32 end )
           root = current;
           break;
         }
-        auto temp = root->FindChildR(
-          []( const typename TreeNode<Expression::pointer>::pointer _node ) { return nullptr == _node->right; } );
+        auto temp
+          = root->FindChildR( []( const BinExpr::Node::pointer _node ) { return nullptr == _node->right; } );
         temp->InsertRight( current );
 
         last_is_op = false;
@@ -278,11 +279,10 @@ BinExpr::Node::pointer Parser::ParseBinary( u32& offset, const u32 end )
           root = current;
         } else {
           bool level_flag { false };
-          auto temp = root->FindChildR(
-            [&current, &level_flag]( const typename TreeNode<Expression::pointer>::pointer _node ) {
-              level_flag = ( _node->data->getLevel() > current->data->getLevel() );
-              return ( nullptr == _node->right ) || ( _node->data->getLevel() <= current->data->getLevel() );
-            } );
+          auto temp = root->FindChildR( [&current, &level_flag]( const BinExpr::Node::pointer _node ) {
+            level_flag = ( _node->data->getLevel() > current->data->getLevel() );
+            return ( nullptr == _node->right ) || ( _node->data->getLevel() <= current->data->getLevel() );
+          } );
           if ( temp != root ) {
             if ( level_flag ) {
               if ( nullptr == temp->left )

@@ -1,7 +1,10 @@
 #ifndef _X86_ASM_H_
 #define _X86_ASM_H_
 
+#include "base/log.hpp"
+#include "base/string.hpp"
 #include "base/vasdef.hpp"
+#include <stdexcept>
 
 namespace vastina {
 
@@ -153,6 +156,9 @@ public:
 
   const_str_t test { "test" };
   const_str_t testq { "testq" };
+
+  // rax -> eax -> ax -> al
+  static std::string to_lower( std::string reg );
 
   const_str_t file_start_ { "\t.file\t\"{}\"\n"
                             "\t.text\n" };

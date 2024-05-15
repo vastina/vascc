@@ -5,10 +5,10 @@
 
 #include "base/vasdef.hpp"
 
+#include <functional>
 #include <memory>
 #include <unordered_map>
 #include <vector>
-#include <functional>
 
 namespace vastina {
 struct token_t
@@ -35,9 +35,9 @@ typedef struct Location
   u32 count_;
 } Location;
 typedef struct sLoc
-{ // stack location
-  u32 offset_;
-  bool isPointer_;
+{             // stack location
+  u32 offset; // associated with codegen:Generator::counter.rsp
+  bool isPointer;
 } sLocation;
 
 class Value
@@ -116,7 +116,7 @@ typedef struct SymbolTable
 
   SymbolTable()
     : Variables { new std::unordered_map<string_view, Variable::pointer>() }
-    , functions { new std::unordered_map<string_view, Function::pointer> }
+    , functions { new std::unordered_map<string_view, Function::pointer>() }
   {}
   ~SymbolTable()
   {
@@ -130,7 +130,6 @@ typedef struct SymbolTable
     // return static_cast<bool>(Variables->count(name));
   }
   inline bool funcExist( const string_view& name ) const { return functions->contains( name ); }
-  // Variables.insert(std::make_pair(name, var)); }
   inline Variable::pointer getVar( const string_view& name ) const
   {
     if ( varExist( name ) )
@@ -155,7 +154,6 @@ typedef struct SymbolTable
   inline void addFunc( const string_view& name, Function::pointer fc ) { functions->insert_or_assign( name, fc ); }
 
   // inline Variable::pointer getVar( `the source-location` ) to-do
-  // this to-do seems a little impossible now
 } SymbolTable;
 
 typedef struct TypeTable

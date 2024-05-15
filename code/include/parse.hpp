@@ -63,7 +63,7 @@ private:
   BinStmt::pointer Binary( range_t );
   CallExpr::pointer Callee( u32 );
 
-  typename TreeNode<Expression::pointer>::pointer ParseBinary( u32&, const u32 );
+  BinExpr::Node::pointer ParseBinary( u32&, const u32 );
 };
 
 } // namespace vastina

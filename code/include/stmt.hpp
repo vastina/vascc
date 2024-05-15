@@ -126,7 +126,6 @@ public:
   using pointer = BinStmt*;
 
 protected:
-  // typename TreeNode<Expression::pointer>::pointer root_;
   // Scope::pointer scope_;
   BinExpr::pointer data_;
 
@@ -134,9 +133,7 @@ public:
   BinStmt( Stmt::pointer parent ) : Stmt( parent ), data_( nullptr ) {}
   BinStmt( Stmt::pointer parent, Scope::pointer scope ) : Stmt( parent ), data_( new BinExpr( scope ) ) {}
   ~BinStmt() {}
-  // typename TreeNode<Expression::pointer>::pointer
-  // doParse(const std::vector<token_t> &primary_tokens, u32 end, u32 &offset);
-  // void Parse(const std::vector<token_t> &, range_t) override;
+
   void setRoot( BinExpr::Node::pointer );
   BinExpr::pointer getData() const;
 

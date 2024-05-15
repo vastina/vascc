@@ -3,8 +3,8 @@
 #include "base/vasdef.hpp"
 #include "expr.hpp"
 
-#include <iostream>
 #include <functional>
+#include <iostream>
 
 namespace vastina {
 

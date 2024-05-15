@@ -66,8 +66,7 @@ lexer::RESULT lexer::ParseKeyWord( const string_view& target,
                                    const std::function<bool( char )>& DefaultEndjudge )
 {
   u32 len = target.size();
-  if ( Strcmp( buffer, offset, target )
-       && endjudge( buffer[offset + len] ) ) {
+  if ( Strcmp( buffer, offset, target ) && endjudge( buffer[offset + len] ) ) {
     tokens.push_back( token_t( target_type, target, line ) );
     offset += len;
     return lexer::RESULT::SUCCESS;

@@ -85,7 +85,7 @@ Function::pointer CallExpr::getFunc()
 {
   return dynamic_cast<Function::pointer>( value_ );
 }
-void CallExpr::addPara( typename TreeNode<Expression::pointer>::pointer val )
+void CallExpr::addPara( CallExpr::Node::pointer val )
 {
   paras_.push_back( new BinExpr( val ) );
 }

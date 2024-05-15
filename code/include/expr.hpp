@@ -89,6 +89,7 @@ class CallExpr : public ValExpr
 {
 public:
   using pointer = CallExpr*;
+  using Node = TreeNode<Expression::pointer>;
 
 protected:
   std::vector<BinExpr::pointer> paras_;
@@ -96,7 +97,7 @@ protected:
 public:
   CallExpr( Value::pointer val );
   Function::pointer getFunc() override;
-  void addPara( typename TreeNode<Expression::pointer>::pointer val );
+  void addPara( Node::pointer val );
   void Walk() const override;
 };
 

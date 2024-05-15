@@ -4,9 +4,9 @@
 #include "base/vasdef.hpp"
 #include "symbol.hpp" // see symbol.hpp struct token_t
 
+#include <functional>
 #include <string>
 #include <vector>
-#include <functional>
 
 namespace vastina {
 
@@ -56,7 +56,7 @@ public:
 
   STATE Next();
   void NextLine();
-  i32 reScan(); // todo, for non-func func declare
+  i32 reScan(); // maybe need in the futrue
 
   const std::vector<token_t>& getTokens();
   const string_view getBuffer();

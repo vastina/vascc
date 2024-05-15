@@ -292,7 +292,7 @@ inline static constexpr u32 SIZEOF( TOKEN )
   return {};
 }
 
-#define const_str_t static constexpr string_view const
+#define const_str_t static constexpr ::std::string_view const
 
 } // namespace vastina
 

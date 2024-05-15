@@ -79,6 +79,7 @@ public:
     u32 rsp {};
     u32 loc {};  //.LC
     u32 lfbe {}; //.LFB .LFE
+    u32 jmp {};  //.L
   } counter;
 
 protected:

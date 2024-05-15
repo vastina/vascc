@@ -6,7 +6,6 @@
 #include <format>
 #include <string_view>
 
-
 namespace vastina {
 
 enum class CHARTYPE
