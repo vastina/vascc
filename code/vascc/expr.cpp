@@ -92,7 +92,8 @@ void CallExpr::addPara( CallExpr::Node::pointer val )
 
 void CallExpr::Walk() const
 {
-  std::cout << "call expr, callee name: " << value_->getName() << ", walk params\n";
+  std::cout << "call expr, callee name: " << value_->getName()
+            << ( paras_.empty() ? ", no params\n" : ", walk params\n" );
   for ( auto&& para : paras_ ) {
     para->Walk();
   }

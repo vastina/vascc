@@ -8,7 +8,8 @@ int main( int argc, char* argv[] )
 {
   (void)system( "rm -f hello.s" );
   (void)system( "touch hello.s" );
-  auto writer { new Writer( "hello.s" ) };
+  auto filer { new Filer( "hello.s" ) };
+  auto writer { &filer->writer() };
 
   std::string greet { "hello " };
   if ( 1 == argc )
@@ -37,6 +38,6 @@ int main( int argc, char* argv[] )
   writer->WriteAll();
   writer->Close();
 
-  delete writer;
+  delete filer;
   return 0;
 }

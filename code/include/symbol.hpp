@@ -103,7 +103,7 @@ public:
   Function( const SourceLocation& Srcloc, TOKEN type ) : Value( Srcloc, type ), paras_ {} {}
   ~Function() { paras_.clear(); }
 
-  virtual u32 getParamSize() { return paras_.size(); }
+  u32 getParamSize() { return paras_.size(); }
   void addPara( Variable::pointer var ) { paras_.push_back( var ); }
 };
 

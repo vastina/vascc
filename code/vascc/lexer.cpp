@@ -95,17 +95,16 @@ void lexer::forSingelWord( const string_view& target, TOKEN target_type )
 
 void lexer::ParseNumber() {}
 
-inline const std::function<bool( char )> SymbolEndJudge = [flag { true }]( char ch ) mutable {
+constexpr auto SymbolEndJudge { [flag { true }]( char ch ) mutable {
   if ( flag ) { // 第一个字符不能是数字
     flag = false;
     return ( CHARTYPE::CHAR == CharType( ch ) );
   }
   return ( CHARTYPE::OTHER != CharType( ch ) );
-};
-inline const std::function<bool( char )> NormalEnd
-  = []( char ch ) { return ( CHARTYPE::OTHER == CharType( ch ) ); };
-inline const std::function<bool( char )> Truer = []( char ) { return true; };
-inline const std::function<bool( char )> Falser = []( char ) { return false; };
+} };
+constexpr auto NormalEnd { []( char ch ) { return ( CHARTYPE::OTHER == CharType( ch ) ); } };
+constexpr auto Truer { []( char ) { return true; } };
+constexpr auto Falser { []( char ) { return false; } };
 
 lexer::STATE lexer::Next()
 {

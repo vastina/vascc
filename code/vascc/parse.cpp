@@ -139,7 +139,6 @@ i32 Parser::Fdecl()
 
 i32 Parser::Call()
 {
-
   auto callee = Callee( p_offset_ );
   auto callstmt = new CallStmt( current_stmt_, callee );
   current_stmt_->addChildren( callstmt );
@@ -149,7 +148,6 @@ i32 Parser::Call()
 
 i32 Parser::Ret()
 {
-
   Next();
   auto ret = new RetStmt( current_stmt_, Binary( { CurrentToken().start, CurrentToken().end } ) );
   current_stmt_->addChildren( ret );
@@ -159,7 +157,6 @@ i32 Parser::Ret()
 
 i32 Parser::Ifer()
 {
-
   Next();
   auto ifstmt = new IfStmt( current_stmt_, Binary( { CurrentToken().start, CurrentToken().end } ) );
   current_stmt_->addChildren( ifstmt );
@@ -171,7 +168,6 @@ i32 Parser::Ifer()
 
 i32 Parser::Loop()
 {
-
   Next();
   auto lstmt = new LoopStmt( current_stmt_, Binary( { CurrentToken().start, CurrentToken().end } ) );
   current_stmt_->addChildren( lstmt );

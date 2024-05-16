@@ -15,7 +15,8 @@
 
 using namespace vastina;
 
-auto writer { new Writer( "binary.s" ) };
+auto filer { new Filer( "binary.s" ) };
+auto writer { &filer->writer() };
 auto tlr { x86::r15 }; // temp left reg
 auto trr { x86::r14 }; //      right
 
@@ -64,7 +65,7 @@ int main( int argc, char* argv[] )
 
   delete pp;
   delete psr;
-  delete writer;
+  delete filer;
   return 0;
 }
 

@@ -1,4 +1,5 @@
 #include "base/string.hpp"
+#include "codegen.hpp"
 #include "lexer.hpp"
 #include "parse.hpp"
 #include "symbol.hpp"
@@ -33,11 +34,11 @@ int main( int argc, char* argv[] )
   }
   std::cout << "--------------------------preprocess-result-----------------"
                "--------\n";
-  Preprocess* pp = new Preprocess( *tks, lx.getScope() );
-  pp->Process();
+  auto pp = Preprocess( *tks, lx.getScope() );
+  pp.Process();
 
-  for ( u32 i = 0; i < pp->getSize(); i++ ) {
-    auto& next = pp->getNext();
+  for ( u32 i = 0; i < pp.getSize(); i++ ) {
+    auto& next = pp.getNext();
     print( "offset: {}\nProcessedTokenType: {}\nstr:\t\"", i, p_token_str( next.tk ) );
     for ( u32 j = next.start; j < next.end; j++ ) {
       std::cout << tks->at( j ).name << ' ';
@@ -47,8 +48,8 @@ int main( int argc, char* argv[] )
   std::cout << "--------------------------symboltable--scope----------------"
                "--------\n";
 
-  std::queue<decltype( pp->CurrentScope() )> st;
-  st.push( pp->CurrentScope() );
+  std::queue<decltype( pp.CurrentScope() )> st;
+  st.push( pp.CurrentScope() );
 
   while ( !st.empty() ) {
     auto scope = st.front();
@@ -68,9 +69,12 @@ int main( int argc, char* argv[] )
   std::cout << "--------------------------Parser----------------------------"
                "--------\n";
 
-  auto psr = new Parser( *tks.get(), pp->getResult(), pp->CurrentScope() );
-  (void)psr->Parse();
-  psr->DfsWalk();
+  auto psr { Parser( *tks.get(), pp.getResult(), pp.CurrentScope() ) };
+  (void)psr.Parse();
+  psr.DfsWalk();
+
+  auto gen { Generator( psr.getStmtRoot(), pp.CurrentScope() ) };
+  gen.Generate();
 
   return 0;
 }

@@ -93,6 +93,10 @@ public:
 
   const_str_t sete { "sete" };
   const_str_t setne { "setne" };
+  const_str_t setg { "setg" };
+  const_str_t setge { "setge" };
+  const_str_t setl { "setl" };
+  const_str_t setle { "setle" };
 
   const_str_t mov { "mov" };
   const_str_t movw { "movw" };
