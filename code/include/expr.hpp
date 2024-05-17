@@ -2,8 +2,8 @@
 #define _EXPRESSION_H_
 
 #include "base/Tree.hpp"
-#include "base/vasdef.hpp"
 #include "base/string.hpp"
+#include "base/vasdef.hpp"
 #include "symbol.hpp"
 
 #include <memory>
@@ -23,10 +23,11 @@ public:
   using pointer = Expression*;
   virtual void Walk() const = 0;
   // ValExpr and OpExpr
-  virtual TOKEN getToken() const { 
+  virtual TOKEN getToken() const
+  {
     Walk();
-    print("donot call this");
-    std::exit(-1);
+    print( "donot call this" );
+    std::exit( -1 );
   }
   virtual const string_view& getName() const;
   // CallExpr

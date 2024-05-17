@@ -74,7 +74,8 @@ Scope::pointer BinExpr::getScope() const
   return scope_;
 }
 
-TOKEN BinExpr::getToken() const {
+TOKEN BinExpr::getToken() const
+{
   return root_->data->getToken();
 }
 

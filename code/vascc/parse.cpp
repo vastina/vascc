@@ -308,11 +308,10 @@ BinExpr::Node::pointer Parser::ParseBinary( u32& offset, const u32 end )
       break;
   }
 
-  switch (token_type(root->data->getToken())) {
-    case TOKEN_TYPE::VALUE:{
-      
+  switch ( token_type( root->data->getToken() ) ) {
+    case TOKEN_TYPE::VALUE: {
     }
-    case TOKEN_TYPE::OPERATOR: 
+    case TOKEN_TYPE::OPERATOR:
       break;
     default:
       break;

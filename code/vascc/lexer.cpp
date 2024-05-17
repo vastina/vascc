@@ -45,9 +45,9 @@ lexer::STATE lexer::ParseWhiteSpace()
   while ( isWhiteSpace( buffer[offset] ) ) {
     if ( buffer[offset] == '\n' )
       line++;
-    offset++;
     if ( offset == buffer.size() - 1 )
       return STATE::END;
+    offset++;
   }
   return STATE::NORMAL;
 }
@@ -332,12 +332,14 @@ lexer::STATE lexer::Next()
           const auto again { [this] {
             state = ParseWhiteSpace();
             if ( state == STATE::END ) {
-              throw "fuck you, what you have writen?\n";
+              LEAVE_MSG( "fuck you, what you have writen?\n" );
+              std::exit( -1 );
             }
             return buffer[offset] == '"';
           } };
-          auto last_offset { offset++ };
+          auto last_offset { offset };
           do {
+            offset++;
             try { // may out if range here
               while ( '"' != buffer[offset] )
                 offset++;
@@ -349,6 +351,12 @@ lexer::STATE lexer::Next()
           } while ( again() ); // for "sth""somestr" case
           string_view data { buffer.data() + last_offset, offset - last_offset };
           tokens.push_back( token_t( TOKEN::STRING, data, line ) );
+          /*
+          "some str"
+          "some str"
+          is not supported in x86-asm code
+          no modify here, keep the origin token
+          */
           // auto str { new literal( tokens.back(), TOKEN::STRING ) };
           // auto root { current_scope->getRoot() };
 

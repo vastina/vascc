@@ -5,7 +5,7 @@
 #include "stmt.hpp"
 
 #include <fcntl.h>
-#include <iostream>
+#include <ranges>
 
 namespace vastina {
 
@@ -13,7 +13,7 @@ void Generator::Generate( const string_view& file_name )
 {
   ::system( std::format( "rm -f {}", file_name ).data() );
   ::system( std::format( "touch {}", file_name ).data() );
-  //todo remove this
+  // todo remove this
 
   filer_ = new Filer( file_name );
   filer_->Open();
@@ -31,8 +31,8 @@ i32 Generator::doGenerate( Stmt::pointer stmt )
   static u32 pos;
   switch ( stmt->StmtType() ) {
     case STMTTYPE::Return: {
-      Binary( dynamic_cast<BinStmt::pointer>(stmt->getResult()) );
-      filer_->PushBack(x86::Twoer(x86::popq, x86::rax)); //this is wrong
+      Binary( dynamic_cast<BinStmt::pointer>( stmt->getResult() ) );
+      filer_->PushBack( x86::Twoer( x86::popq, x86::rax ) ); // this is wrong
       break;
     }
     case STMTTYPE::Fdecl: {
@@ -94,11 +94,12 @@ i32 Generator::doGenerate( Stmt::pointer stmt )
 void Generator::Callee( CallStmt::pointer stmt )
 {
   auto callee { dynamic_cast<CallExpr::pointer>( stmt->getData() ) };
-  
-  return doCallee(callee);
+
+  return doCallee( callee );
 }
 
-void Generator::doCallee( CallExpr::pointer callee ){
+void Generator::doCallee( CallExpr::pointer callee )
+{
   auto paras { callee->getParas() };
   auto func { callee->getFunc() };
 
@@ -108,10 +109,14 @@ void Generator::doCallee( CallExpr::pointer callee ){
 
     switch ( paras.at( pos )->getToken() ) {
       case TOKEN::STRING: {
-        filer_->Insert( counter_.loc.pos++,
-                        x86::rodata( counter_.loc.lc++,
-                                     "string",
-                                     paras.at( pos )->getName() ) ); // name means data from original buffer
+        filer_->Insert(
+          counter_.loc.pos++,
+          x86::rodata( counter_.loc.lc++,
+                       "string",
+                       std::ranges::to<std::string>( paras.at( pos )->getRoot()->data->getName()
+                                                     | std::views::filter( []( char c ) {
+                                                         return c != '\n';
+                                                       } ) ) ) ); // name means data from original buffer
         filer_->PushBack( x86::Threer(
           x86::leaq, x86::regIndirect( std::format( ".LC{}", counter_.loc.lc - 1 ), x86::rip ), x86::rax ) );
         {
@@ -134,10 +139,12 @@ void Generator::doCallee( CallExpr::pointer callee ){
   do {
     switch ( paras.at( pos )->getToken() ) {
       case TOKEN::STRING: {
-        auto str {paras.at( pos )->getRoot()->data->getName()};
         filer_->Insert( counter_.loc.pos++,
-                        x86::rodata( counter_.loc.lc++, "string", str ) );
-std::cout << str << '\n';          
+                        x86::rodata( counter_.loc.lc++,
+                                     "string",
+                                     std::ranges::to<std::string>(
+                                       paras.at( pos )->getRoot()->data->getName()
+                                       | std::views::filter( []( char c ) { return c != '\n'; } ) ) ) );
         filer_->PushBack( x86::Threer( x86::leaq,
                                        x86::regIndirect( std::format( ".LC{}", counter_.loc.lc - 1 ), x86::rip ),
                                        x86::regs_for_call[pos] ) );
@@ -328,7 +335,7 @@ void Generator::doBinary( BinExpr::Node::pointer node )
           // auto des {node->left->data->getName()};
           doBinary( node->right );
           writer()->PushBack( x86::Twoer( x86::popq, x86::rax ) );
-          return ;//(void)writer()->PushBack( x86::Threer( x86::movq, x86::rax, "-8(%rsp)" ) );
+          return; //(void)writer()->PushBack( x86::Threer( x86::movq, x86::rax, "-8(%rsp)" ) );
         }
         case TOKEN::MULTI: {
           return helper( node, [this] {
@@ -367,11 +374,11 @@ void Generator::doBinary( BinExpr::Node::pointer node )
     }
     case TOKEN_TYPE::VALUE: {
       switch ( tk ) {
-        case TOKEN::SYMBOLF:{
-          auto callee {dynamic_cast<CallExpr::pointer>(node->data)};
-          doCallee(callee);
-          if(!callee->getFunc()->isVoid_){
-            filer_->PushBack(x86::Twoer( x86::pushq, x86::rax ));
+        case TOKEN::SYMBOLF: {
+          auto callee { dynamic_cast<CallExpr::pointer>( node->data ) };
+          doCallee( callee );
+          if ( !callee->getFunc()->isVoid_ ) {
+            filer_->PushBack( x86::Twoer( x86::pushq, x86::rax ) );
           }
           return;
         }
