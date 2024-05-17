@@ -132,6 +132,13 @@ void Generator::doCallee( CallExpr::pointer callee )
         stack_usage += 8;
         break;
       }
+      case TOKEN::CHAR:
+      case TOKEN::INT:
+      case TOKEN::LONG: {
+
+      }
+      case TOKEN::FLOAT:
+      case TOKEN::DOUBLE:
       default:
         THIS_NOT_SUPPORT( std::format( "type with token id {},", (i32)paras.at( pos )->getToken() ) );
     }
@@ -149,6 +156,13 @@ void Generator::doCallee( CallExpr::pointer callee )
                                        x86::regIndirect( std::format( ".LC{}", counter_.loc.lc - 1 ), x86::rip ),
                                        x86::regs_for_call[pos] ) );
       }
+      case TOKEN::CHAR:
+      case TOKEN::INT:
+      case TOKEN::LONG:{
+
+      }
+      case TOKEN::FLOAT:
+      case TOKEN::DOUBLE:
       default:
         break;
     }
@@ -175,9 +189,9 @@ void Generator::doBinary( BinExpr::Node::pointer node )
 {
   const static auto helper { [this]( BinExpr::Node::pointer node, const std::function<void()>& details ) {
     doBinary( node->left );
+    writer()->PushBack( x86::Twoer( x86::popq, tlr_ ) );
     doBinary( node->right );
     writer()->PushBack( x86::Twoer( x86::popq, trr_ ) );
-    writer()->PushBack( x86::Twoer( x86::popq, tlr_ ) );
 
     details();
 
