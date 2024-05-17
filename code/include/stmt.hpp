@@ -36,6 +36,8 @@ enum class STMTTYPE
   Call
 };
 
+// these classes are just containers
+
 // base statements
 class Stmt
 {

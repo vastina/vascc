@@ -93,9 +93,13 @@ public:
 class Function : public Value
 {
 protected:
-  bool isVoid_ {};
   std::vector<Variable::pointer> paras_;
 
+public:
+  bool isVoid_ {};
+  bool isBuiltin_{};
+  bool isUseValist_{}; //if use, (int, float, ....) --> paras_.size()==2
+  // instead of set and get, I think this is better, single thread after all
 public:
   using pointer = Function*;
 
@@ -123,6 +127,8 @@ typedef struct SymbolTable
     Variables->clear();
     functions->clear();
   }
+
+  void useBuiltin();
 
   inline bool varExist( const string_view& name ) const
   {

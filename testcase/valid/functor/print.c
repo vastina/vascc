@@ -1,7 +1,6 @@
-extern int printf(const char * format, ...);
-
 int main(){
-  printf("vas\n");
+  int res;
+  res = printf("vas\n") + printf("gnu\n");
 
   return 0;
 }

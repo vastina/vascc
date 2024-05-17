@@ -191,10 +191,11 @@ CallExpr::pointer Parser::Callee( u32 pos )
   auto func = scope_->getFunc( ( PeekPrtat( Peekat( pos ).start ) ).name );
   auto callexpr = new class CallExpr( func );
   callexpr->setLevel( Level( func->getSrcloc().token ) );
-  for ( auto i { 1u }; i <= func->getParamSize(); i++ ) {
+  for ( auto i { 1u }; i <= func->getParamSize() || func->isUseValist_; i++ ) {
     auto start { Peekat( pos + i ).start };
     callexpr->addPara( ParseBinary( start, Peekat( pos + i ).end ) );
     Next();
+    if( Peek() != P_TOKEN::BINARY) break;
   }
   return callexpr;
 }

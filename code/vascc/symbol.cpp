@@ -3,8 +3,10 @@
 #include "base/vasdef.hpp"
 #include "expr.hpp"
 
+#include <cstdint>
 #include <functional>
 #include <iostream>
+#include <string_view>
 
 namespace vastina {
 
@@ -147,6 +149,27 @@ Scope::pointer Scope::getChildat( u32 offst )
   return children_.at( offst );
 }
 
+void SymbolTable::useBuiltin(){
+  constexpr u32 unreachable_line {0u};
+  {
+    const static token_t printf {TOKEN::SYMBOLF, string_view("printf"), unreachable_line};
+    auto _builtin_printf {new Function(printf, TOKEN::INT)};
+    _builtin_printf->isBuiltin_ = true;
+    _builtin_printf->isUseValist_ = true;
+    //_builtin_printf->isVoid_ = false;
+    addFunc(printf.name, _builtin_printf);
+  }
+  {
+    const static token_t scanf  {TOKEN::SYMBOLF, string_view("scanf"), unreachable_line};
+    auto _builtin_scanf {new Function(scanf, TOKEN::INT)};
+    _builtin_scanf->isBuiltin_ = true;
+    _builtin_scanf->isUseValist_ = true;
+    //_builtin_printf->isVoid_ = false;
+    addFunc(scanf.name, _builtin_scanf);
+  }
+
+}
+
 inline TOKEN Preprocess::Current()
 {
   return primary_tokens[offset].token;
@@ -224,7 +247,7 @@ i32 Preprocess::Process()
         }
         break;
       }
-      case TOKEN::SYMBOLF: { // void go here
+      case TOKEN::SYMBOLF: { // void or return value ignored go here
         if ( !current_scope->funcExist( CurrentTokenName() ) ) {
           TEMP_LOG
           EXIT_ERROR
@@ -471,7 +494,7 @@ i32 Preprocess::Callee( Function::pointer func )
     else
       Next();
 
-    if ( ++count > func->getParamSize() )
+    if ( ++count > func->getParamSize() && !func->isUseValist_ )
       RETURN_ERROR;
   }
 

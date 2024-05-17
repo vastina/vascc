@@ -20,6 +20,7 @@ int main( int argc, char* argv[] )
   }
 
   lexer lx = lexer( argv[1] );
+  lx.getScope()->getSymbolTable()->useBuiltin();
   std::cout << "--------------------------lexer-----------------------------"
                "--------\n";
   lx.Parse();
@@ -73,8 +74,8 @@ int main( int argc, char* argv[] )
   (void)psr.Parse();
   psr.DfsWalk();
 
-  auto gen { Generator( psr.getStmtRoot(), pp.CurrentScope() ) };
-  gen.Generate( std::string( argv[1] ).append( ".s" ) );
+  //auto gen { Generator( psr.getStmtRoot(), pp.CurrentScope() ) };
+  //gen.Generate( std::string( argv[1] ).append( ".s" ) );
 
   return 0;
 }
