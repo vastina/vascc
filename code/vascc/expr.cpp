@@ -74,6 +74,10 @@ Scope::pointer BinExpr::getScope() const
   return scope_;
 }
 
+TOKEN BinExpr::getToken() const {
+  return root_->data->getToken();
+}
+
 void BinExpr::Walk() const
 {
   root_->Walk( walk_order::PREORDER, []( const Expression::pointer& _data ) { _data->Walk(); } );

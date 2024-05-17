@@ -63,6 +63,11 @@ std::string x86::func_declare_end( u32 counter, const string_view& func_name )
   return format( func_declare_end_, counter, func_name, func_name );
 }
 
+std::string x86::constant( i64 val )
+{
+  return format( constant_, val );
+}
+
 std::string x86::Threer( const string_view& op, const string_view& _1, const string_view& _2 )
 {
   return format( Threer_, op, _1, _2 );
@@ -81,6 +86,11 @@ std::string x86::Twoer_2( const string_view& op, const string_view& _1 )
 std::string x86::make_call( const string_view& func_name )
 {
   return Twoer( call, func_name );
+}
+
+std::string x86::call_builtin( const string_view& func_name )
+{
+  return Twoer( call, std::format( "{}@PLT", func_name ) );
 }
 
 std::string x86::make_jump( const string_view& op, const string_view& location )

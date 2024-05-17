@@ -71,7 +71,11 @@ public:
   // RetStmt
   virtual pointer getResult() const { return nullptr; };
   // FdeclStmt
+  // and CallStmt
   virtual Function::pointer getFunc() const { return nullptr; }
+  // CallStmt
+  // and
+  virtual Expression::pointer getData() const { return nullptr; }
   // VdeclStmt
   virtual Variable::pointer getVar() const { return nullptr; }
 
@@ -142,7 +146,7 @@ public:
   ~BinStmt() {}
 
   void setRoot( BinExpr::Node::pointer );
-  BinExpr::pointer getData() const;
+  BinExpr::pointer getData() const override;
 
   static Expression::pointer Creator( const token_t&, const Scope::pointer );
   static BinExpr::Node::pointer nodeCreator( const token_t&, Scope::pointer );
@@ -259,6 +263,8 @@ protected:
 
 public:
   CallStmt( Stmt::pointer parent, Expression::pointer callee ) : Stmt( parent ), callee_( callee ) {}
+  Function::pointer getFunc() const override { return callee_->getFunc(); }
+  Expression::pointer getData() const override { return callee_; }
 
   STMTTYPE StmtType() const override;
   string_view getName() const override;

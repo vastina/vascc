@@ -149,25 +149,25 @@ Scope::pointer Scope::getChildat( u32 offst )
   return children_.at( offst );
 }
 
-void SymbolTable::useBuiltin(){
-  constexpr u32 unreachable_line {0u};
+void SymbolTable::useBuiltin()
+{
+  constexpr u32 unreachable_line { 0u };
   {
-    const static token_t printf {TOKEN::SYMBOLF, string_view("printf"), unreachable_line};
-    auto _builtin_printf {new Function(printf, TOKEN::INT)};
+    const static token_t printf { TOKEN::SYMBOLF, string_view( "printf" ), unreachable_line };
+    auto _builtin_printf { new Function( printf, TOKEN::INT ) };
     _builtin_printf->isBuiltin_ = true;
     _builtin_printf->isUseValist_ = true;
     //_builtin_printf->isVoid_ = false;
-    addFunc(printf.name, _builtin_printf);
+    addFunc( printf.name, _builtin_printf );
   }
   {
-    const static token_t scanf  {TOKEN::SYMBOLF, string_view("scanf"), unreachable_line};
-    auto _builtin_scanf {new Function(scanf, TOKEN::INT)};
+    const static token_t scanf { TOKEN::SYMBOLF, string_view( "scanf" ), unreachable_line };
+    auto _builtin_scanf { new Function( scanf, TOKEN::INT ) };
     _builtin_scanf->isBuiltin_ = true;
     _builtin_scanf->isUseValist_ = true;
     //_builtin_printf->isVoid_ = false;
-    addFunc(scanf.name, _builtin_scanf);
+    addFunc( scanf.name, _builtin_scanf );
   }
-
 }
 
 inline TOKEN Preprocess::Current()
@@ -310,9 +310,10 @@ i32 Preprocess::Process()
 
 i32 Preprocess::Binary( const std::function<bool()>& EndJudge )
 {
-  typedef struct BracketCount{
+  typedef struct BracketCount
+  {
     u32 open {};
-    u32 close{};
+    u32 close {};
   } BracketCount;
 
   BracketCount bc;
@@ -419,12 +420,12 @@ i32 Preprocess::Declare( const std::function<bool()>& EndJudge )
 {
 
   std::function<void()> adder;
+  auto type { Current() };
   switch ( Current() ) {
     case TOKEN::INT:
     case TOKEN::FLOAT:
-      adder = [this]() { current_scope->addVar( CurrentTokenName(), new Variable( CurrentToken(), Current() ) ); };
-      break;
     case TOKEN::DOUBLE:
+      adder = [this, type]() { current_scope->addVar( CurrentTokenName(), new Variable( CurrentToken(), type ) ); };
       break;
     default: {
       TEMP_LOG

@@ -53,8 +53,10 @@ public:
   ~Value() = default;
   virtual const string_view& getName() const { return Srcloc_.name; }
   virtual const SourceLocation& getSrcloc() const { return Srcloc_; }
+  virtual void setLocation() {}
 
-  inline pointer self() { return this; }
+  // why I add this? no one use it...
+  // inline pointer self() { return this; }
   inline TOKEN getType() { return type_; }
 };
 
@@ -69,8 +71,9 @@ public:
   literal( const SourceLocation& Srcloc, TOKEN type ) : Value( Srcloc, type ) {}
   ~literal() {}
 
-  inline void setLocation() {}
-  inline const Location& getLocation() { return loc_; }
+  void setLocation() override {}
+  // seems useless now, but no delete
+  const Location& getLocation() { return loc_; }
 };
 
 class Variable : public Value
@@ -97,8 +100,8 @@ protected:
 
 public:
   bool isVoid_ {};
-  bool isBuiltin_{};
-  bool isUseValist_{}; //if use, (int, float, ....) --> paras_.size()==2
+  bool isBuiltin_ {};
+  bool isUseValist_ {}; // if use, (int, float, ....) --> paras_.size()==2
   // instead of set and get, I think this is better, single thread after all
 public:
   using pointer = Function*;

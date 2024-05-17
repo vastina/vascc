@@ -75,7 +75,7 @@ Expression::pointer BinStmt::Creator( const token_t& token, const Scope::pointer
           return new ValExpr( scope->getFunc( token.name ) );
         }
       } else {
-        return new ValExpr( new literal( token ) );
+        return new ValExpr( new literal( token, token.token ) );
       }
 
       break;

@@ -1,6 +1,6 @@
 int main(){
   int res;
-  res = printf("vas\n") + printf("gnu\n");
+  res = printf("vas\n");
 
   return 0;
 }

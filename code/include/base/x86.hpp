@@ -158,6 +158,8 @@ public:
   const_str_t test { "test" };
   const_str_t testq { "testq" };
 
+  const_str_t regs_for_call[] { rdi, rsi, rdx, rcx, r8, r9 };
+
   // rax -> eax -> ax -> al
   static std::string to_lower( std::string reg );
 
@@ -211,6 +213,9 @@ public:
                             "\t.align 8\n"
                             "4:\n\n" };
 
+  const_str_t constant_ { "${}" };
+  static std::string constant( i64 val );
+
   // {} -> op, {},{} -> sth
   const_str_t Threer_ { "\t{}\t{}, {}\n" };
   static std::string Threer( const string_view& op, const string_view& _1, const string_view& _2 );
@@ -222,6 +227,7 @@ public:
   static std::string Twoer_2( const string_view& op, const string_view& _1 );
 
   static std::string make_call( const string_view& func_name );
+  static std::string call_builtin( const string_view& func_name );
   static std::string make_jump( const string_view& op, const string_view& location );
 
   // {} -> value, {} -> register

@@ -195,7 +195,8 @@ CallExpr::pointer Parser::Callee( u32 pos )
     auto start { Peekat( pos + i ).start };
     callexpr->addPara( ParseBinary( start, Peekat( pos + i ).end ) );
     Next();
-    if( Peek() != P_TOKEN::BINARY) break;
+    if ( Peek() != P_TOKEN::BINARY )
+      break;
   }
   return callexpr;
 }
@@ -304,6 +305,16 @@ BinExpr::Node::pointer Parser::ParseBinary( u32& offset, const u32 end )
     }
 
     if ( offset >= end )
+      break;
+  }
+
+  switch (token_type(root->data->getToken())) {
+    case TOKEN_TYPE::VALUE:{
+      
+    }
+    case TOKEN_TYPE::OPERATOR: 
+      break;
+    default:
       break;
   }
   return root;

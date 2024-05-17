@@ -46,7 +46,7 @@ enum TOKEN
 
   NUMBER, // number
   LCHAR,  // literal char while char is a type
-  STRING, // string
+  STRING, // string is not string
   TRUE,   // true
   FALSE,  // false
 
@@ -109,9 +109,12 @@ enum TOKEN
   ANDE,         // &=
   XORE,         // ^=
   ORE,          // |=
-  LINE,         // __LINE__
-  FILE,         // __FILE__
-  EVERYTHING,   // ...
+
+  INCLUDE, // #include
+  DEFINE,  // #define
+  LINE,    // __LINE__
+  FILE,    // __FILE__
+  VALIST,  // ...
 
   // todo and more...
   //  ++    --    sizeof    &    *    ->    .    [    ]

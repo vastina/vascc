@@ -80,14 +80,14 @@ public:
     u32 rsp {};
     typedef struct lc_
     {
-      u32 lc {}; //.LC
-      // u32 pos {}; //pos in buffer
+      u32 lc {};     //.LC
+      u32 pos { 1 }; // pos in buffer and 0 is file start
     } lc_;
     lc_ loc {};
     typedef struct lf_
     {
       u32 lfbe {};
-      // u32 pos {};
+      u32 pos {};
     } lf_;
     lf_ lf {};  //.LFB .LFE
     u32 jmp {}; //.L
@@ -118,9 +118,11 @@ public:
 protected:
   i32 doGenerate( Stmt::pointer );
 
-public:
-  BinaryGen::pointer Binary( BinStmt::pointer );
-  CallGen::pointer Callee( CallStmt::pointer );
+protected:
+  void Binary( BinStmt::pointer );
+  void doBinary( BinExpr::Node::pointer );
+  void Callee( CallStmt::pointer );
+  void doCallee( CallExpr::pointer );
 
 public:
   void Generate( const string_view& );

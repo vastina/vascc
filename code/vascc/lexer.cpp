@@ -303,7 +303,7 @@ lexer::STATE lexer::Next()
     case CHARTYPE::OTHER: {
       switch ( buffer[offset] ) {
         case '.':
-          ParseKeyWord( "...", TOKEN::EVERYTHING, NormalEnd, TOKEN::SYMBOL, SymbolEndJudge );
+          ParseKeyWord( "...", TOKEN::VALIST, NormalEnd, TOKEN::SYMBOL, SymbolEndJudge );
           break;
         case '(':
           forSingelWord( "(", TOKEN::NLBRAC );
@@ -329,17 +329,29 @@ lexer::STATE lexer::Next()
           forSingelWord( ":", TOKEN::COLON );
           break;
         case '"': {
+          const auto again { [this] {
+            state = ParseWhiteSpace();
+            if ( state == STATE::END ) {
+              throw "fuck you, what you have writen?\n";
+            }
+            return buffer[offset] == '"';
+          } };
           auto last_offset { offset++ };
-          try { // may out if range here
-            while ( '"' != buffer[offset] )
-              offset++;
-          } catch ( const std::exception& e ) {
-            LEAVE_MSG( e.what() );
-            std::exit( -1 );
-          }
-          offset++;
+          do {
+            try { // may out if range here
+              while ( '"' != buffer[offset] )
+                offset++;
+            } catch ( const std::exception& e ) {
+              LEAVE_MSG( e.what() );
+              std::exit( -1 );
+            }
+            offset++;
+          } while ( again() ); // for "sth""somestr" case
           string_view data { buffer.data() + last_offset, offset - last_offset };
           tokens.push_back( token_t( TOKEN::STRING, data, line ) );
+          // auto str { new literal( tokens.back(), TOKEN::STRING ) };
+          // auto root { current_scope->getRoot() };
+
           break;
         }
         case '\'':

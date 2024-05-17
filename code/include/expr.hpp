@@ -3,6 +3,7 @@
 
 #include "base/Tree.hpp"
 #include "base/vasdef.hpp"
+#include "base/string.hpp"
 #include "symbol.hpp"
 
 #include <memory>
@@ -22,7 +23,11 @@ public:
   using pointer = Expression*;
   virtual void Walk() const = 0;
   // ValExpr and OpExpr
-  virtual TOKEN getToken() const { return {}; }
+  virtual TOKEN getToken() const { 
+    Walk();
+    print("donot call this");
+    std::exit(-1);
+  }
   virtual const string_view& getName() const;
   // CallExpr
   virtual Function::pointer getFunc() { return nullptr; }
@@ -80,6 +85,7 @@ public:
 
   void setRoot( Node::pointer root );
   Node::pointer getRoot() const;
+  TOKEN getToken() const override;
   Scope::pointer getScope() const;
 
   void Walk() const override;
@@ -97,6 +103,7 @@ protected:
 public:
   CallExpr( Value::pointer val );
   Function::pointer getFunc() override;
+  const decltype( paras_ )& getParas() { return paras_; }
   void addPara( Node::pointer val );
   void Walk() const override;
 };
