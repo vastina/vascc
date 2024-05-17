@@ -74,7 +74,7 @@ int main( int argc, char* argv[] )
   psr.DfsWalk();
 
   auto gen { Generator( psr.getStmtRoot(), pp.CurrentScope() ) };
-  gen.Generate();
+  gen.Generate( std::string( argv[1] ).append( ".s" ) );
 
   return 0;
 }

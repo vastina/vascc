@@ -107,12 +107,6 @@ class AddrExpr : public ValExpr
 class nValExpr : public Expression
 {};
 
-typedef struct BracketCount
-{
-  u32 open = 0;
-  u32 close = 0;
-} BracketCount;
-
 } // namespace vastina
 
 #endif // _EXPRESSION_H_

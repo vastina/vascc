@@ -287,6 +287,10 @@ i32 Preprocess::Process()
 
 i32 Preprocess::Binary( const std::function<bool()>& EndJudge )
 {
+  typedef struct BracketCount{
+    u32 open {};
+    u32 close{};
+  } BracketCount;
 
   BracketCount bc;
   u32 last_offset = offset;

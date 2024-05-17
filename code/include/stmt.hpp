@@ -68,6 +68,10 @@ public:
   virtual void Parse( const std::vector<token_t>&, range_t ) {}
   // RetStmt
   virtual pointer getResult() const { return nullptr; };
+  // FdeclStmt
+  virtual Function::pointer getFunc() const { return nullptr; }
+  // VdeclStmt
+  virtual Variable::pointer getVar() const { return nullptr; }
 
   // for test
   virtual string_view getName() const { return "Stmt"; };
@@ -110,6 +114,7 @@ protected:
 
 public:
   FdeclStmt( Stmt::pointer parent, Function::pointer func ) : CompoundStmt( parent ), func_ { func } {}
+  Function::pointer getFunc() const override { return func_; }
 
   STMTTYPE StmtType() const override;
   string_view getName() const override;
@@ -160,6 +165,7 @@ public:
   VdeclStmt( Stmt::pointer parent, Variable::pointer var ) : Stmt( parent ), var_( var ) {}
   // override but not impl will cause a link error
   void InitWithStmt( Stmt::pointer stmt ) override { Initer = dynamic_cast<BinStmt::pointer>( stmt ); };
+  Variable::pointer getVar() const override { return var_; }
 
   STMTTYPE StmtType() const override;
   string_view getName() const override;

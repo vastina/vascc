@@ -135,7 +135,11 @@ lexer::STATE lexer::Next()
           if ( res == RESULT::SUCCESS )
             break;
           else
-            ParseKeyWord( "char", TOKEN::BOOL, NormalEnd, TOKEN::SYMBOL, SymbolEndJudge );
+            res = ParseKeyWord( "char", TOKEN::CHAR, NormalEnd, TOKEN::UNKNOW, Truer );
+          if ( res == RESULT::SUCCESS )
+            break;
+          else
+            ParseKeyWord( "const", TOKEN::CONST, NormalEnd, TOKEN::SYMBOL, SymbolEndJudge );
           break;
         }
         case 'd': {
@@ -143,7 +147,7 @@ lexer::STATE lexer::Next()
           break;
         }
         case 'e': {
-          RESULT res = ParseKeyWord( "else", TOKEN::ELSE, NormalEnd, TOKEN::SYMBOL, SymbolEndJudge );
+          RESULT res = ParseKeyWord( "else", TOKEN::ELSE, NormalEnd, TOKEN::UNKNOW, Truer );
           if ( res == RESULT::SUCCESS )
             break;
           else
@@ -151,7 +155,7 @@ lexer::STATE lexer::Next()
           if ( res == RESULT::SUCCESS )
             break;
           else
-            res = ParseKeyWord( "extern", TOKEN::EXTERN, NormalEnd, TOKEN::UNKNOW, Truer );
+            res = ParseKeyWord( "extern", TOKEN::EXTERN, NormalEnd, TOKEN::SYMBOL, SymbolEndJudge );
           break;
         }
         case 'f': {
@@ -298,6 +302,9 @@ lexer::STATE lexer::Next()
     }
     case CHARTYPE::OTHER: {
       switch ( buffer[offset] ) {
+        case '.':
+          ParseKeyWord( "...", TOKEN::EVERYTHING, NormalEnd, TOKEN::SYMBOL, SymbolEndJudge );
+          break;
         case '(':
           forSingelWord( "(", TOKEN::NLBRAC );
           break;
@@ -496,6 +503,15 @@ lexer::STATE lexer::Next()
       if ( func_token.token == TOKEN::SYMBOL && token_type( tokens.at( size - 3 ).token ) == TOKEN_TYPE::TYPE ) {
         func_token.token = TOKEN::SYMBOLF;
         current_scope->addFunc( func_token.name, new Function( func_token ) );
+      }
+    } catch ( const std::exception& e ) {
+      LEAVE_MSG( e.what() );
+      std::exit( -1 );
+    }
+  } else if ( TOKEN::MULTI == tokens.back().token ) {
+    try {
+      if ( TOKEN_TYPE::TYPE == token_type( tokens.at( size - 2 ).token ) ) {
+        tokens.back().token = TOKEN::POINTER;
       }
     } catch ( const std::exception& e ) {
       LEAVE_MSG( e.what() );

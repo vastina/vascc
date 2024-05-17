@@ -4,6 +4,7 @@
 #include "base/io.hpp"
 #include "base/x86.hpp"
 #include "stmt.hpp"
+#include "symbol.hpp"
 #include <vector>
 
 namespace vastina {
@@ -77,9 +78,19 @@ public:
   typedef struct counter
   {
     u32 rsp {};
-    u32 loc {};  //.LC
-    u32 lfbe {}; //.LFB .LFE
-    u32 jmp {};  //.L
+    typedef struct lc_
+    {
+      u32 lc {}; //.LC
+      // u32 pos {}; //pos in buffer
+    } lc_;
+    lc_ loc {};
+    typedef struct lf_
+    {
+      u32 lfbe {};
+      // u32 pos {};
+    } lf_;
+    lf_ lf {};  //.LFB .LFE
+    u32 jmp {}; //.L
   } counter;
 
 protected:
@@ -89,6 +100,9 @@ protected:
   counter counter_ {};
 
   CodeGen::pointer current_gener_;
+
+  Filer::pointer filer_ { nullptr };
+  auto writer() { return static_cast<Writer*>( filer_ ); }
 
 protected:
   string_view tlr_ { x86::r14 }; // temp left reg
@@ -102,26 +116,14 @@ public:
   {}
 
 protected:
-  i32 Vdecl();
-  i32 Fdecl();
-  i32 Call();
-  i32 Ret();
-  i32 Ifer();
-  i32 Loop();
-  i32 Binary();
+  i32 doGenerate( Stmt::pointer );
 
 public:
   BinaryGen::pointer Binary( BinStmt::pointer );
   CallGen::pointer Callee( CallStmt::pointer );
-};
-
-class CodeGener : public Generator
-{ // the interface
-private:
-  Writer::pointer writer_;
 
 public:
-  i32 Generate();
+  void Generate( const string_view& );
 };
 
 }; // namespace vastina

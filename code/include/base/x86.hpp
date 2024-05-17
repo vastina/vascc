@@ -1,10 +1,7 @@
 #ifndef _X86_ASM_H_
 #define _X86_ASM_H_
 
-#include "base/log.hpp"
-#include "base/string.hpp"
 #include "base/vasdef.hpp"
-#include <stdexcept>
 
 namespace vastina {
 

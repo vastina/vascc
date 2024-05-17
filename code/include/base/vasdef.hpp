@@ -50,6 +50,9 @@ enum TOKEN
   TRUE,   // true
   FALSE,  // false
 
+  REF,     // &
+  POINTER, // *
+
   NLBRAC,    // (
   NRBRAC,    // )
   OBRACE,    // {
@@ -107,7 +110,8 @@ enum TOKEN
   XORE,         // ^=
   ORE,          // |=
   LINE,         // __LINE__
-  FILE,         //
+  FILE,         // __FILE__
+  EVERYTHING,   // ...
 
   // todo and more...
   //  ++    --    sizeof    &    *    ->    .    [    ]
@@ -166,6 +170,7 @@ inline static constexpr TOKEN_TYPE token_type( TOKEN tk )
     case TOKEN::SYMBOL:
     case TOKEN::NUMBER:
     case TOKEN::STRING:
+    case TOKEN::LCHAR:
     case TOKEN::SYMBOLF: // what about void?
       return TOKEN_TYPE::VALUE;
     case TOKEN::NLBRAC:
@@ -287,9 +292,26 @@ enum class P_TOKEN
 };
 
 // base sizeof
-inline static constexpr u32 SIZEOF( TOKEN )
+inline static constexpr u32 SIZEOF( TOKEN type )
 {
-  return {};
+  switch ( type ) {
+    case TOKEN::INT:
+      return sizeof( int );
+    case TOKEN::LONG:
+      return sizeof( long );
+    case TOKEN::FLOAT:
+      return sizeof( float );
+    //-case TOKEN::DOUBLE: return sizeof(double);
+    case TOKEN::CHAR:
+      return sizeof( char );
+    case TOKEN::BOOL:
+      return sizeof( bool );
+    case TOKEN::VOID: // return 0;
+    default:
+      throw( "wrong token" );
+  }
+  // this is not reachable
+  return -1;
 }
 
 #define const_str_t static constexpr ::std::string_view const

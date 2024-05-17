@@ -226,6 +226,8 @@ BinExpr::Node::pointer Parser::ParseBinary( u32& offset, const u32 end )
     auto tk = current->data->getToken();
     switch ( token_type( tk ) ) {
       case TOKEN_TYPE::BRAC: {
+        //[[fallthrough]] {
+        // `fallthrough` attribute only applies to empty statement
         if ( TOKEN::NRBRAC == tk ) {
           root->data->setLevel( Level( TOKEN::SYMBOL ) );
           return root;

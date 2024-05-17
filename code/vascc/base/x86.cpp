@@ -1,4 +1,5 @@
 #include "base/x86.hpp"
+#include "base/log.hpp"
 #include "base/string.hpp"
 
 namespace vastina {
