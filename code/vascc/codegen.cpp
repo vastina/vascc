@@ -6,6 +6,7 @@
 
 #include <fcntl.h>
 #include <ranges>
+#include <string_view>
 
 namespace vastina {
 
@@ -32,7 +33,8 @@ i32 Generator::doGenerate( Stmt::pointer stmt )
   switch ( stmt->StmtType() ) {
     case STMTTYPE::Return: {
       Binary( dynamic_cast<BinStmt::pointer>( stmt->getResult() ) );
-      filer_->PushBack( x86::Twoer( x86::popq, x86::rax ) ); // this is wrong
+      filer_->PushBack(x86::Threer(x86::movq, x86::regIndirect("8", x86::rsp), x86::rax));
+      filer_->PushBack(x86::Threer(x86::addq, x86::constant(16), x86::rsp));
       break;
     }
     case STMTTYPE::Fdecl: {
@@ -155,10 +157,15 @@ void Generator::doCallee( CallExpr::pointer callee )
         filer_->PushBack( x86::Threer( x86::leaq,
                                        x86::regIndirect( std::format( ".LC{}", counter_.loc.lc - 1 ), x86::rip ),
                                        x86::regs_for_call[pos] ) );
+        break;
       }
+      case TOKEN::SYMBOL:
       case TOKEN::CHAR:
       case TOKEN::INT:
       case TOKEN::LONG:{
+        // tobe removed
+        filer_->PushBack(x86::Threer(x86::movq, x86::constant(100), x86::regs_for_call[pos]));
+        break;
 
       }
       case TOKEN::FLOAT:
@@ -189,18 +196,18 @@ void Generator::doBinary( BinExpr::Node::pointer node )
 {
   const static auto helper { [this]( BinExpr::Node::pointer node, const std::function<void()>& details ) {
     doBinary( node->left );
-    writer()->PushBack( x86::Twoer( x86::popq, tlr_ ) );
     doBinary( node->right );
-    writer()->PushBack( x86::Twoer( x86::popq, trr_ ) );
+    poper(trr_);
+    poper(tlr_);
 
     details();
 
-    return (void)writer()->PushBack( x86::Twoer( x86::pushq, x86::rax ) );
+    pusher(x86::rax);
   } };
   const static auto single_op { [this]( BinExpr::Node::pointer toTravel, const std::function<void()> details ) {
     doBinary( toTravel );
     details();
-    return (void)writer()->PushBack( x86::Twoer( x86::pushq, x86::rax ) );
+    pusher(x86::rax);
   } };
 
   auto tk { node->data->getToken() };
@@ -269,13 +276,13 @@ void Generator::doBinary( BinExpr::Node::pointer node )
           // not good
           return nullptr == node->left ? single_op( node->right,
                                                     [this] {
-                                                      writer()->PushBack( x86::Twoer( x86::popq, trr_ ) );
+                                                      poper(trr_);
                                                       writer()->PushBack( x86::Threer( x86::testq, trr_, trr_ ) );
                                                       writer()->PushBack( x86::to_zero( x86::rax ) );
                                                       writer()->PushBack( x86::Twoer( x86::sete, x86::al ) );
                                                     } )
                                        : single_op( node->left, [this] {
-                                           writer()->PushBack( x86::Twoer( x86::popq, tlr_ ) );
+                                           poper(tlr_);
                                            writer()->PushBack( x86::Threer( x86::testq, tlr_, tlr_ ) );
                                            writer()->PushBack( x86::to_zero( x86::rax ) );
                                            writer()->PushBack( x86::Twoer( x86::sete, x86::al ) );
@@ -294,11 +301,11 @@ void Generator::doBinary( BinExpr::Node::pointer node )
         case TOKEN::LOGAND: {
           return helper( node, [this] {
             writer()->PushBack( x86::Threer( x86::testq, tlr_, tlr_ ) );
-            writer()->PushBack( x86::Twoer( x86::setne, x86::r8b ) );
+            writer()->PushBack( x86::Twoer( x86::setne, x86::r13b ) );
             writer()->PushBack( x86::Threer( x86::testq, trr_, trr_ ) );
             writer()->PushBack( x86::Twoer( x86::setne, x86::al ) );
             writer()->PushBack( x86::Threer( x86::movzbl, x86::al, x86::eax ) );
-            writer()->PushBack( x86::Threer( x86::andl, x86::r8d, x86::eax ) );
+            writer()->PushBack( x86::Threer( x86::andl, x86::r13d, x86::eax ) );
           } );
         }
         case TOKEN::EQUAL: {
@@ -317,7 +324,7 @@ void Generator::doBinary( BinExpr::Node::pointer node )
         }
         case TOKEN::PLUS: {
           if ( nullptr == node->left or nullptr == node->right ) {
-            const static auto donothing { [this] { writer()->PushBack( x86::Twoer( x86::popq, x86::rax ) ); } };
+            const static auto donothing { [this] { poper(x86::rax); } };
             return nullptr == node->left ? single_op( node->right, donothing ) : single_op( node->left, donothing );
           }
           return helper( node, [this] {
@@ -328,13 +335,13 @@ void Generator::doBinary( BinExpr::Node::pointer node )
         case TOKEN::NEG: {
           if ( nullptr == node->left and nullptr != node->right ) {
             return single_op( node->right, [this] {
-              writer()->PushBack( x86::Twoer( x86::popq, trr_ ) );
+              poper(trr_);
               writer()->PushBack( x86::to_neg( trr_ ) );
               writer()->PushBack( x86::Threer( x86::movq, trr_, x86::rax ) );
             } );
           } else if ( nullptr == node->right and nullptr != node->left ) {
             return single_op( node->left, [this] {
-              writer()->PushBack( x86::Twoer( x86::popq, tlr_ ) );
+              poper(tlr_);
               writer()->PushBack( x86::to_neg( tlr_ ) );
               writer()->PushBack( x86::Threer( x86::movq, tlr_, x86::rax ) );
             } );
@@ -348,7 +355,7 @@ void Generator::doBinary( BinExpr::Node::pointer node )
           // should be replaced by data location
           // auto des {node->left->data->getName()};
           doBinary( node->right );
-          writer()->PushBack( x86::Twoer( x86::popq, x86::rax ) );
+          poper(x86::rax);
           return; //(void)writer()->PushBack( x86::Threer( x86::movq, x86::rax, "-8(%rsp)" ) );
         }
         case TOKEN::MULTI: {
@@ -375,7 +382,7 @@ void Generator::doBinary( BinExpr::Node::pointer node )
         }
         case TOKEN::OPS: {
           const auto details { [this] {
-            writer()->PushBack( x86::Twoer( x86::popq, x86::rax ) );
+            poper(x86::rax);
             writer()->PushBack( x86::Twoer( x86::notq, x86::rax ) );
           } };
           return nullptr == node->right ? single_op( node->left, details ) : single_op( node->right, details );
@@ -392,7 +399,8 @@ void Generator::doBinary( BinExpr::Node::pointer node )
           auto callee { dynamic_cast<CallExpr::pointer>( node->data ) };
           doCallee( callee );
           if ( !callee->getFunc()->isVoid_ ) {
-            filer_->PushBack( x86::Twoer( x86::pushq, x86::rax ) );
+            pusher(x86::rax);
+            //filer_->PushBack( x86::Twoer( x86::pushq, x86::rax ) );
           }
           return;
         }
@@ -400,7 +408,9 @@ void Generator::doBinary( BinExpr::Node::pointer node )
           // assume all integer here
           auto val { std::stoi( node->data->getName().data() ) };
           writer()->PushBack( x86::Threer( x86::movq, std::format( "${}", val ), x86::rax ) );
-          return (void)writer()->PushBack( x86::Twoer( x86::pushq, x86::rax ) );
+
+          return pusher(x86::rax);
+          //return (void)writer()->PushBack( x86::Twoer( x86::pushq, x86::rax ) );
         }
         case TOKEN::STRING:
 
@@ -418,6 +428,16 @@ void Generator::doBinary( BinExpr::Node::pointer node )
       THIS_NOT_SUPPORT( node->data->getName() );
       exit( 1 );
   }
+}
+
+void Generator::poper(const string_view& reg){
+  filer_->PushBack(x86::Threer(x86::movq, x86::regIndirect("8", x86::rsp), reg));
+  filer_->PushBack(x86::Threer(x86::addq, x86::constant(16), x86::rsp));
+}
+
+void Generator::pusher(const string_view& reg){
+  filer_->PushBack(x86::Threer(x86::subq, x86::constant(16), x86::rsp));
+  filer_->PushBack(x86::Threer(x86::movq, reg, x86::regIndirect("8", x86::rsp)));
 }
 
 }; // namespace vastina
