@@ -95,11 +95,11 @@ void lexer::forSingelWord( const string_view& target, TOKEN target_type )
 
 void lexer::ParseNumber() {}
 
-constexpr auto SymbolEndJudge { [flag { true }]( char ch ) mutable {
-  if ( flag ) { // 第一个字符不能是数字
-    flag = false;
-    return ( CHARTYPE::CHAR == CharType( ch ) );
-  }
+constexpr auto SymbolEndJudge { [/*flag { true }*/]( char ch ) /*mutable*/ {
+  // if ( flag ) { // the first one should not be number
+  //   flag = false;
+  //   return ( CHARTYPE::CHAR == CharType( ch ) );
+  // } it's only called when CHARTYPE::CHAR == CharType( first_letter )
   return ( CHARTYPE::OTHER != CharType( ch ) );
 } };
 constexpr auto NormalEnd { []( char ch ) { return ( CHARTYPE::OTHER == CharType( ch ) ); } };

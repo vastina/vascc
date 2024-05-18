@@ -31,11 +31,12 @@ enum TOKEN
 
   VAR,     // var
   LET,     // let
-  SYMBOL,  // symbol
+  SYMBOL,  // var symbol
   FUNC,    // func
-  SYMBOLF, // symbol
+  SYMBOLF, // func symbol
   MAIN,    // main
   RETURN,  // return
+  TYPEDEF, // typedef
 
   STRUCT, // struct
   ENUM,   // enum
