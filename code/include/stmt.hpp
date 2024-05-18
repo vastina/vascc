@@ -67,6 +67,7 @@ public:
   virtual void setCondition( Stmt::pointer ) {}
   // VdeclStmt
   virtual void InitWithStmt( Stmt::pointer ) {}
+  virtual Stmt::pointer getIniter() const { return nullptr; }
   // BinStmt
   virtual void Parse( const std::vector<token_t>&, range_t ) {}
   // RetStmt
@@ -173,6 +174,7 @@ public:
   // override but not impl will cause a link error
   void InitWithStmt( Stmt::pointer stmt ) override { Initer = dynamic_cast<BinStmt::pointer>( stmt ); };
   Variable::pointer getVar() const override { return var_; }
+  BinStmt::pointer getIniter() const override { return Initer; }
 
   STMTTYPE StmtType() const override;
   string_view getName() const override;

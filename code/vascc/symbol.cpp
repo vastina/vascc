@@ -117,16 +117,16 @@ void SymbolTable::useBuiltin()
   {
     const static token_t printf { TOKEN::SYMBOLF, string_view( "printf" ), unreachable_line };
     auto _builtin_printf { new Function( printf, TOKEN::INT ) };
-    _builtin_printf->isBuiltin_ = true;
-    _builtin_printf->isUseValist_ = true;
+    _builtin_printf->ty_.isBuiltin_ = true;
+    _builtin_printf->ty_.isUseValist_ = true;
     //_builtin_printf->isVoid_ = false;
     addFunc( printf.name, _builtin_printf );
   }
   {
     const static token_t scanf { TOKEN::SYMBOLF, string_view( "scanf" ), unreachable_line };
     auto _builtin_scanf { new Function( scanf, TOKEN::INT ) };
-    _builtin_scanf->isBuiltin_ = true;
-    _builtin_scanf->isUseValist_ = true;
+    _builtin_scanf->ty_.isBuiltin_ = true;
+    _builtin_scanf->ty_.isUseValist_ = true;
     //_builtin_printf->isVoid_ = false;
     addFunc( scanf.name, _builtin_scanf );
   }

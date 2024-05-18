@@ -1,5 +1,7 @@
 #include "symbol.hpp"
 
+#include <functional>
+
 namespace vastina {
 
 // todo file preprocess

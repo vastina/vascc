@@ -119,10 +119,12 @@ protected:
   i32 doGenerate( Stmt::pointer );
 
 protected:
-  void Binary( BinStmt::pointer );
+  void Binary( BinStmt::pointer, bool );
   void doBinary( BinExpr::Node::pointer );
   void Callee( CallStmt::pointer );
   void doCallee( CallExpr::pointer );
+  void Params ( const std::vector<Variable::pointer>& );
+  void ParamClean( const std::vector<Variable::pointer>& );
 
 protected:
   void poper( const string_view& );

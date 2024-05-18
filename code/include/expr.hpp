@@ -32,6 +32,8 @@ public:
   virtual const string_view& getName() const;
   // CallExpr
   virtual Function::pointer getFunc() { return nullptr; }
+  // Valexpr
+  virtual Value::pointer getVal() const {return nullptr; };
 
   virtual ~Expression() = default;
 
@@ -65,6 +67,7 @@ protected:
 public:
   ValExpr( Value::pointer val );
   TOKEN getToken() const override;
+  Value::pointer getVal() const override { return value_; }
   const string_view& getName() const override;
   void Walk() const override;
 };

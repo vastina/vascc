@@ -2,6 +2,7 @@
 #include "base/log.hpp"
 
 #include <iostream>
+#include <functional>
 
 namespace vastina {
 
@@ -92,8 +93,9 @@ i32 Preprocess::Process()
           TEMP_LOG
           EXIT_ERROR
         }
-        results.push_back( { P_TOKEN::CALL, offset, offset + 1 } );
+        //results.push_back( { P_TOKEN::CALL, offset, offset + 1 } );
         EXCEPT_ZERO( Callee, current_scope->getFunc( CurrentTokenName() ) );
+        if(Current() == TOKEN::NRBRAC) Next();
         // if(Callee(current_scope->getFunc(CurrentTokenName()))!=0) EXIT_ERROR;
         break;
       }
@@ -201,6 +203,7 @@ i32 Preprocess::Binary( const std::function<bool()>& EndJudge )
             break;
           case TOKEN::STRING:
             break;
+          case TOKEN::LCHAR:
           default:
             break;
         }
@@ -238,23 +241,6 @@ i32 Preprocess::Binary( const std::function<bool()>& EndJudge )
 
   return 0;
 }
-
-// i32 Preprocess::Assign(std::function<bool()> &EndJudge) {
-//     u32 last_offset = offset;
-//     while (true) {
-//         if (Current() == TOKEN::SYMBOL && Peek() == TOKEN::ASSIGN) {
-//             Next();
-//             Next();
-//         } else {
-//             results.push_back({P_TOKEN::BINARY, last_offset, offset});
-//             (void)Binary([this]() { return Current() == TOKEN::SEMICOLON; });
-//             break;
-//         }
-//         if (EndJudge())
-//             break;
-//     }
-//     return 0;
-// }
 
 i32 Preprocess::Declare( const std::function<bool()>& EndJudge )
 {
@@ -330,13 +316,13 @@ i32 Preprocess::Callee( Function::pointer func )
     if ( Binary( [this] { return ( Current() == TOKEN::COMMA ) || ( Current() == TOKEN::NRBRAC ); } ) != 0 ) {
       RETURN_ERROR
     }
+    if ( ++count > func->getParamSize() && !func->ty_.isUseValist_ )
+      RETURN_ERROR;
+    
     if ( Current() == TOKEN::NRBRAC )
       break;
     else
       Next();
-
-    if ( ++count > func->getParamSize() && !func->isUseValist_ )
-      RETURN_ERROR;
   }
 
   return 0;

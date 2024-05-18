@@ -5,7 +5,6 @@
 
 #include "base/vasdef.hpp"
 
-#include <functional>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -29,15 +28,21 @@ struct token_t
   token_t( token_t&& tk );
 };
 
+typedef struct var_type {
+  bool isConst;
+  bool isStatic;
+  bool isPointer;
+  bool isParam; //形参
+} type;
+
 using SourceLocation = token_t;
 typedef struct Location
 { //.LC${count}
-  u32 count_;
+  //u32 count_;
 } Location;
 typedef struct sLoc
 {             // stack location
   u32 offset; // associated with codegen:Generator::counter.rsp
-  bool isPointer;
 } sLocation;
 
 class Value
@@ -45,7 +50,7 @@ class Value
 
 protected:
   const SourceLocation& Srcloc_;
-  TOKEN type_ {}; // so todo
+  TOKEN type_ {};
 
 public:
   using pointer = Value*;
@@ -82,15 +87,14 @@ public:
   using pointer = Variable*;
 
 protected:
-  sLoc stack_location_;
-  bool isConst_ {};
-  bool isTrivial_ {};
-
+  ;
 public:
   Variable() = delete;
   Variable( const SourceLocation& srcloc, TOKEN type ) : Value( srcloc, type ) {}
   ~Variable() {}
-  inline bool isConst() { return isConst_; }
+  sLoc stack{};
+  //TOKEN type_ {}; from base class Value
+  var_type ty_{};
 };
 
 class Function : public Value
@@ -99,9 +103,17 @@ protected:
   std::vector<Variable::pointer> paras_;
 
 public:
-  bool isVoid_ {};
-  bool isBuiltin_ {};
-  bool isUseValist_ {}; // if use, (int, float, ....) --> paras_.size()==2
+  typedef struct func_type {
+    var_type vty{};
+    bool isVoid_ {};
+    bool isBuiltin_ {};
+    bool isUseValist_ {};
+  } func_type;
+  func_type ty_;
+
+  // bool isVoid_ {};
+  // bool isBuiltin_ {};
+  // bool isUseValist_ {}; // if use, (int, float, ....) --> paras_.size()==2
   // instead of set and get, I think this is better, single thread after all
 public:
   using pointer = Function*;
@@ -111,7 +123,11 @@ public:
   ~Function() { paras_.clear(); }
 
   u32 getParamSize() { return paras_.size(); }
-  void addPara( Variable::pointer var ) { paras_.push_back( var ); }
+  const decltype(paras_)& getParams() { return paras_; }
+  void addPara( Variable::pointer var ) {
+    var->ty_.isParam = true;
+    paras_.push_back( var );
+  }
 };
 
 typedef struct SymbolTable
