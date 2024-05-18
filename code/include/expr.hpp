@@ -33,7 +33,7 @@ public:
   // CallExpr
   virtual Function::pointer getFunc() { return nullptr; }
   // Valexpr
-  virtual Value::pointer getVal() const {return nullptr; };
+  virtual Value::pointer getVal() const { return nullptr; };
 
   virtual ~Expression() = default;
 

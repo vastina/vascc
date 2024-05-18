@@ -1,8 +1,8 @@
 #include "preprocess.hpp"
 #include "base/log.hpp"
 
-#include <iostream>
 #include <functional>
+#include <iostream>
 
 namespace vastina {
 
@@ -93,9 +93,10 @@ i32 Preprocess::Process()
           TEMP_LOG
           EXIT_ERROR
         }
-        //results.push_back( { P_TOKEN::CALL, offset, offset + 1 } );
+        // results.push_back( { P_TOKEN::CALL, offset, offset + 1 } );
         EXCEPT_ZERO( Callee, current_scope->getFunc( CurrentTokenName() ) );
-        if(Current() == TOKEN::NRBRAC) Next();
+        if ( Current() == TOKEN::NRBRAC )
+          Next();
         // if(Callee(current_scope->getFunc(CurrentTokenName()))!=0) EXIT_ERROR;
         break;
       }
@@ -318,7 +319,7 @@ i32 Preprocess::Callee( Function::pointer func )
     }
     if ( ++count > func->getParamSize() && !func->ty_.isUseValist_ )
       RETURN_ERROR;
-    
+
     if ( Current() == TOKEN::NRBRAC )
       break;
     else

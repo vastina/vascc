@@ -123,7 +123,7 @@ protected:
   void doBinary( BinExpr::Node::pointer );
   void Callee( CallStmt::pointer );
   void doCallee( CallExpr::pointer );
-  void Params ( const std::vector<Variable::pointer>& );
+  void Params( const std::vector<Variable::pointer>& );
   void ParamClean( const std::vector<Variable::pointer>& );
 
 protected:

@@ -28,17 +28,18 @@ struct token_t
   token_t( token_t&& tk );
 };
 
-typedef struct var_type {
+typedef struct var_type
+{
   bool isConst;
   bool isStatic;
   bool isPointer;
-  bool isParam; //形参
+  bool isParam; // 形参
 } type;
 
 using SourceLocation = token_t;
 typedef struct Location
 { //.LC${count}
-  //u32 count_;
+  // u32 count_;
 } Location;
 typedef struct sLoc
 {             // stack location
@@ -88,13 +89,14 @@ public:
 
 protected:
   ;
+
 public:
   Variable() = delete;
   Variable( const SourceLocation& srcloc, TOKEN type ) : Value( srcloc, type ) {}
   ~Variable() {}
-  sLoc stack{};
-  //TOKEN type_ {}; from base class Value
-  var_type ty_{};
+  sLoc stack {};
+  // TOKEN type_ {}; from base class Value
+  var_type ty_ {};
 };
 
 class Function : public Value
@@ -103,8 +105,9 @@ protected:
   std::vector<Variable::pointer> paras_;
 
 public:
-  typedef struct func_type {
-    var_type vty{};
+  typedef struct func_type
+  {
+    var_type vty {};
     bool isVoid_ {};
     bool isBuiltin_ {};
     bool isUseValist_ {};
@@ -123,8 +126,9 @@ public:
   ~Function() { paras_.clear(); }
 
   u32 getParamSize() { return paras_.size(); }
-  const decltype(paras_)& getParams() { return paras_; }
-  void addPara( Variable::pointer var ) {
+  const decltype( paras_ )& getParams() { return paras_; }
+  void addPara( Variable::pointer var )
+  {
     var->ty_.isParam = true;
     paras_.push_back( var );
   }
