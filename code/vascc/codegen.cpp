@@ -1,8 +1,10 @@
 #include "codegen.hpp"
+#include "base/Tree.hpp"
 #include "base/io.hpp"
 #include "base/log.hpp"
 #include "expr.hpp"
 #include "stmt.hpp"
+#include "symbol.hpp"
 
 #include <ranges>
 
@@ -27,28 +29,93 @@ void Generator::Generate( const string_view& file_name )
 
 i32 Generator::doGenerate( Stmt::pointer stmt )
 {
-  static u32 func_pos;
   switch ( stmt->StmtType() ) {
     case STMTTYPE::Return: {
       Binary( dynamic_cast<BinStmt::pointer>( stmt->getResult() ), false );
       poper( x86::rax );
+      // todo clean
+      // filer_->PushBack(x86::single(x86::ret));
       break;
     }
     case STMTTYPE::Fdecl: {
-      if ( nullptr != stmt->getParent() ) {
-        if ( STMTTYPE::Fdecl == stmt->getParent()->StmtType() ) {
-          // todo, func declared in func
-        }
-      }
-      func_pos = filer_->PushBack( x86::func_declare_start( stmt->getFunc()->getName() ) );
-      filer_->PushBack( x86::func_start( stmt->getFunc()->getName(), counter_.lf.lfbe ) );
-      Params( stmt->getFunc()->getParams() );
+      FuncStart( dynamic_cast<FdeclStmt::pointer>(stmt));
       break;
     }
     case STMTTYPE::Vdecl: {
-      auto var { stmt->getVar() };
+      Vdecl(dynamic_cast<VdeclStmt::pointer>(stmt));
+      break;
+    }
+    case STMTTYPE::Call: {
+      Callee( dynamic_cast<CallStmt::pointer>( stmt ) );
+      break;
+    }
+    case STMTTYPE::Binary: {
+      Binary( dynamic_cast<BinStmt::pointer>( stmt ), true );
+    }
+    case STMTTYPE::If: {
+
+    }
+    case STMTTYPE::Loop: {
+
+    }
+    case STMTTYPE::Cond:
+    case STMTTYPE::Compound:
+    default:
+      break;
+  }
+
+  for ( auto&& child : stmt->getChildren() ) {
+    doGenerate( child );
+  }
+
+  switch ( stmt->StmtType() ) {
+    case STMTTYPE::Fdecl: {
+      FuncEnd(dynamic_cast<FdeclStmt::pointer>(stmt));
+    }
+    case STMTTYPE::Binary:
+    case STMTTYPE::Call:
+    case STMTTYPE::Compound:
+    case STMTTYPE::Vdecl:
+    case STMTTYPE::If:
+    case STMTTYPE::Loop:
+    default:
+      break;
+  }
+
+  return 0;
+}
+
+void Generator::FuncStart( FdeclStmt::pointer stmt ){
+  static u32 func_pos {};
+
+  // it always has a parent named CompoundStmt at least
+  // if ( nullptr != stmt->getParent() )
+  if ( STMTTYPE::Fdecl == stmt->getParent()->StmtType() ) {
+    // todo, func declared in func
+  }
+  func_pos = filer_->PushBack( x86::func_declare_start( stmt->getFunc()->getName() ) );
+  filer_->PushBack( x86::func_start( stmt->getFunc()->getName(), counter_.lf.lfbe ) );
+  Params( stmt->getFunc()->getParams() );
+}
+
+void Generator::FuncEnd( FdeclStmt::pointer stmt ){
+  if ( stmt->getFunc()->getSrcloc().token == TOKEN::MAIN ) {
+    filer_->PushBack( x86::main_func_end );
+  } else {
+    ParamClean( stmt->getFunc()->getParams() );
+    filer_->PushBack( x86::func_end );
+  }
+  filer_->PushBack( x86::func_declare_end( counter_.lf.lfbe++, stmt->getFunc()->getName() ) );
+}
+
+void Generator::Vdecl( VdeclStmt::pointer stmt ){
+  if(nullptr == scope_->getParent()){
+    // todo, if is global here
+  }
+
+  const auto var { stmt->getVar() };
       if ( var->ty_.isParam )
-        break;
+        return;
 
       auto type { var->getType() };
       switch ( type ) {
@@ -69,41 +136,6 @@ i32 Generator::doGenerate( Stmt::pointer stmt )
         default:
           THIS_NOT_SUPPORT( std::format( "type with token id {},", (i32)type ) );
       }
-      break;
-    }
-    case STMTTYPE::Call: {
-      Callee( dynamic_cast<CallStmt::pointer>( stmt ) );
-      break;
-    }
-    case STMTTYPE::Binary: {
-      Binary( dynamic_cast<BinStmt::pointer>( stmt ), true );
-    }
-    default:
-      break;
-  }
-
-  for ( auto&& child : stmt->getChildren() ) {
-    doGenerate( child );
-  }
-
-  switch ( stmt->StmtType() ) {
-    case STMTTYPE::Fdecl: {
-      ParamClean( stmt->getFunc()->getParams() );
-      if ( stmt->getFunc()->getSrcloc().token == TOKEN::MAIN )
-        filer_->PushBack( x86::main_func_end );
-      else
-        filer_->PushBack( x86::func_end );
-      filer_->PushBack( x86::func_declare_end( counter_.lf.lfbe++, stmt->getFunc()->getName() ) );
-    }
-    case STMTTYPE::Binary:
-    case STMTTYPE::Call:
-    case STMTTYPE::Compound:
-    case STMTTYPE::Vdecl:
-    default:
-      break;
-  }
-
-  return 0;
 }
 
 void Generator::Params( const std::vector<Variable::pointer>& paras )
@@ -140,42 +172,23 @@ void Generator::Callee( CallStmt::pointer stmt )
 
 void Generator::doCallee( CallExpr::pointer callee )
 {
-  auto paras { callee->getParas() };
-  auto func { callee->getFunc() };
-
-  auto pos { paras.size() - 1 };
+  const auto paras { callee->getParas() };
+  const auto func { callee->getFunc() };
+  
   u32 stack_usage {};
+  if(!paras.empty()) {
+  auto pos { paras.size() - 1 };
   for ( ; pos > 5; pos-- ) {
-    switch ( paras.at( pos )->getToken() ) {
-      case TOKEN::STRING: {
-        break;
-      }
-      case TOKEN::LCHAR: {
-        // if you make two or more letters in '', it will report error before this
-        char ch = paras.at( pos )->getName()[1];
-        filer_->PushBack( x86::Twoer( x86::pushq, x86::constant( ch - 0 ) ) );
-        stack_usage += 8;
-        break;
-      }
-      case TOKEN::CHAR:
-      case TOKEN::INT:
-      case TOKEN::LONG: {
-      }
-      case TOKEN::FLOAT:
-      case TOKEN::DOUBLE:
-      default:
-        THIS_NOT_SUPPORT( std::format( "type with token id {},", (i32)paras.at( pos )->getToken() ) );
-    }
+    doBinary( paras.at( pos )->getRoot() ); // Binary.pop == flase
+    poper(x86::rax);
+    filer_->PushBack(x86::Twoer(x86::pushq, x86::rax));
+    stack_usage += 8; // this is wrong
   }
   do {
-    switch ( paras.at( pos )->getToken() ) {
-      default:
-        doBinary( paras.at( pos )->getRoot() ); // Binary.pop == flase
-        poper( x86::regs_for_call[pos] );
-        break;
-    }
+    doBinary( paras.at( pos )->getRoot() ); // Binary.pop == flase
+    poper( x86::regs_for_call[pos] );
   } while ( pos-- );
-
+  }
   if ( func->ty_.isBuiltin_ )
     filer_->PushBack( x86::call_builtin( func->getName() ) );
   else
@@ -188,7 +201,7 @@ void Generator::doCallee( CallExpr::pointer callee )
 
 void Generator::Binary( BinStmt::pointer stmt, bool pop )
 {
-  auto data { stmt->getData()->getRoot() };
+  const auto data { stmt->getData()->getRoot() };
 
   doBinary( data );
   if ( pop )
@@ -213,7 +226,7 @@ void Generator::doBinary( BinExpr::Node::pointer node )
     pusher( x86::rax );
   } };
 
-  auto tk { node->data->getToken() };
+  const auto tk { node->data->getToken() };
   switch ( token_type( tk ) ) {
     case TOKEN_TYPE::OPERATOR: {
       switch ( tk ) {
@@ -355,12 +368,25 @@ void Generator::doBinary( BinExpr::Node::pointer node )
           } );
         }
         case TOKEN::ASSIGN: {
-          // should be replaced by data location
-          auto des { dynamic_cast<Variable::pointer>( node->left->data->getVal() ) };
+          /*                =
+                           /  \
+                          =   expr
+                        /   \
+                      var1  var2
+            go deep here or do sth others?
+          */
+          //auto des { dynamic_cast<Variable::pointer>( node->left->data->getVal() ) };
           doBinary( node->right );
           poper( x86::rax );
-          writer()->PushBack( x86::Threer(
-            x86::movq, x86::rax, x86::regIndirect( std::format( "-{}", des->stack.offset ), x86::rbp ) ) );
+          node->left->Travel(walk_order::PREORDER, [this](const decltype(node->data)& data_){
+            if(TOKEN::SYMBOL == data_->getToken()){
+              auto des { dynamic_cast<Variable::pointer>(data_->getVal()) };
+              this->writer()->PushBack( x86::Threer(
+                x86::movq, x86::rax, x86::regIndirect( std::format( "-{}", des->stack.offset ), x86::rbp ) ) );
+            }
+          });
+          //writer()->PushBack( x86::Threer(
+            //x86::movq, x86::rax, x86::regIndirect( std::format( "-{}", des->stack.offset ), x86::rbp ) ) );
           return pusher( x86::rax );
         }
         case TOKEN::MULTI: {
@@ -417,7 +443,7 @@ void Generator::doBinary( BinExpr::Node::pointer node )
         }
         case TOKEN::NUMBER: {
           // todo
-          auto val { std::stol( node->data->getName().data() ) };
+          const auto val { std::stol( node->data->getName().data() ) };
           writer()->PushBack( x86::Threer( x86::movq, std::format( "${}", val ), x86::rax ) );
 
           return pusher( x86::rax );

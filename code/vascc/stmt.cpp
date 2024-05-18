@@ -64,6 +64,7 @@ Expression::pointer BinStmt::Creator( const token_t& token, const Scope::pointer
     case TOKEN_TYPE::VALUE:
       if ( TOKEN::SYMBOL == tk ) {
         if ( !scope->varExist( token.name ) ) {
+          print("{}, {}\n", scope->getRange().start, scope->getRange().end);
           REPORT_MSG( "var not exist" );
         } else {
           return new ValExpr( scope->getVar( token.name ) );
@@ -101,11 +102,11 @@ STMTTYPE FdeclStmt::StmtType() const
 string_view FdeclStmt::getName() const
 {
   return "FdeclStmt";
-};
+}
 void FdeclStmt::walk() const
 {
   print( "function name: {}\n", func_->getName() );
-};
+}
 
 void BinStmt::setRoot( BinExpr::Node::pointer root )
 {
@@ -123,7 +124,7 @@ STMTTYPE BinStmt::StmtType() const
 string_view BinStmt::getName() const
 {
   return "BinStmt";
-};
+}
 void BinStmt::walk() const
 {
   print( "binary walk\n" );
@@ -137,7 +138,7 @@ STMTTYPE VdeclStmt::StmtType() const
 string_view VdeclStmt::getName() const
 {
   return "VdeclStmt";
-};
+}
 void VdeclStmt::walk() const
 {
   print( "Vdecl, var-name: {}\n", var_->getName() );
@@ -154,7 +155,7 @@ STMTTYPE CondStmt::StmtType() const
 string_view CondStmt::getName() const
 {
   return "CondStmt";
-};
+}
 void CondStmt::walk() const
 {
   print( "CondStmt, walk condition\n" );
@@ -168,7 +169,7 @@ STMTTYPE LoopStmt::StmtType() const
 string_view LoopStmt::getName() const
 {
   return "LoopStmt";
-};
+}
 void LoopStmt::walk() const
 {
   print( "LoopStmt, walk condition\n" );
@@ -182,7 +183,7 @@ STMTTYPE IfStmt::StmtType() const
 string_view IfStmt::getName() const
 {
   return "IfStmt";
-};
+}
 void IfStmt::walk() const
 {
   print( "IfStmt, walk condition\n" );
@@ -192,7 +193,7 @@ void IfStmt::walk() const
 Stmt::pointer RetStmt::getResult() const
 {
   return result_;
-};
+}
 
 STMTTYPE RetStmt::StmtType() const
 {
@@ -201,7 +202,7 @@ STMTTYPE RetStmt::StmtType() const
 string_view RetStmt::getName() const
 {
   return "RetStmt";
-};
+}
 void RetStmt::walk() const
 {
   print( "RetStmt, walk result\n" );
@@ -215,7 +216,7 @@ STMTTYPE CallStmt::StmtType() const
 string_view CallStmt::getName() const
 {
   return "CallStmt";
-};
+}
 void CallStmt::walk() const
 {
   print( "CallStmt, walk callee\n" );

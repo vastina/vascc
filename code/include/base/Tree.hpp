@@ -36,10 +36,10 @@ public:
 
 private:
   inline void InOrder(
-    void visit( const ty& data_ ),
+    std::function<void(const ty& data_)> visit,
     pointer root,
-    void leftmark() = [] { std::cout << "go left\n"; },
-    void rightmark() = [] { std::cout << "go right\n"; } )
+    std::function<void()> leftmark = [] { std::cout << "go left\n"; },
+    std::function<void()> rightmark = [] { std::cout << "go right\n"; } )
   {
     if ( root->left != nullptr ) {
       leftmark();
@@ -52,10 +52,10 @@ private:
     }
   }
   inline void PreOrder(
-    void visit( const ty& data_ ),
+    std::function<void(const ty& data_)> visit,
     pointer root,
-    void leftmark() = [] { std::cout << "go left\n"; },
-    void rightmark() = [] { std::cout << "go right\n"; } )
+    std::function<void()> leftmark = [] { std::cout << "go left\n"; },
+    std::function<void()> rightmark = [] { std::cout << "go right\n"; } )
   {
     visit( root->data );
     if ( root->left != nullptr ) {
@@ -72,10 +72,10 @@ private:
     }
   }
   inline void PostOrder(
-    void visit( const ty& data_ ),
+    std::function<void(const ty& data_)> visit,
     pointer root,
-    void leftmark() = [] { std::cout << "go left\n"; },
-    void rightmark() = [] { std::cout << "go right\n"; } )
+    std::function<void()> leftmark = [] { std::cout << "go left\n"; },
+    std::function<void()> rightmark = [] { std::cout << "go right\n"; } )
   {
     if ( root->left != nullptr ) {
       leftmark();
@@ -101,6 +101,22 @@ public:
         break;
       case walk_order::POSTORDER:
         PostOrder( visit, this );
+        break;
+      default:
+        break;
+    }
+  }
+  inline void Travel( walk_order order, std::function<void(const ty& data_)> details )
+  {
+    switch ( order ) {
+      case walk_order::PREORDER:
+        PreOrder( details, this );
+        break;
+      case walk_order::INORDER:
+        InOrder( details, this );
+        break;
+      case walk_order::POSTORDER:
+        PostOrder( details, this );
         break;
       default:
         break;

@@ -2,6 +2,7 @@
 #define _X86_ASM_H_
 
 #include "base/vasdef.hpp"
+#include <array>
 
 namespace vastina {
 
@@ -158,7 +159,8 @@ public:
   const_str_t test { "test" };
   const_str_t testq { "testq" };
 
-  const_str_t regs_for_call[] { rdi, rsi, rdx, rcx, r8, r9 };
+  constexpr static std::array<const string_view, 6> const regs_for_call{{rdi,  rsi,  rdx,  rcx,  r8, r9 }};
+  //const_str_t regs_for_call[] { rdi, rsi, rdx, rcx, r8, r9 };
 
   // rax -> eax -> ax -> al
   static std::string to_lower( std::string reg );

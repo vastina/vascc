@@ -3,6 +3,7 @@
 #include "base/Tree.hpp"
 #include "base/log.hpp"
 #include "base/vasdef.hpp"
+#include "stmt.hpp"
 #include "symbol.hpp"
 
 #include <queue>
@@ -97,6 +98,13 @@ i32 Parser::Parse()
         scope_ = scope_->getParent();
       if ( current_stmt_->getParent() != nullptr )
         current_stmt_ = current_stmt_->getParent();
+    }
+    if( scope_->idchild_ < scope_->getChildren().size() )
+    if( p_offset_ >= scope_->getChildat(scope_->idchild_)->getRange().start){
+      scope_ = scope_->getNextChild();
+      auto newCompound {new CompoundStmt(current_stmt_)};
+      current_stmt_->addChildren( newCompound );
+      current_stmt_ = newCompound;
     }
   }
 
