@@ -1,1 +1,0 @@
-This folder contains some code when I learn the LLVM
