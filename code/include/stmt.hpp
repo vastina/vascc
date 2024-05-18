@@ -4,6 +4,7 @@
 #include "base/Tree.hpp"
 #include "base/vasdef.hpp"
 #include "expr.hpp"
+#include "preprocess.hpp"
 #include "symbol.hpp"
 
 #include <memory>

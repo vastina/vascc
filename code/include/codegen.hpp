@@ -123,9 +123,10 @@ protected:
   void doBinary( BinExpr::Node::pointer );
   void Callee( CallStmt::pointer );
   void doCallee( CallExpr::pointer );
+
 protected:
-  void poper(const string_view&);
-  void pusher(const string_view&);
+  void poper( const string_view& );
+  void pusher( const string_view& );
 
 public:
   void Generate( const string_view& );
