@@ -5,5 +5,6 @@ int fac(int n){
 
 int main(){
     int a = fac(4) ;
+    printf("%d\n", a);
     return 1-(a==24) ;
 }
