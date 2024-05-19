@@ -34,6 +34,7 @@ typedef struct var_type
   bool isStatic;
   bool isPointer;
   bool isParam; // 形参
+  bool isGlobal;
 } type;
 
 using SourceLocation = token_t;

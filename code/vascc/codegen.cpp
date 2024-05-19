@@ -2,10 +2,12 @@
 #include "base/Tree.hpp"
 #include "base/io.hpp"
 #include "base/log.hpp"
+#include "base/vasdef.hpp"
 #include "expr.hpp"
 #include "stmt.hpp"
 #include "symbol.hpp"
 
+#include <algorithm>
 #include <ranges>
 
 namespace vastina {
@@ -20,29 +22,29 @@ void Generator::Generate( const string_view& file_name )
   filer_->Open();
 
   filer_->PushBack( x86::file_start( file_name ) );
-  EXCEPT_ZERO( doGenerate, current_stmt_ );
+  doGenerate( current_stmt_ );
   filer_->PushBack( x86::asm_end_str );
 
   writer()->WriteAll();
   filer_->Close();
 }
 
-i32 Generator::doGenerate( Stmt::pointer stmt )
+void Generator::doGenerate( Stmt::pointer stmt )
 {
   switch ( stmt->StmtType() ) {
     case STMTTYPE::Return: {
       Binary( dynamic_cast<BinStmt::pointer>( stmt->getResult() ), false );
       poper( x86::rax );
       // todo clean
-      // filer_->PushBack(x86::single(x86::ret));
       break;
     }
     case STMTTYPE::Fdecl: {
-      FuncStart( dynamic_cast<FdeclStmt::pointer>(stmt));
+      FuncStart( dynamic_cast<FdeclStmt::pointer>( stmt ) );
+      scope_ = scope_->getNextChild();
       break;
     }
     case STMTTYPE::Vdecl: {
-      Vdecl(dynamic_cast<VdeclStmt::pointer>(stmt));
+      Vdecl( dynamic_cast<VdeclStmt::pointer>( stmt ) );
       break;
     }
     case STMTTYPE::Call: {
@@ -51,15 +53,23 @@ i32 Generator::doGenerate( Stmt::pointer stmt )
     }
     case STMTTYPE::Binary: {
       Binary( dynamic_cast<BinStmt::pointer>( stmt ), true );
+      break;
     }
     case STMTTYPE::If: {
-
+      IfStart( dynamic_cast<IfStmt::pointer>( stmt ) );
+      scope_ = scope_->getNextChild();
+      break;
     }
+    // break is not supported now actually
     case STMTTYPE::Loop: {
-
+      scope_ = scope_->getNextChild();
+      break;
+    }
+    case STMTTYPE::Compound: {
+      if(nullptr != scope_->getParent())
+        scope_ = scope_->getNextChild();
     }
     case STMTTYPE::Cond:
-    case STMTTYPE::Compound:
     default:
       break;
   }
@@ -70,35 +80,73 @@ i32 Generator::doGenerate( Stmt::pointer stmt )
 
   switch ( stmt->StmtType() ) {
     case STMTTYPE::Fdecl: {
-      FuncEnd(dynamic_cast<FdeclStmt::pointer>(stmt));
+      FuncEnd( dynamic_cast<FdeclStmt::pointer>( stmt ) );
+      scope_ = scope_->getParent();
+      break;
     }
-    case STMTTYPE::Binary:
-    case STMTTYPE::Call:
-    case STMTTYPE::Compound:
-    case STMTTYPE::Vdecl:
-    case STMTTYPE::If:
-    case STMTTYPE::Loop:
+    case STMTTYPE::Binary:{
+      break;
+    }
+    case STMTTYPE::Call:{
+      break;
+    }
+    case STMTTYPE::Compound: {
+      if(nullptr != scope_->getParent())
+        scope_ = scope_->getParent();
+      break;
+    }
+    case STMTTYPE::Vdecl:{
+      break;
+    }
+    case STMTTYPE::If:{
+      IfEnd( /*dynamic_cast<IfStmt::pointer>(stmt)*/ );
+      scope_ = scope_->getParent();
+      break;
+    }
+    case STMTTYPE::Loop:{
+      scope_ = scope_->getParent();
+      break;
+    }
     default:
       break;
   }
-
-  return 0;
 }
 
-void Generator::FuncStart( FdeclStmt::pointer stmt ){
-  static u32 func_pos {};
+void Generator::IfStart( IfStmt::pointer stmt ) {
+  auto conditon { dynamic_cast<BinStmt::pointer>(stmt->getCondition()) };
+  Binary(conditon, false);
+  poper(x86::rax);
+
+  filer_->PushBack(x86::Threer(x86::cmpq, x86::constant(0), x86::rax));
+  filer_->PushBack(x86::Twoer(x86::jne, std::format(".L{}",  counter_.jmp.current+1)));
+  filer_->PushBack(std::format(".L{}:\n",  counter_.jmp.current));
+  counter_.jmp.history.push(++counter_.jmp.current);
+}
+
+void Generator::IfEnd( ){
+  const u32 L = counter_.jmp.history.top();
+  filer_->PushBack(std::format(".L{}:\n", L));
+  counter_.jmp.history.pop();
+}
+
+void Generator::LoopW( LoopStmt::pointer ) {}
+
+void Generator::FuncStart( FdeclStmt::pointer stmt )
+{
+  //static u32 func_pos {};
 
   // it always has a parent named CompoundStmt at least
   // if ( nullptr != stmt->getParent() )
   if ( STMTTYPE::Fdecl == stmt->getParent()->StmtType() ) {
     // todo, func declared in func
   }
-  func_pos = filer_->PushBack( x86::func_declare_start( stmt->getFunc()->getName() ) );
+  /*func_pos =*/ filer_->PushBack( x86::func_declare_start( stmt->getFunc()->getName() ) );
   filer_->PushBack( x86::func_start( stmt->getFunc()->getName(), counter_.lf.lfbe ) );
   Params( stmt->getFunc()->getParams() );
 }
 
-void Generator::FuncEnd( FdeclStmt::pointer stmt ){
+void Generator::FuncEnd( FdeclStmt::pointer stmt )
+{
   if ( stmt->getFunc()->getSrcloc().token == TOKEN::MAIN ) {
     filer_->PushBack( x86::main_func_end );
   } else {
@@ -108,34 +156,66 @@ void Generator::FuncEnd( FdeclStmt::pointer stmt ){
   filer_->PushBack( x86::func_declare_end( counter_.lf.lfbe++, stmt->getFunc()->getName() ) );
 }
 
-void Generator::Vdecl( VdeclStmt::pointer stmt ){
-  if(nullptr == scope_->getParent()){
-    // todo, if is global here
-  }
+void Generator::Vdecl( VdeclStmt::pointer stmt )
+{
+  auto var { stmt->getVar() };
+  
+  if ( nullptr == scope_->getParent() ) {
+    var->ty_.isGlobal = true;
+    // if is global here
+    const_str_t global_var_{"" // a temp solution
+      "\t.global\t{}\n" // var_name
+      "\t.data\n"
+      "\t.align {}\n"   // align<-->size
+      "\t.type {}, @object\n" //var_name
+      "\t.size {}, {}\n"      //var_name, size<-->align
+      "{}:\n" //var_name
+      "\t.{} {}\n" // {}->quad, long, value(doublebyte), byte ; {}->value(constant)(`global2 = 1+global1` is not supported)
+      "\t.text\n"
+    };
+    constexpr auto static global_var{
+      [](const string_view& varname, const u32 size, const string_view& type, const string_view& value){
+        return format(global_var_, varname, std::max(size,(u32)(sizeof(short))), varname, varname,
+        size, varname, type, value);
+    }};
 
-  const auto var { stmt->getVar() };
-      if ( var->ty_.isParam )
-        return;
-
-      auto type { var->getType() };
-      switch ( type ) {
-        case TOKEN::CHAR:
-        case TOKEN::INT:
-        case TOKEN::LONG: {
-          if ( var->ty_.isConst ) {}
-          if ( var->ty_.isStatic ) {}
-          if ( var->ty_.isPointer ) {}
-          if ( nullptr != stmt->getIniter() ) {
-            Binary( dynamic_cast<BinStmt::pointer>( stmt->getIniter() ), false );
-          } else {
-            pusher( x86::rax ); // random value in rax
-          }
-          var->stack.offset = counter_.rsp - sizeof( long ); // -offset(%rbp)
-          break;
+    switch (var->getType()) {
+      case TOKEN::INT:{
+        if(nullptr == stmt->getIniter()) {
+          filer_->PushBack(global_var(var->getName(), 4, "long", "0"));
+        } else {
+          const auto expr { dynamic_cast<BinExpr::pointer>(stmt->getIniter()->getData()) };
+          filer_->PushBack(global_var(var->getName(), 4, "long", expr->getRoot()->data->getName()));
         }
-        default:
-          THIS_NOT_SUPPORT( std::format( "type with token id {},", (i32)type ) );
       }
+      default: break;
+    }
+
+    return;
+  }
+  
+  if ( var->ty_.isParam )
+    return;
+
+  auto type { var->getType() };
+  switch ( type ) {
+    case TOKEN::CHAR:
+    case TOKEN::INT:
+    case TOKEN::LONG: {
+      if ( var->ty_.isConst ) {}
+      if ( var->ty_.isStatic ) {}
+      if ( var->ty_.isPointer ) {}
+      if ( nullptr != stmt->getIniter() ) {
+        Binary( dynamic_cast<BinStmt::pointer>( stmt->getIniter() ), false );
+      } else {
+        pusher( x86::rax ); // random value in rax
+      }
+      var->stack.offset = counter_.rsp - sizeof( long ); // -offset(%rbp)
+      break;
+    }
+    default:
+      THIS_NOT_SUPPORT( std::format( "type with token id {},", (i32)type ) );
+  }
 }
 
 void Generator::Params( const std::vector<Variable::pointer>& paras )
@@ -174,20 +254,20 @@ void Generator::doCallee( CallExpr::pointer callee )
 {
   const auto paras { callee->getParas() };
   const auto func { callee->getFunc() };
-  
+
   u32 stack_usage {};
-  if(!paras.empty()) {
-  auto pos { paras.size() - 1 };
-  for ( ; pos > 5; pos-- ) {
-    doBinary( paras.at( pos )->getRoot() ); // Binary.pop == flase
-    poper(x86::rax);
-    filer_->PushBack(x86::Twoer(x86::pushq, x86::rax));
-    stack_usage += 8; // this is wrong
-  }
-  do {
-    doBinary( paras.at( pos )->getRoot() ); // Binary.pop == flase
-    poper( x86::regs_for_call[pos] );
-  } while ( pos-- );
+  if ( !paras.empty() ) {
+    auto pos { paras.size() - 1 };
+    for ( ; pos > 5; pos-- ) {
+      doBinary( paras.at( pos )->getRoot() ); // Binary.pop == flase
+      poper( x86::rax );
+      filer_->PushBack( x86::Twoer( x86::pushq, x86::rax ) );
+      stack_usage += 8; // this is wrong
+    }
+    do {
+      doBinary( paras.at( pos )->getRoot() ); // Binary.pop == flase
+      poper( x86::regs_for_call[pos] );
+    } while ( pos-- );
   }
   if ( func->ty_.isBuiltin_ )
     filer_->PushBack( x86::call_builtin( func->getName() ) );
@@ -375,18 +455,18 @@ void Generator::doBinary( BinExpr::Node::pointer node )
                       var1  var2
             go deep here or do sth others?
           */
-          //auto des { dynamic_cast<Variable::pointer>( node->left->data->getVal() ) };
+          // auto des { dynamic_cast<Variable::pointer>( node->left->data->getVal() ) };
           doBinary( node->right );
           poper( x86::rax );
-          node->left->Travel(walk_order::PREORDER, [this](const decltype(node->data)& data_){
-            if(TOKEN::SYMBOL == data_->getToken()){
-              auto des { dynamic_cast<Variable::pointer>(data_->getVal()) };
+          node->left->Travel( walk_order::PREORDER, [this]( const decltype( node->data )& data_ ) {
+            if ( TOKEN::SYMBOL == data_->getToken() ) {
+              auto des { dynamic_cast<Variable::pointer>( data_->getVal() ) };
               this->writer()->PushBack( x86::Threer(
                 x86::movq, x86::rax, x86::regIndirect( std::format( "-{}", des->stack.offset ), x86::rbp ) ) );
             }
-          });
-          //writer()->PushBack( x86::Threer(
-            //x86::movq, x86::rax, x86::regIndirect( std::format( "-{}", des->stack.offset ), x86::rbp ) ) );
+          } );
+          // writer()->PushBack( x86::Threer(
+          // x86::movq, x86::rax, x86::regIndirect( std::format( "-{}", des->stack.offset ), x86::rbp ) ) );
           return pusher( x86::rax );
         }
         case TOKEN::MULTI: {
@@ -428,8 +508,13 @@ void Generator::doBinary( BinExpr::Node::pointer node )
       switch ( tk ) {
         case TOKEN::SYMBOL: {
           auto var { dynamic_cast<Variable::pointer>( node->data->getVal() ) };
-          writer()->PushBack( x86::Threer(
+          if(var->ty_.isGlobal){
+            writer()->PushBack( x86::Threer(
+              x86::movq, x86::regIndirect( var->getName(), x86::rip ), x86::rax ) );
+          } else {
+            writer()->PushBack( x86::Threer(
             x86::movq, x86::regIndirect( std::format( "-{}", var->stack.offset ), x86::rbp ), x86::rax ) );
+          }
           return pusher( x86::rax );
         }
         case TOKEN::SYMBOLF: {
@@ -462,13 +547,15 @@ void Generator::doBinary( BinExpr::Node::pointer node )
         case TOKEN::LCHAR: {
           // if you make two or more letters in '', it will report error before this
           char ch = node->data->getName()[1];
-          filer_->PushBack( x86::Twoer( x86::pushq, x86::constant( ch - 0 ) ) );
+          pusher(x86::constant(ch-0));
           break;
         }
-        case TOKEN::TRUE:
-
-        case TOKEN::FALSE:
-
+        case TOKEN::TRUE:{
+          return pusher(x86::constant(1));
+        }
+        case TOKEN::FALSE:{
+          return pusher(x86::constant(0));
+        }
         default:
           THIS_NOT_SUPPORT( node->data->getName() );
           print( "\nbye\n" );
@@ -489,6 +576,7 @@ void Generator::poper( const string_view& reg )
   counter_.rsp -= 16;
 }
 
+//reg or constant
 void Generator::pusher( const string_view& reg )
 {
   filer_->PushBack( x86::Threer( x86::subq, x86::constant( 16 ), x86::rsp ) );

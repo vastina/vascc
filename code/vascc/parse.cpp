@@ -282,13 +282,13 @@ BinExpr::Node::pointer Parser::ParseBinary( u32& offset, const u32 end )
         if ( last_is_op )
           current->data->setLevel( Level( TOKEN::SYMBOL ) ); //--
 
-        if ( current->data->getLevel() >= root->data->getLevel() ) {
+        if ( current->data->getLevel() >=/*do not modify it to >*/ root->data->getLevel() ) {
           root->ReplaceByL( current );
           root = current;
         } else {
           bool level_flag { false };
           auto temp = root->FindChildR( [&current, &level_flag]( const BinExpr::Node::pointer _node ) {
-            level_flag = ( _node->data->getLevel() > current->data->getLevel() );
+            level_flag = ( _node->data->getLevel() > current->data->getLevel() );/*do not modify it to <*/
             return ( nullptr == _node->right ) || ( _node->data->getLevel() <= current->data->getLevel() );
           } );
           if ( temp != root ) {

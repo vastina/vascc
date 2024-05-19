@@ -5,6 +5,7 @@
 #include "base/x86.hpp"
 #include "stmt.hpp"
 #include "symbol.hpp"
+#include <stack>
 #include <vector>
 
 namespace vastina {
@@ -18,7 +19,7 @@ public:
     typedef struct lc_
     {
       u32 lc {};     //.LC
-      u32 pos { 1 }; // pos in buffer and 0 is file start
+      u32 pos { 1 }; // pos in buffer and 0 is x86::file_start
     } lc_;
     lc_ loc {};
     typedef struct lf_
@@ -27,7 +28,11 @@ public:
       u32 pos {};
     } lf_;
     lf_ lf {};  //.LFB .LFE
-    u32 jmp {}; //.L
+    typedef struct jmp_{
+      std::stack<u32> history {};
+      u32 current {};
+    } jmp_;
+    jmp_ jmp {};
   } counter;
 
 protected:
@@ -46,14 +51,15 @@ protected:
 
 public:
   Generator() = delete;
-  Generator( Stmt::pointer current_stmt, Scope::pointer scope )
-    : current_stmt_( current_stmt ), scope_( scope )
-  {}
+  Generator( Stmt::pointer current_stmt, Scope::pointer scope ) : current_stmt_( current_stmt ), scope_( scope ) {}
 
 protected:
-  i32 doGenerate( Stmt::pointer );
+  void doGenerate( Stmt::pointer );
 
 protected:
+  void IfStart( IfStmt::pointer );
+  void IfEnd( );
+  void LoopW( LoopStmt::pointer );
   void FuncStart( FdeclStmt::pointer );
   void FuncEnd( FdeclStmt::pointer );
   void Vdecl( VdeclStmt::pointer );

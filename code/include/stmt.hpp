@@ -65,6 +65,7 @@ public:
   };
   // CondStmt
   virtual void setCondition( Stmt::pointer ) {}
+  virtual Stmt::pointer getCondition() const { return nullptr; }
   // VdeclStmt
   virtual void InitWithStmt( Stmt::pointer ) {}
   virtual Stmt::pointer getIniter() const { return nullptr; }
@@ -195,8 +196,9 @@ public:
   CondStmt( Stmt::pointer parent ) : CompoundStmt( parent ) {}
   CondStmt( Stmt::pointer parent, BinStmt::pointer cond ) : CompoundStmt( parent ), condition_( cond ) {}
   void setCondition( Stmt::pointer ) override;
+  Stmt::pointer getCondition() const override { return condition_; }
 
-  STMTTYPE StmtType() const override;
+  virtual STMTTYPE StmtType() const override;
   string_view getName() const override;
   void walk() const override;
 };
@@ -230,7 +232,7 @@ public:
   IfStmt( Stmt::pointer parent ) : CondStmt( parent ) {}
   IfStmt( Stmt::pointer parent, BinStmt::pointer cond ) : CondStmt( parent, cond ) {}
 
-  STMTTYPE StmtType() const override;
+  STMTTYPE StmtType() const override final;
   string_view getName() const override;
   void walk() const override;
 };
