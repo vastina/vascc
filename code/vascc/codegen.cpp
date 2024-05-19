@@ -33,9 +33,7 @@ void Generator::doGenerate( Stmt::pointer stmt )
 {
   switch ( stmt->StmtType() ) {
     case STMTTYPE::Return: {
-      Binary( dynamic_cast<BinStmt::pointer>( stmt->getStmt() ), false );
-      poper( x86::rax );
-      // todo clean
+      RetGen( dynamic_cast<RetStmt::pointer>( stmt ) );
       break;
     }
     case STMTTYPE::Fdecl: {
@@ -112,6 +110,17 @@ void Generator::doGenerate( Stmt::pointer stmt )
   }
 }
 
+void Generator::RetGen( RetStmt::pointer stmt ){
+  if( nullptr != stmt->getStmt() ){
+    Binary( dynamic_cast<BinStmt::pointer>( stmt->getStmt() ), false );
+    poper( x86::rax );
+  }
+
+  auto fdecl = stmt->getParent();
+  while(fdecl->StmtType() != STMTTYPE::Fdecl) fdecl = fdecl->getParent();
+  doFuncEnd(dynamic_cast<FdeclStmt::pointer>(fdecl));
+}
+
 void Generator::IfStart( IfStmt::pointer stmt )
 {
   auto conditon { dynamic_cast<BinStmt::pointer>( stmt->getStmt() ) };
@@ -119,9 +128,9 @@ void Generator::IfStart( IfStmt::pointer stmt )
   poper( x86::rax );
 
   filer_->PushBack( x86::Threer( x86::cmpq, x86::constant( 0 ), x86::rax ) );
-  filer_->PushBack( x86::Twoer( x86::jne, std::format( ".L{}", counter_.jmp.current + 1 ) ) );
-  filer_->PushBack( std::format( ".L{}:\n", counter_.jmp.current ) );
-  counter_.jmp.history.push( ++counter_.jmp.current );
+  filer_->PushBack( x86::Twoer( x86::je, std::format( ".L{}", counter_.jmp.current + 1 ) ) );
+  filer_->PushBack( std::format( ".L{}:\n", counter_.jmp.current++ ) );
+  counter_.jmp.history.push( counter_.jmp.current++ );
 }
 
 void Generator::IfEnd()
@@ -149,13 +158,19 @@ void Generator::FuncStart( FdeclStmt::pointer stmt )
 
 void Generator::FuncEnd( FdeclStmt::pointer stmt )
 {
+  doFuncEnd(stmt);
+  filer_->PushBack( x86::func_declare_end( counter_.lf.lfbe++, stmt->getFunc()->getSrcloc().name ) );
+  counter_.rsp.current = 0;
+}
+
+void Generator::doFuncEnd( FdeclStmt::pointer stmt ){
+  Clean();
   if ( stmt->getFunc()->getSrcloc().token == TOKEN::MAIN ) {
     filer_->PushBack( x86::main_func_end );
   } else {
-    ParamClean( stmt->getFunc()->getParams() );
+    //ParamClean( stmt->getFunc()->getParams() );
     filer_->PushBack( x86::func_end );
   }
-  filer_->PushBack( x86::func_declare_end( counter_.lf.lfbe++, stmt->getFunc()->getSrcloc().name ) );
 }
 
 void Generator::Vdecl( VdeclStmt::pointer stmt )
@@ -208,7 +223,7 @@ void Generator::Vdecl( VdeclStmt::pointer stmt )
   if ( var->ty_.isParam )
     return;
 
-  auto type { var->getType() };
+  const auto type { var->getType() };
   switch ( type ) {
     case TOKEN::CHAR:
     case TOKEN::INT:
@@ -219,9 +234,9 @@ void Generator::Vdecl( VdeclStmt::pointer stmt )
       if ( nullptr != stmt->getStmt() ) {
         Binary( dynamic_cast<BinStmt::pointer>( stmt->getStmt() ), false );
       } else {
-        pusher( x86::rax ); // random value in rax
+        pusher( x86::rax ); // some value in rax
       }
-      var->stack.offset = counter_.rsp - sizeof( long ); // -offset(%rbp)
+      var->stack.offset = counter_.rsp.current - sizeof( long ); // -offset(%rbp)
       break;
     }
     default:
@@ -238,7 +253,7 @@ void Generator::Params( const std::vector<Variable::pointer>& paras )
   for ( ; pos > 5; pos-- ) {}
   do {
     pusher( x86::regs_for_call[pos] );
-    paras.at( pos )->stack.offset = counter_.rsp - sizeof( long );
+    paras.at( pos )->stack.offset = counter_.rsp.current - sizeof( long );
   } while ( pos-- );
 }
 
@@ -417,8 +432,8 @@ void Generator::doBinary( BinExpr::Node::pointer node )
         }
         case TOKEN::EQUAL: {
           return helper( node, [this] {
-            writer()->PushBack( x86::Threer( x86::cmpq, tlr_, trr_ ) );
             writer()->PushBack( x86::to_zero( x86::rax ) );
+            writer()->PushBack( x86::Threer( x86::cmpq, tlr_, trr_ ) );
             writer()->PushBack( x86::Twoer( x86::sete, x86::al ) );
           } );
         }
@@ -532,17 +547,15 @@ void Generator::doBinary( BinExpr::Node::pointer node )
           doCallee( callee );
           if ( !dynamic_cast<Function::pointer>(callee->getValue())->ty_.isVoid_ ) {
             pusher( x86::rax );
-            // filer_->PushBack( x86::Twoer( x86::pushq, x86::rax ) );
           }
           return;
         }
         case TOKEN::NUMBER: {
           // todo
-          const auto val { std::stol( node->data->getToken().name.data() ) };
-          writer()->PushBack( x86::Threer( x86::movq, std::format( "${}", val ), x86::rax ) );
+          //const auto val { std::stol( node->data->getToken().name.data() ) };
+          writer()->PushBack( x86::Threer( x86::movq, std::format( "${}", node->data->getToken().name ), x86::rax ) );
 
           return pusher( x86::rax );
-          // return (void)writer()->PushBack( x86::Twoer( x86::pushq, x86::rax ) );
         }
         case TOKEN::STRING:
           filer_->Insert( counter_.loc.pos++,
@@ -583,7 +596,7 @@ void Generator::poper( const string_view& reg )
 {
   filer_->PushBack( x86::Threer( x86::movq, x86::regIndirect( "8", x86::rsp ), reg ) );
   filer_->PushBack( x86::Threer( x86::addq, x86::constant( 16 ), x86::rsp ) );
-  counter_.rsp -= 16;
+  counter_.rsp.current -= 16;
 }
 
 // reg or constant
@@ -591,7 +604,11 @@ void Generator::pusher( const string_view& reg )
 {
   filer_->PushBack( x86::Threer( x86::subq, x86::constant( 16 ), x86::rsp ) );
   filer_->PushBack( x86::Threer( x86::movq, reg, x86::regIndirect( "8", x86::rsp ) ) );
-  counter_.rsp += 16;
+  counter_.rsp.current += 16;
+}
+
+void Generator::Clean(){
+  filer_->PushBack(x86::Threer( x86::addq, x86::constant( counter_.rsp.current ), x86::rsp ));
 }
 
 }; // namespace vastina

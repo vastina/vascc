@@ -15,7 +15,11 @@ class Generator
 public:
   typedef struct counter
   {
-    u32 rsp {};
+    typedef struct rsp_{
+      //std::stack<u32> backup {};
+      u32 current {};
+    } rsp_;
+    rsp_ rsp {};
     typedef struct lc_
     {
       u32 lc {};     //.LC
@@ -58,11 +62,13 @@ protected:
   void doGenerate( Stmt::pointer );
 
 protected:
+  void RetGen( RetStmt::pointer );
   void IfStart( IfStmt::pointer );
   void IfEnd();
   void LoopW( LoopStmt::pointer );
   void FuncStart( FdeclStmt::pointer );
   void FuncEnd( FdeclStmt::pointer );
+  void doFuncEnd( FdeclStmt::pointer );
   void Vdecl( VdeclStmt::pointer );
   void Binary( BinStmt::pointer, bool );
   void doBinary( BinExpr::Node::pointer );
@@ -74,6 +80,7 @@ protected:
 protected:
   void poper( const string_view& );
   void pusher( const string_view& );
+  void Clean();
 
 public:
   void Generate( const string_view& );

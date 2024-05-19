@@ -13,5 +13,7 @@ int closet (int x, int y, int z, int target){
 }
 
 int main (){
-    return closet(2, 4, 8, 16);
+    printf("%d\n", closet(2, 4, 8, 16));
+
+    return 0;
 }
