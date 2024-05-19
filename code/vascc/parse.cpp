@@ -1,5 +1,7 @@
 #include "parse.hpp"
 #include "base/log.hpp"
+#include "expr.hpp"
+#include "stmt.hpp"
 
 #include <queue>
 
@@ -78,6 +80,9 @@ i32 Parser::Parse()
         EXCEPT_ZERO( Ret );
         break;
       }
+      case P_TOKEN::GOTO:{
+        EXCEPT_ZERO( Goto );
+      }
       case P_TOKEN::END: {
         break;
       }
@@ -106,6 +111,26 @@ i32 Parser::Parse()
   while ( scope_->getParent() != nullptr )
     scope_ = scope_->getParent();
   scope_->reSet();
+
+  return 0;
+}
+
+i32 Parser::Goto(){
+  // again, use ref only, no copy
+  const auto& tk {PeekPrtat(CurrentToken().start)};
+  switch (tk.token) {
+    case TOKEN::BREAK:
+    case TOKEN::CONTINUE:{
+      current_stmt_->addChildren(new BcStmt(current_stmt_, new OpExpr(tk)));
+      Next();
+      break;
+    }
+    case TOKEN::SWITCH:
+    case TOKEN::CASE:
+    default:
+    // leave sth?
+      break;
+  }
 
   return 0;
 }
@@ -171,8 +196,9 @@ i32 Parser::Ifer()
 
 i32 Parser::Loop()
 {
+  auto with_do { PeekPrtat(CurrentToken().start).token == TOKEN::DO };
   Next();
-  auto lstmt = new LoopStmt( current_stmt_, Binary( { CurrentToken().start, CurrentToken().end } ) );
+  auto lstmt = new LoopStmt( current_stmt_, Binary( { CurrentToken().start, CurrentToken().end } ), with_do );
   current_stmt_->addChildren( lstmt );
   current_stmt_ = lstmt;
   scope_ = scope_->getNextChild();

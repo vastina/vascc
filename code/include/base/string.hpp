@@ -42,6 +42,8 @@ inline bool Strcmp( const std::string& buffer, u32 offset, const string_view& te
 inline const_str_t p_token_str( P_TOKEN ptk )
 {
   switch ( ptk ) {
+    case P_TOKEN::GOTO:
+      return "goto";
     case P_TOKEN::BINARY:
       return "binary";
     case P_TOKEN::FDECL:

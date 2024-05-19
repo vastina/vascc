@@ -59,6 +59,7 @@ private:
   i32 Ifer();
   i32 Loop();
   i32 Binary();
+  i32 Goto();
 
   BinStmt::pointer Binary( range_t );
   CallExpr::pointer Callee( u32 );

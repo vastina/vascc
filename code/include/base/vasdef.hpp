@@ -292,6 +292,7 @@ enum class P_TOKEN
   LOOP,
   CALL,
   RET,
+  GOTO, //goto is not goto
   END
 };
 

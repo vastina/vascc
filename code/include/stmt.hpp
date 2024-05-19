@@ -22,8 +22,11 @@ enum class STMTTYPE
   Vdecl,
   Binary,
   Cond,
+  GOTO,
+  BC,
   If,
   Loop,
+  FOR,  //ok, use this for for
   Return,
   Call
 };
@@ -70,6 +73,8 @@ public:
   virtual Function::pointer getFunc() const { throw "donot call this"; }
   virtual Variable::pointer getVar() const { throw "donot call this"; }
 
+  virtual bool getState() const { throw "donot call this"; }
+
   // for test
   virtual string_view for_test_getName() const { throw "donot call this"; };
   virtual void walk() const { throw "donot call this"; }
@@ -91,9 +96,9 @@ public:
   void addChildren( Stmt::pointer, i32 ) override;
   const Stmts& getChildren() const override;
 
-  STMTTYPE StmtType() const override;
-  string_view for_test_getName() const override;
-  void walk() const override;
+  virtual STMTTYPE StmtType() const override;
+  virtual string_view for_test_getName() const override;
+  virtual void walk() const override;
 };
 //--------------compound
 // statements------------------------------------------------------------------------------------
@@ -184,8 +189,8 @@ public:
   Stmt::pointer getStmt() const override { return condition_; }
 
   virtual STMTTYPE StmtType() const override;
-  string_view for_test_getName() const override;
-  void walk() const override;
+  virtual string_view for_test_getName() const override;
+  virtual void walk() const override;
 };
 //--------------condition
 // statement------------------------------------------------------------------------------------
@@ -196,9 +201,10 @@ class LoopStmt : public CondStmt
 {
 
 protected:
+  bool with_do_ {};
 public:
-  LoopStmt( Stmt::pointer parent ) : CondStmt( parent ) {}
-  LoopStmt( Stmt::pointer parent, BinStmt::pointer cond ) : CondStmt( parent, cond ) {}
+  LoopStmt( Stmt::pointer parent, BinStmt::pointer cond, bool with_do ) : CondStmt( parent, cond ), with_do_(with_do) {}
+  bool getState() const override { return with_do_; }
 
   STMTTYPE StmtType() const override;
   string_view for_test_getName() const override;
@@ -258,6 +264,39 @@ public:
   STMTTYPE StmtType() const override;
   string_view for_test_getName() const override;
   void walk() const override;
+};
+
+// this is not goto, for switch
+class GotoStmt : public CompoundStmt {
+public:
+  using pointer = GotoStmt*;
+
+protected:
+  BinStmt::pointer entry;
+
+public:
+
+};
+
+// for break and continue and ...
+class BcStmt : public Stmt {
+public:
+  using pointer = BcStmt*;
+protected:
+  OpExpr::pointer data_;
+
+public:
+  BcStmt( Stmt::pointer parent, OpExpr::pointer op ) : Stmt( parent ), data_( op ) {}
+  ~BcStmt(){
+    delete data_;
+  }
+  Expression::pointer getExpr() const override { return data_; }
+
+  inline STMTTYPE StmtType() const override { return STMTTYPE::BC; };
+  inline string_view for_test_getName() const override { return data_->getToken().name; } ;
+  inline void walk() const override {
+    data_->Walk();
+  };
 };
 
 }; // namespace vastina

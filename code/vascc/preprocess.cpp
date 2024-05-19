@@ -125,19 +125,32 @@ i32 Preprocess::Process()
               print( "peek token: {}\n", (i32)Peek() );
               EXIT_ERROR;
             }
-            break;
+            goto done;
           }
           case TOKEN_TYPE::VALUE: {
             tryNext( TOKEN::SEMICOLON, true );
             results.push_back( { P_TOKEN::BINARY, offset - 1, offset } );
             results.push_back( { P_TOKEN::END, offset, offset + 1 } );
-            break;
+            goto done;
           }
 
+          default:
+            break;
+        }
+        switch ( Current() ) {
+          // case TOKEN::SWITCH:
+          // case TOKEN::CASE:  //todo
+          case TOKEN::CONTINUE:
+          case TOKEN::BREAK:{
+            tryNext( TOKEN::SEMICOLON, true );
+            results.push_back( { P_TOKEN::GOTO, offset - 1, offset } );
+            break;
+          }
           default:
             TEMP_LOG;
             EXIT_ERROR;
         }
+        done:{}
       }
     }
   }

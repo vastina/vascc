@@ -109,13 +109,13 @@ public:
   {
     switch ( order ) {
       case walk_order::PREORDER:
-        PreOrder( details, this, {}, {} );
+        PreOrder( details, this, []{}, []{} );
         break;
       case walk_order::INORDER:
-        InOrder( details, this, {}, {} );
+        InOrder( details, this, []{}, []{} );
         break;
       case walk_order::POSTORDER:
-        PostOrder( details, this, {}, {} );
+        PostOrder( details, this, []{}, []{} );
         break;
       default:
         break;

@@ -51,14 +51,25 @@ void Generator::doGenerate( Stmt::pointer stmt )
       scope_ = scope_->getNextChild();
       break;
     }
-    // break is not supported now actually
     case STMTTYPE::Loop: {
+      auto lstmt { dynamic_cast<LoopStmt::pointer>(stmt) };
+      if(lstmt->getState()){  //with_do_
+        //LoopD
+      } else {
+        LoopWStart( lstmt );
+      }
       scope_ = scope_->getNextChild();
       break;
+    }
+    case STMTTYPE::FOR: {
+
     }
     case STMTTYPE::Compound: {
       if ( nullptr != scope_->getParent() )
         scope_ = scope_->getNextChild();
+    }
+    case STMTTYPE::BC:{
+
     }
     case STMTTYPE::Cond:
     default:
@@ -95,8 +106,20 @@ void Generator::doGenerate( Stmt::pointer stmt )
       break;
     }
     case STMTTYPE::Loop: {
+      if(dynamic_cast<LoopStmt::pointer>(stmt)->getState()){ //with_do_
+        //LoopD
+      } else {
+        LoopWEnd();
+      }
       scope_ = scope_->getParent();
       break;
+    }
+    case STMTTYPE::BC: {
+      if(TOKEN::BREAK == stmt->getExpr()->getToken().token){
+        filer_->PushBack(x86::Twoer(x86::jmp, std::format(".L{}", counter_.go.goout)));
+      } else if(TOKEN::CONTINUE == stmt->getExpr()->getToken().token){
+        filer_->PushBack(x86::Twoer(x86::jmp, std::format(".L{}", counter_.go.goback)));
+      }
     }
     default:
       break;
@@ -134,7 +157,34 @@ void Generator::IfEnd()
   counter_.jmp.history.pop();
 }
 
-void Generator::LoopW( LoopStmt::pointer ) {}
+
+void Generator::LoopWStart( LoopStmt::pointer stmt )
+{
+  counter_.go.goback = counter_.jmp.current;
+  filer_->PushBack(std::format(".L{}:\n", counter_.jmp.current++));
+  auto condition { dynamic_cast<BinStmt::pointer>( stmt->getStmt() ) };
+  Binary(condition, false);
+  poper(x86::rax);
+
+  filer_->PushBack( x86::Threer( x86::cmpq, x86::constant( 0 ), x86::rax ) );
+  filer_->PushBack( x86::Twoer( x86::je, std::format( ".L{}", counter_.jmp.current + 1 ) ) );
+  filer_->PushBack( std::format( ".L{}:\n", counter_.jmp.current++ ) );
+  counter_.go.goout = counter_.jmp.current;
+  counter_.go.backup.push(std::make_pair(counter_.go.goback, counter_.go.goout));
+  counter_.jmp.history.push( counter_.jmp.current++ );
+}
+
+void Generator::LoopWEnd()
+{
+  
+  counter_.go.goback = counter_.go.backup.top().first;
+  counter_.go.goout = counter_.go.backup.top().second;
+  counter_.go.backup.pop();
+  filer_->PushBack(x86::Twoer(x86::jmp, std::format(".L{}", counter_.go.goback)));
+  
+  filer_->PushBack( std::format( ".L{}:\n", u32 { counter_.jmp.history.top() } ) );
+  counter_.jmp.history.pop();
+}
 
 void Generator::FuncStart( FdeclStmt::pointer stmt )
 {
@@ -435,8 +485,8 @@ void Generator::doBinary( BinExpr::Node::pointer node )
         }
         case TOKEN::NOTEQUAL: {
           return helper( node, [this] {
-            writer()->PushBack( x86::Threer( x86::cmpq, tlr_, trr_ ) );
             writer()->PushBack( x86::to_zero( x86::rax ) );
+            writer()->PushBack( x86::Threer( x86::cmpq, tlr_, trr_ ) );
             writer()->PushBack( x86::Twoer( x86::setne, x86::al ) );
           } );
         }
