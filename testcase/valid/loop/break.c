@@ -9,7 +9,7 @@ int main() {
     if( input == 1 ){
       break;
     }
-    if( input%2 != 0 ){
+    if( !(input%2 == 0) ){
       input = 3*input + 1;
     }
     time = time+1;

@@ -445,14 +445,14 @@ void Generator::doBinary( BinExpr::Node::pointer node )
           return nullptr == node->left ? single_op( node->right,
                                                     [this] {
                                                       poper( trr_ );
-                                                      writer()->PushBack( x86::Threer( x86::testq, trr_, trr_ ) );
                                                       writer()->PushBack( x86::to_zero( x86::rax ) );
+                                                      writer()->PushBack( x86::Threer( x86::testq, trr_, trr_ ) );
                                                       writer()->PushBack( x86::Twoer( x86::sete, x86::al ) );
                                                     } )
                                        : single_op( node->left, [this] {
                                            poper( tlr_ );
-                                           writer()->PushBack( x86::Threer( x86::testq, tlr_, tlr_ ) );
                                            writer()->PushBack( x86::to_zero( x86::rax ) );
+                                           writer()->PushBack( x86::Threer( x86::testq, tlr_, tlr_ ) );
                                            writer()->PushBack( x86::Twoer( x86::sete, x86::al ) );
                                          } );
           // so how to tell clang-format not do this?
@@ -460,7 +460,7 @@ void Generator::doBinary( BinExpr::Node::pointer node )
         case TOKEN::LOGOR: {
           return helper( node, [this] {
             writer()->PushBack( x86::Threer( x86::orq, trr_, tlr_ ) );
-            // writer()->PushBack( x86::Threer( x86::movq, tlr_, x86::rax ) );
+            writer()->PushBack( x86::to_zero( x86::rax ) );
             writer()->PushBack( x86::Threer( x86::testq, tlr_, tlr_ ) );
             writer()->PushBack( x86::Twoer( x86::setne, x86::al ) );
             writer()->PushBack( x86::Threer( x86::movzbl, x86::al, x86::eax ) );
@@ -468,6 +468,7 @@ void Generator::doBinary( BinExpr::Node::pointer node )
         }
         case TOKEN::LOGAND: {
           return helper( node, [this] {
+            writer()->PushBack( x86::to_zero( x86::rax ) );
             writer()->PushBack( x86::Threer( x86::testq, tlr_, tlr_ ) );
             writer()->PushBack( x86::Twoer( x86::setne, x86::r13b ) );
             writer()->PushBack( x86::Threer( x86::testq, trr_, trr_ ) );
