@@ -1,6 +1,5 @@
 #include "symbol.hpp"
 #include "base/log.hpp"
-#include "base/vasdef.hpp"
 
 namespace vastina {
 

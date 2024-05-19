@@ -3,7 +3,6 @@
 
 #include <functional>
 #include <iostream>
-#include <memory>
 
 enum class walk_order
 {
@@ -16,13 +15,13 @@ namespace vastina {
 
 template<typename ty>
 // it's actually just a binary tree
-class TreeNode : public std::enable_shared_from_this<TreeNode<ty>>
+class TreeNode //: public std::enable_shared_from_this<TreeNode<ty>>
 {
 
 public:
   using node = TreeNode<ty>;
-  using pointer = TreeNode<ty>*;
-  using nodeptr = std::shared_ptr<TreeNode<ty>>;
+  using pointer = node*;
+  //  using nodeptr = std::shared_ptr<node>;
 
 public:
   ty data;
@@ -36,10 +35,10 @@ public:
 
 private:
   inline void InOrder(
-    std::function<void( const ty& data_ )> visit,
+    const std::function<void( const ty& data_ )>& visit,
     pointer root,
-    std::function<void()> leftmark = [] { std::cout << "go left\n"; },
-    std::function<void()> rightmark = [] { std::cout << "go right\n"; } )
+    const std::function<void()>& leftmark = [] { std::cout << "go left\n"; },
+    const std::function<void()>& rightmark = [] { std::cout << "go right\n"; } )
   {
     if ( root->left != nullptr ) {
       leftmark();
@@ -52,10 +51,10 @@ private:
     }
   }
   inline void PreOrder(
-    std::function<void( const ty& data_ )> visit,
+    const std::function<void( const ty& data_ )>& visit,
     pointer root,
-    std::function<void()> leftmark = [] { std::cout << "go left\n"; },
-    std::function<void()> rightmark = [] { std::cout << "go right\n"; } )
+    const std::function<void()>& leftmark = [] { std::cout << "go left\n"; },
+    const std::function<void()>& rightmark = [] { std::cout << "go right\n"; } )
   {
     visit( root->data );
     if ( root->left != nullptr ) {
@@ -72,10 +71,10 @@ private:
     }
   }
   inline void PostOrder(
-    std::function<void( const ty& data_ )> visit,
+    const std::function<void( const ty& data_ )>& visit,
     pointer root,
-    std::function<void()> leftmark = [] { std::cout << "go left\n"; },
-    std::function<void()> rightmark = [] { std::cout << "go right\n"; } )
+    const std::function<void()>& leftmark = [] { std::cout << "go left\n"; },
+    const std::function<void()>& rightmark = [] { std::cout << "go right\n"; } )
   {
     if ( root->left != nullptr ) {
       leftmark();
@@ -110,13 +109,13 @@ public:
   {
     switch ( order ) {
       case walk_order::PREORDER:
-        PreOrder( details, this );
+        PreOrder( details, this, {}, {} );
         break;
       case walk_order::INORDER:
-        InOrder( details, this );
+        InOrder( details, this, {}, {} );
         break;
       case walk_order::POSTORDER:
-        PostOrder( details, this );
+        PostOrder( details, this, {}, {} );
         break;
       default:
         break;
@@ -212,7 +211,15 @@ public:
     this->parent = target;
     target->right = this;
   }
-}; // This one should be modified after the completion of <ty, lty, rty>
+  inline static void deletenode( pointer node )
+  {
+    if ( nullptr != node->left )
+      deletenode( node->left );
+    if ( nullptr != node->right )
+      deletenode( node->right );
+    delete node;
+  }
+};
 
 // template <typename ty, //root type
 //         typename lty,  //left type

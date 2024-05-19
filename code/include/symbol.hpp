@@ -5,7 +5,6 @@
 
 #include "base/vasdef.hpp"
 
-#include <memory>
 #include <unordered_map>
 #include <vector>
 
@@ -57,7 +56,7 @@ protected:
 public:
   using pointer = Value*;
   Value( const SourceLocation& srcloc, TOKEN type ) : Srcloc_( srcloc ), type_( type ) {}
-  ~Value() = default;
+  virtual ~Value() = default;
   virtual const SourceLocation& getSrcloc() const { return Srcloc_; }
   virtual void setLocation() {}
 
@@ -143,8 +142,14 @@ typedef struct SymbolTable
   {}
   ~SymbolTable()
   {
+    for ( auto&& var : *Variables )
+      delete var.second;
+    for ( auto&& fun : *functions )
+      delete fun.second;
     Variables->clear();
     functions->clear();
+    delete Variables;
+    delete functions;
   }
 
   void useBuiltin();
@@ -209,7 +214,6 @@ class Scope
 {
 public:
   using pointer = Scope*;
-  using ScopePtr = std::shared_ptr<Scope>;
 
 private:
   pointer parent_; // if can't find symbol, ask parent
@@ -224,6 +228,17 @@ public:
   Scope() = delete;
   Scope( range_t&& r ) : parent_( nullptr ), r_( r ), st_( new SymbolTable() ), children_() {}
   Scope( pointer parent, range_t&& r ) : parent_( parent ), r_( r ), st_( new SymbolTable() ), children_() {}
+  ~Scope()
+  {
+    children_.clear();
+    delete st_;
+  }
+  inline static void deleteScope( Scope::pointer scope )
+  {
+    for ( auto&& child : scope->getChildren() )
+      deleteScope( child );
+    delete scope;
+  }
 
   void addVar( const string_view&, Variable::pointer );
   void addFunc( const string_view&, Function::pointer );

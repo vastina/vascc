@@ -1,13 +1,6 @@
 #include "lexer.hpp"
 #include "base/log.hpp"
-#include "base/string.hpp"
-#include "base/vasdef.hpp"
-#include "symbol.hpp"
-
-#include <cstdlib>
-#include <exception>
 #include <fstream>
-#include <functional>
 
 namespace vastina {
 
@@ -37,6 +30,7 @@ lexer::lexer( const char* filename )
 
 lexer::~lexer()
 {
+  buffer.clear();
   tokens.clear();
 };
 

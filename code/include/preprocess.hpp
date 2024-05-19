@@ -27,7 +27,7 @@ public:
   using pointer = Preprocess*;
 
 private:
-  std::vector<token_t>& primary_tokens;
+  const std::vector<token_t>& primary_tokens;
   u32 offset;
 
   std::vector<p_token_t> results;
@@ -36,9 +36,10 @@ private:
   Scope::pointer current_scope;
 
 public:
-  Preprocess( std::vector<token_t>& tks ) : primary_tokens( tks ), offset(), current_scope( new Scope( { 0, 0 } ) )
+  Preprocess( const std::vector<token_t>& tks )
+    : primary_tokens( tks ), offset(), current_scope( new Scope( { 0, 0 } ) )
   {}
-  Preprocess( std::vector<token_t>& tks, Scope::pointer self ) : primary_tokens( tks ), offset()
+  Preprocess( const std::vector<token_t>& tks, Scope::pointer self ) : primary_tokens( tks ), offset()
   {
     current_scope = self;
   };

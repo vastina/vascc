@@ -2,11 +2,8 @@
 #include "codegen.hpp"
 #include "lexer.hpp"
 #include "parse.hpp"
-#include "symbol.hpp"
 
 #include <cstring>
-#include <iostream>
-#include <memory>
 #include <queue>
 
 // const static before_main_t before_main = before_main_t();
@@ -26,24 +23,24 @@ int main( int argc, char* argv[] )
                "--------\n";
   lx.Parse();
 
-  auto tks = std::make_unique<std::vector<token_t>>( lx.getTokens() );
-  for ( u32 i = 0; i < tks->size(); i++ ) {
+  const auto tks { lx.getTokens() };
+  for ( u32 i = 0; i < tks.size(); i++ ) {
     print( "offset:{}, \ttoken:{} \ttokenid:{}, \tline:{}\n",
            i,
-           tks->at( i ).name,
-           (i32)tks->at( i ).token,
-           tks->at( i ).line );
+           tks.at( i ).name,
+           (i32)tks.at( i ).token,
+           tks.at( i ).line );
   }
   std::cout << "--------------------------preprocess-result-----------------"
                "--------\n";
-  auto pp = Preprocess( *tks, lx.getScope() );
+  auto pp = Preprocess( tks, lx.getScope() );
   pp.Process();
 
   for ( u32 i = 0; i < pp.getSize(); i++ ) {
     auto& next = pp.getNext();
     print( "offset: {}\nProcessedTokenType: {}\nstr:\t\"", i, p_token_str( next.tk ) );
     for ( u32 j = next.start; j < next.end; j++ ) {
-      std::cout << tks->at( j ).name << ' ';
+      std::cout << tks.at( j ).name << ' ';
     }
     std::cout << "\"\n";
   }
@@ -71,7 +68,7 @@ int main( int argc, char* argv[] )
   std::cout << "--------------------------Parser----------------------------"
                "--------\n";
 
-  auto psr { Parser( *tks.get(), pp.getResult(), pp.CurrentScope() ) };
+  auto psr { Parser( tks, pp.getResult(), pp.CurrentScope() ) };
   (void)psr.Parse();
   psr.DfsWalk();
 

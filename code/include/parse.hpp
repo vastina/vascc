@@ -2,7 +2,6 @@
 #define _PARSE_H_
 
 #include "base/vasdef.hpp"
-#include "expr.hpp"
 #include "stmt.hpp"
 #include "symbol.hpp"
 #include <vector>
@@ -39,6 +38,7 @@ public:
     , current_stmt_( new CompoundStmt( nullptr ) )
     , scope_( scope )
   {}
+  ~Parser() = default;
 
 public:
   void BfsWalk();

@@ -1,6 +1,5 @@
 #include "base/x86.hpp"
 #include "base/log.hpp"
-#include "base/string.hpp"
 
 namespace vastina {
 
@@ -10,7 +9,7 @@ std::string x86::to_lower( std::string reg )
   if ( CharType( reg[1] ) == CHARTYPE::NUM ) {
     if ( reg.size() == 3 )
       return std::string( reg ).append( "d" );
-    switch ( reg[3] ) {
+    switch ( char { reg.back() } ) {
       case 'd':
         return reg.substr( 0, 3 ).append( "w" );
       case 'w':

@@ -18,7 +18,7 @@ protected:
 
 public:
   Buffer();
-  ~Buffer();
+  virtual ~Buffer();
   u32 PushBack( const std::string& str );
   u32 PushBack( const string_view& str );
   u32 PushBack( const char* str );
@@ -44,7 +44,7 @@ protected:
 
 public:
   Filer( const string_view& file_name );
-  ~Filer();
+  virtual ~Filer();
 
   const Reader& reader() const;
   const Writer& writer() const;

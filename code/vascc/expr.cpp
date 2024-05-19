@@ -1,9 +1,4 @@
 #include "expr.hpp"
-#include "base/Tree.hpp"
-#include "base/vasdef.hpp"
-#include "symbol.hpp"
-#include <iostream>
-#include <vector>
 
 namespace vastina {
 

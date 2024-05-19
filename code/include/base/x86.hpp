@@ -10,6 +10,7 @@ class x86
 {
 public:
   x86( ... ) = delete;
+  ~x86() = default;
 
 public:
   const_str_t rsp { "%rsp" };
@@ -184,7 +185,7 @@ public:
   static std::string func_start( const string_view& func_name, u32 counter );
 
   const_str_t func_end { "\tpopq\t%rbp\n"
-                         "\tret\n"  };
+                         "\tret\n" };
 
   // {} -> counter, {} {} -> func_name
   const_str_t func_declare_end_ { "\t.cfi_endproc\n"
@@ -193,7 +194,7 @@ public:
   static std::string func_declare_end( u32 counter, const string_view& func_name );
 
   const_str_t main_func_end { "\tleave\n"
-                              "\tret\n"  };
+                              "\tret\n" };
 
   // just keep it here
   const_str_t asm_end_str { "\t.section\t.note.GNU-stack,\"\",@progbits\n"

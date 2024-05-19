@@ -1,7 +1,6 @@
 #include "preprocess.hpp"
 #include "base/log.hpp"
 
-#include <functional>
 #include <iostream>
 
 namespace vastina {

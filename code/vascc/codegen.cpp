@@ -1,13 +1,6 @@
 #include "codegen.hpp"
-#include "base/Tree.hpp"
-#include "base/io.hpp"
 #include "base/log.hpp"
-#include "base/vasdef.hpp"
-#include "expr.hpp"
-#include "stmt.hpp"
-#include "symbol.hpp"
 
-#include <algorithm>
 #include <ranges>
 
 namespace vastina {
@@ -110,15 +103,17 @@ void Generator::doGenerate( Stmt::pointer stmt )
   }
 }
 
-void Generator::RetGen( RetStmt::pointer stmt ){
-  if( nullptr != stmt->getStmt() ){
+void Generator::RetGen( RetStmt::pointer stmt )
+{
+  if ( nullptr != stmt->getStmt() ) {
     Binary( dynamic_cast<BinStmt::pointer>( stmt->getStmt() ), false );
     poper( x86::rax );
   }
 
   auto fdecl = stmt->getParent();
-  while(fdecl->StmtType() != STMTTYPE::Fdecl) fdecl = fdecl->getParent();
-  doFuncEnd(dynamic_cast<FdeclStmt::pointer>(fdecl));
+  while ( fdecl->StmtType() != STMTTYPE::Fdecl )
+    fdecl = fdecl->getParent();
+  doFuncEnd( dynamic_cast<FdeclStmt::pointer>( fdecl ) );
 }
 
 void Generator::IfStart( IfStmt::pointer stmt )
@@ -150,7 +145,7 @@ void Generator::FuncStart( FdeclStmt::pointer stmt )
   if ( STMTTYPE::Fdecl == stmt->getParent()->StmtType() ) {
     // todo, func declared in func
   }
-  const auto func_name {stmt->getFunc()->getSrcloc().name};
+  const auto func_name { stmt->getFunc()->getSrcloc().name };
   func_pos = filer_->PushBack( x86::func_declare_start( func_name ) );
   filer_->PushBack( x86::func_start( func_name, counter_.lf.lfbe ) );
   Params( stmt->getFunc()->getParams() );
@@ -158,17 +153,18 @@ void Generator::FuncStart( FdeclStmt::pointer stmt )
 
 void Generator::FuncEnd( FdeclStmt::pointer stmt )
 {
-  doFuncEnd(stmt);
+  doFuncEnd( stmt );
   filer_->PushBack( x86::func_declare_end( counter_.lf.lfbe++, stmt->getFunc()->getSrcloc().name ) );
   counter_.rsp.current = 0;
 }
 
-void Generator::doFuncEnd( FdeclStmt::pointer stmt ){
+void Generator::doFuncEnd( FdeclStmt::pointer stmt )
+{
   Clean();
   if ( stmt->getFunc()->getSrcloc().token == TOKEN::MAIN ) {
     filer_->PushBack( x86::main_func_end );
   } else {
-    //ParamClean( stmt->getFunc()->getParams() );
+    // ParamClean( stmt->getFunc()->getParams() );
     filer_->PushBack( x86::func_end );
   }
 }
@@ -279,7 +275,7 @@ void Generator::Callee( CallStmt::pointer stmt )
 void Generator::doCallee( CallExpr::pointer callee )
 {
   const auto paras { callee->getParas() };
-  const auto func { dynamic_cast<Function::pointer>(callee->getValue()) };
+  const auto func { dynamic_cast<Function::pointer>( callee->getValue() ) };
 
   u32 stack_usage {};
   if ( !paras.empty() ) {
@@ -535,7 +531,8 @@ void Generator::doBinary( BinExpr::Node::pointer node )
         case TOKEN::SYMBOL: {
           auto var { dynamic_cast<Variable::pointer>( node->data->getValue() ) };
           if ( var->ty_.isGlobal ) {
-            writer()->PushBack( x86::Threer( x86::movq, x86::regIndirect( var->getSrcloc().name, x86::rip ), x86::rax ) );
+            writer()->PushBack(
+              x86::Threer( x86::movq, x86::regIndirect( var->getSrcloc().name, x86::rip ), x86::rax ) );
           } else {
             writer()->PushBack( x86::Threer(
               x86::movq, x86::regIndirect( std::format( "-{}", var->stack.offset ), x86::rbp ), x86::rax ) );
@@ -545,15 +542,16 @@ void Generator::doBinary( BinExpr::Node::pointer node )
         case TOKEN::SYMBOLF: {
           auto callee { dynamic_cast<CallExpr::pointer>( node->data ) };
           doCallee( callee );
-          if ( !dynamic_cast<Function::pointer>(callee->getValue())->ty_.isVoid_ ) {
+          if ( !dynamic_cast<Function::pointer>( callee->getValue() )->ty_.isVoid_ ) {
             pusher( x86::rax );
           }
           return;
         }
         case TOKEN::NUMBER: {
           // todo
-          //const auto val { std::stol( node->data->getToken().name.data() ) };
-          writer()->PushBack( x86::Threer( x86::movq, std::format( "${}", node->data->getToken().name ), x86::rax ) );
+          // const auto val { std::stol( node->data->getToken().name.data() ) };
+          writer()->PushBack(
+            x86::Threer( x86::movq, std::format( "${}", node->data->getToken().name ), x86::rax ) );
 
           return pusher( x86::rax );
         }
@@ -607,8 +605,10 @@ void Generator::pusher( const string_view& reg )
   counter_.rsp.current += 16;
 }
 
-void Generator::Clean(){
-  filer_->PushBack(x86::Threer( x86::addq, x86::constant( counter_.rsp.current ), x86::rsp ));
+void Generator::Clean()
+{
+  if ( counter_.rsp.current > 0 )
+    filer_->PushBack( x86::Threer( x86::addq, x86::constant( counter_.rsp.current ), x86::rsp ) );
 }
 
 }; // namespace vastina

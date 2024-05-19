@@ -51,6 +51,7 @@ protected:
 
 public:
   ValExpr( Value::pointer val );
+  ~ValExpr() = default;
   const token_t& getToken() const override { return value_->getSrcloc(); }
   Value::pointer getValue() const override { return value_; }
 
@@ -69,6 +70,7 @@ protected:
 public:
   BinExpr() = default;
   BinExpr( Node::pointer root );
+  ~BinExpr() { Node::deletenode( root_ ); }
 
   const token_t& getToken() const override { return root_->data->getToken(); }
   void setRoot( Node::pointer root );
@@ -88,6 +90,12 @@ protected:
 
 public:
   CallExpr( Value::pointer val );
+  ~CallExpr()
+  {
+    for ( auto&& para : paras_ )
+      delete para;
+    paras_.clear();
+  }
 
   const std::vector<BinExpr::pointer>& getParas() { return paras_; }
   void addPara( Node::pointer val );

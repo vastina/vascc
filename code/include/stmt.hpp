@@ -1,23 +1,14 @@
 #ifndef _STATEMENT_H_
 #define _STATEMENT_H_
 
-#include "base/Tree.hpp"
-#include "base/vasdef.hpp"
 #include "expr.hpp"
 #include "preprocess.hpp"
-#include "symbol.hpp"
 
-#include <memory>
 #include <vector>
 
 namespace vastina {
 
-using std::make_shared;
-using std::shared_ptr;
-
-using TokenPtr = shared_ptr<std::vector<token_t>>;
 using ptokens = std::vector<p_token_t>;
-using pTokenPtr = shared_ptr<ptokens>;
 
 class Stmt;
 using Stmts = std::vector<Stmt*>;
@@ -51,6 +42,13 @@ protected:
 public:
   Stmt( pointer parent ) : parent_( parent ) {}
   pointer getParent() const;
+
+  inline static void deleteStmt( Stmt::pointer stmt )
+  {
+    for ( auto&& child : stmt->getChildren() )
+      deleteStmt( child );
+    delete stmt;
+  }
 
   // for all
   virtual ~Stmt() = default;
@@ -133,7 +131,7 @@ protected:
 
 public:
   BinStmt( Stmt::pointer parent ) : Stmt( parent ), data_( new BinExpr() ) {}
-  ~BinStmt() {}
+  ~BinStmt() { delete data_; }
 
   void setRoot( BinExpr::Node::pointer );
   BinExpr::pointer getExpr() const override;

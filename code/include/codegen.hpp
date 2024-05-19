@@ -4,7 +4,6 @@
 #include "base/io.hpp"
 #include "base/x86.hpp"
 #include "stmt.hpp"
-#include "symbol.hpp"
 #include <stack>
 #include <vector>
 
@@ -15,8 +14,9 @@ class Generator
 public:
   typedef struct counter
   {
-    typedef struct rsp_{
-      //std::stack<u32> backup {};
+    typedef struct rsp_
+    {
+      // std::stack<u32> backup {};
       u32 current {};
     } rsp_;
     rsp_ rsp {};
@@ -57,6 +57,12 @@ protected:
 public:
   Generator() = delete;
   Generator( Stmt::pointer current_stmt, Scope::pointer scope ) : current_stmt_( current_stmt ), scope_( scope ) {}
+  ~Generator()
+  {
+    delete filer_;
+    Scope::deleteScope( scope_ );
+    Stmt::deleteStmt( current_stmt_ );
+  }
 
 protected:
   void doGenerate( Stmt::pointer );
