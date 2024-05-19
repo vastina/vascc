@@ -53,3 +53,6 @@ void findExcept(u32 offst, TOKEN except){
     }
 }
 ```
+
+## 5/19/14
+Stmt(call, decl...)-->Expr(call, decl...)-->Value(var, func, lit)-->primary tokens

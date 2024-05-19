@@ -58,7 +58,6 @@ public:
   using pointer = Value*;
   Value( const SourceLocation& srcloc, TOKEN type ) : Srcloc_( srcloc ), type_( type ) {}
   ~Value() = default;
-  virtual const string_view& getName() const { return Srcloc_.name; }
   virtual const SourceLocation& getSrcloc() const { return Srcloc_; }
   virtual void setLocation() {}
 
@@ -111,13 +110,9 @@ public:
     var_type vty {};
     bool isVoid_ {};
     bool isBuiltin_ {};
-    bool isUseValist_ {};
+    bool isUseValist_ {}; // if use, (int, float, ....) --> paras_.size()==2
   } func_type;
   func_type ty_;
-
-  // bool isVoid_ {};
-  // bool isBuiltin_ {};
-  // bool isUseValist_ {}; // if use, (int, float, ....) --> paras_.size()==2
   // instead of set and get, I think this is better, single thread after all
 public:
   using pointer = Function*;

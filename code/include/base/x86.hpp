@@ -159,8 +159,8 @@ public:
   const_str_t test { "test" };
   const_str_t testq { "testq" };
 
-  constexpr static std::array<const string_view, 6> const regs_for_call{{rdi,  rsi,  rdx,  rcx,  r8, r9 }};
-  //const_str_t regs_for_call[] { rdi, rsi, rdx, rcx, r8, r9 };
+  constexpr static std::array<const string_view, 6> const regs_for_call { { rdi, rsi, rdx, rcx, r8, r9 } };
+  // const_str_t regs_for_call[] { rdi, rsi, rdx, rcx, r8, r9 };
 
   // rax -> eax -> ax -> al
   static std::string to_lower( std::string reg );

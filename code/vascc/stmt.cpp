@@ -12,14 +12,6 @@ Stmt::pointer Stmt::getParent() const
   return parent_;
 }
 
-Stmt::pointer CompoundStmt::getChildat( u32 pos )
-{
-  return children_.at( pos );
-}
-u32 CompoundStmt::getStmtSize()
-{
-  return children_.size();
-}
 const Stmts& CompoundStmt::getChildren() const
 {
   return children_;
@@ -28,9 +20,13 @@ STMTTYPE CompoundStmt::StmtType() const
 {
   return STMTTYPE::Compound;
 }
-string_view CompoundStmt::getName() const
+string_view CompoundStmt::for_test_getName() const
 {
   return "CompoundStmt";
+}
+void CompoundStmt::walk() const
+{
+  print( "Compound\n" );
 }
 
 void CompoundStmt::addChildren( Stmt::pointer child, i32 pos = -1 )
@@ -41,7 +37,7 @@ void CompoundStmt::addChildren( Stmt::pointer child, i32 pos = -1 )
     children_.insert( children_.begin() + pos, child );
 }
 
-void CondStmt::setCondition( Stmt::pointer condtion )
+void CondStmt::setStmt( Stmt::pointer condtion )
 {
   condition_ = dynamic_cast<BinStmt::pointer>( condtion );
 }
@@ -64,7 +60,7 @@ Expression::pointer BinStmt::Creator( const token_t& token, const Scope::pointer
     case TOKEN_TYPE::VALUE:
       if ( TOKEN::SYMBOL == tk ) {
         if ( !scope->varExist( token.name ) ) {
-          print("{}, {}\n", scope->getRange().start, scope->getRange().end);
+          print( "{}, {}\n", scope->getRange().start, scope->getRange().end );
           REPORT_MSG( "var not exist" );
         } else {
           return new ValExpr( scope->getVar( token.name ) );
@@ -99,20 +95,20 @@ STMTTYPE FdeclStmt::StmtType() const
 {
   return STMTTYPE::Fdecl;
 }
-string_view FdeclStmt::getName() const
+string_view FdeclStmt::for_test_getName() const
 {
   return "FdeclStmt";
 }
 void FdeclStmt::walk() const
 {
-  print( "function name: {}\n", func_->getName() );
+  print( "function name: {}\n", func_->getSrcloc().name );
 }
 
 void BinStmt::setRoot( BinExpr::Node::pointer root )
 {
   data_->setRoot( root );
 }
-BinExpr::pointer BinStmt::getData() const
+BinExpr::pointer BinStmt::getExpr() const
 {
   return data_;
 }
@@ -121,7 +117,7 @@ STMTTYPE BinStmt::StmtType() const
 {
   return STMTTYPE::Binary;
 }
-string_view BinStmt::getName() const
+string_view BinStmt::for_test_getName() const
 {
   return "BinStmt";
 }
@@ -135,13 +131,13 @@ STMTTYPE VdeclStmt::StmtType() const
 {
   return STMTTYPE::Vdecl;
 }
-string_view VdeclStmt::getName() const
+string_view VdeclStmt::for_test_getName() const
 {
   return "VdeclStmt";
 }
 void VdeclStmt::walk() const
 {
-  print( "Vdecl, var-name: {}\n", var_->getName() );
+  print( "Vdecl, var-name: {}\n", var_->getSrcloc().name );
   return nullptr == Initer ? print( "not init with val\n" ) : ( [&] {
     print( "init with val, walk initer\n" );
     Initer->walk();
@@ -152,7 +148,7 @@ STMTTYPE CondStmt::StmtType() const
 {
   return STMTTYPE::Cond;
 }
-string_view CondStmt::getName() const
+string_view CondStmt::for_test_getName() const
 {
   return "CondStmt";
 }
@@ -166,7 +162,7 @@ STMTTYPE LoopStmt::StmtType() const
 {
   return STMTTYPE::Loop;
 }
-string_view LoopStmt::getName() const
+string_view LoopStmt::for_test_getName() const
 {
   return "LoopStmt";
 }
@@ -180,7 +176,7 @@ STMTTYPE IfStmt::StmtType() const
 {
   return STMTTYPE::If;
 }
-string_view IfStmt::getName() const
+string_view IfStmt::for_test_getName() const
 {
   return "IfStmt";
 }
@@ -190,7 +186,7 @@ void IfStmt::walk() const
   condition_->walk();
 }
 
-Stmt::pointer RetStmt::getResult() const
+Stmt::pointer RetStmt::getStmt() const
 {
   return result_;
 }
@@ -199,7 +195,7 @@ STMTTYPE RetStmt::StmtType() const
 {
   return STMTTYPE::Return;
 }
-string_view RetStmt::getName() const
+string_view RetStmt::for_test_getName() const
 {
   return "RetStmt";
 }
@@ -213,7 +209,7 @@ STMTTYPE CallStmt::StmtType() const
 {
   return STMTTYPE::Call;
 }
-string_view CallStmt::getName() const
+string_view CallStmt::for_test_getName() const
 {
   return "CallStmt";
 }

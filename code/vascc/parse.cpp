@@ -99,13 +99,13 @@ i32 Parser::Parse()
       if ( current_stmt_->getParent() != nullptr )
         current_stmt_ = current_stmt_->getParent();
     }
-    if( scope_->idchild_ < scope_->getChildren().size() )
-    if( p_offset_ >= scope_->getChildat(scope_->idchild_)->getRange().start){
-      scope_ = scope_->getNextChild();
-      auto newCompound {new CompoundStmt(current_stmt_)};
-      current_stmt_->addChildren( newCompound );
-      current_stmt_ = newCompound;
-    }
+    if ( scope_->idchild_ < scope_->getChildren().size() )
+      if ( p_offset_ >= scope_->getChildat( scope_->idchild_ )->getRange().start ) {
+        scope_ = scope_->getNextChild();
+        auto newCompound { new CompoundStmt( current_stmt_ ) };
+        current_stmt_->addChildren( newCompound );
+        current_stmt_ = newCompound;
+      }
   }
 
   while ( scope_->getParent() != nullptr )
@@ -124,7 +124,7 @@ i32 Parser::Vdecl()
 
   if ( Peek() == P_TOKEN::BINARY ) { // if with sth to init
     Next();
-    vstmt->InitWithStmt( Binary( { CurrentToken().start, CurrentToken().end } ) );
+    vstmt->setStmt( Binary( { CurrentToken().start, CurrentToken().end } ) );
   }
 
   return 0;
@@ -211,7 +211,7 @@ CallExpr::pointer Parser::Callee( u32 pos )
 
 BinStmt::pointer Parser::Binary( range_t r )
 {
-  auto bstmt = new BinStmt( current_stmt_, scope_ );
+  auto bstmt = new BinStmt( current_stmt_ );
   auto start = r.start;
   auto root { ParseBinary( start, r.end ) };
   bstmt->setRoot( root );
@@ -234,15 +234,15 @@ BinExpr::Node::pointer Parser::ParseBinary( u32& offset, const u32 end )
     auto current = BinStmt::nodeCreator( PeekPrtat( offset ), scope_ );
     offset++;
     auto tk = current->data->getToken();
-    switch ( token_type( tk ) ) {
+    switch ( token_type( tk.token ) ) {
       case TOKEN_TYPE::BRAC: {
         //[[fallthrough]] {
         // `fallthrough` attribute only applies to empty statement
-        if ( TOKEN::NRBRAC == tk ) {
+        if ( TOKEN::NRBRAC == tk.token ) {
           root->data->setLevel( Level( TOKEN::SYMBOL ) );
           return root;
         } else {
-          if ( TOKEN_TYPE::BRAC == token_type( root->data->getToken() ) ) {
+          if ( TOKEN_TYPE::BRAC == token_type( root->data->getToken().token ) ) {
             root = ParseBinary( offset, end );
           } else {
             current = ParseBinary( offset, end );
@@ -256,7 +256,7 @@ BinExpr::Node::pointer Parser::ParseBinary( u32& offset, const u32 end )
       }
       I_DONOT_LIKE_THIS:
       case TOKEN_TYPE::VALUE: {
-        if ( current->data->getToken() == TOKEN::SYMBOLF ) {
+        if ( current->data->getToken().token == TOKEN::SYMBOLF ) {
           Next();
           u32 last_offset { p_offset_ };
           current->data = Callee( p_offset_ );
@@ -264,7 +264,7 @@ BinExpr::Node::pointer Parser::ParseBinary( u32& offset, const u32 end )
             offset += Peekat( i ).end - Peekat( i ).start + 1;
           offset--;
         }
-        if ( token_type( root->data->getToken() ) == TOKEN_TYPE::VALUE ) {
+        if ( token_type( root->data->getToken().token ) == TOKEN_TYPE::VALUE ) {
           // for binexpr starts with value
           root = current;
           break;
@@ -282,13 +282,13 @@ BinExpr::Node::pointer Parser::ParseBinary( u32& offset, const u32 end )
         if ( last_is_op )
           current->data->setLevel( Level( TOKEN::SYMBOL ) ); //--
 
-        if ( current->data->getLevel() >=/*do not modify it to >*/ root->data->getLevel() ) {
+        if ( current->data->getLevel() >= /*do not modify it to >*/ root->data->getLevel() ) {
           root->ReplaceByL( current );
           root = current;
         } else {
           bool level_flag { false };
           auto temp = root->FindChildR( [&current, &level_flag]( const BinExpr::Node::pointer _node ) {
-            level_flag = ( _node->data->getLevel() > current->data->getLevel() );/*do not modify it to <*/
+            level_flag = ( _node->data->getLevel() > current->data->getLevel() ); /*do not modify it to <*/
             return ( nullptr == _node->right ) || ( _node->data->getLevel() <= current->data->getLevel() );
           } );
           if ( temp != root ) {
@@ -303,7 +303,7 @@ BinExpr::Node::pointer Parser::ParseBinary( u32& offset, const u32 end )
             temp->InsertRight( current );
         }
 
-        current->data->setLevel( Level( current->data->getToken() ) ); //--
+        current->data->setLevel( Level( current->data->getToken().token ) ); //--
         last_is_op = true;
         break;
       }
@@ -316,7 +316,7 @@ BinExpr::Node::pointer Parser::ParseBinary( u32& offset, const u32 end )
       break;
   }
 
-  switch ( token_type( root->data->getToken() ) ) {
+  switch ( token_type( root->data->getToken().token ) ) {
     case TOKEN_TYPE::VALUE: {
     }
     case TOKEN_TYPE::OPERATOR:
@@ -338,7 +338,7 @@ void Parser::BfsWalk()
     que.pop();
     auto level = quee.front();
     quee.pop();
-    print( "level:{}, name:{}\n", level, stmt->getName() );
+    print( "level:{}, name:{}\n", level, stmt->for_test_getName() );
     stmt->walk();
     for ( auto&& child : stmt->getChildren() ) {
       que.push( child );
@@ -354,7 +354,7 @@ void Parser::DfsWalk()
 
 void Parser::doDfsWalk( Stmt::pointer stmt, u32 level )
 {
-  print( "stmt_name: {}\n", stmt->getName() );
+  print( "stmt_name: {}\n", stmt->for_test_getName() );
   stmt->walk();
   print( stmt->getChildren().size() == 0 ? "" : "children_size: {}\n", stmt->getChildren().size() );
   auto count { 1u };

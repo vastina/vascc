@@ -27,8 +27,9 @@ public:
       u32 lfbe {};
       u32 pos {};
     } lf_;
-    lf_ lf {};  //.LFB .LFE
-    typedef struct jmp_{
+    lf_ lf {}; //.LFB .LFE
+    typedef struct jmp_
+    {
       std::stack<u32> history {};
       u32 current {};
     } jmp_;
@@ -58,7 +59,7 @@ protected:
 
 protected:
   void IfStart( IfStmt::pointer );
-  void IfEnd( );
+  void IfEnd();
   void LoopW( LoopStmt::pointer );
   void FuncStart( FdeclStmt::pointer );
   void FuncEnd( FdeclStmt::pointer );

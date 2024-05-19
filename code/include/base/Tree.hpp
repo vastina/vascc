@@ -36,7 +36,7 @@ public:
 
 private:
   inline void InOrder(
-    std::function<void(const ty& data_)> visit,
+    std::function<void( const ty& data_ )> visit,
     pointer root,
     std::function<void()> leftmark = [] { std::cout << "go left\n"; },
     std::function<void()> rightmark = [] { std::cout << "go right\n"; } )
@@ -52,7 +52,7 @@ private:
     }
   }
   inline void PreOrder(
-    std::function<void(const ty& data_)> visit,
+    std::function<void( const ty& data_ )> visit,
     pointer root,
     std::function<void()> leftmark = [] { std::cout << "go left\n"; },
     std::function<void()> rightmark = [] { std::cout << "go right\n"; } )
@@ -72,7 +72,7 @@ private:
     }
   }
   inline void PostOrder(
-    std::function<void(const ty& data_)> visit,
+    std::function<void( const ty& data_ )> visit,
     pointer root,
     std::function<void()> leftmark = [] { std::cout << "go left\n"; },
     std::function<void()> rightmark = [] { std::cout << "go right\n"; } )
@@ -106,7 +106,7 @@ public:
         break;
     }
   }
-  inline void Travel( walk_order order, std::function<void(const ty& data_)> details )
+  inline void Travel( walk_order order, std::function<void( const ty& data_ )> details )
   {
     switch ( order ) {
       case walk_order::PREORDER:

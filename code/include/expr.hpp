@@ -2,17 +2,12 @@
 #define _EXPRESSION_H_
 
 #include "base/Tree.hpp"
-#include "base/string.hpp"
 #include "base/vasdef.hpp"
 #include "symbol.hpp"
 
-#include <memory>
 #include <vector>
 
 namespace vastina {
-
-using std::make_shared;
-using std::shared_ptr;
 
 class Expression
 {
@@ -22,18 +17,10 @@ protected:
 public:
   using pointer = Expression*;
   virtual void Walk() const = 0;
-  // ValExpr and OpExpr
-  virtual TOKEN getToken() const
-  {
-    Walk();
-    print( "donot call this" );
-    std::exit( -1 );
-  }
-  virtual const string_view& getName() const;
-  // CallExpr
-  virtual Function::pointer getFunc() { return nullptr; }
+  // for all
+  virtual const token_t& getToken() const { throw "donot call this"; }
   // Valexpr
-  virtual Value::pointer getVal() const { return nullptr; };
+  virtual Value::pointer getValue() const { throw "donot call this"; }
 
   virtual ~Expression() = default;
 
@@ -51,11 +38,9 @@ public:
   using pointer = OpExpr*;
   OpExpr() = delete;
   OpExpr( const token_t& op );
-  static pointer Create( TOKEN tk );
 
 public:
-  TOKEN getToken() const override;
-  const string_view& getName() const override;
+  const token_t& getToken() const override;
   void Walk() const override;
 };
 
@@ -66,9 +51,9 @@ protected:
 
 public:
   ValExpr( Value::pointer val );
-  TOKEN getToken() const override;
-  Value::pointer getVal() const override { return value_; }
-  const string_view& getName() const override;
+  const token_t& getToken() const override { return value_->getSrcloc(); }
+  Value::pointer getValue() const override { return value_; }
+
   void Walk() const override;
 };
 
@@ -79,18 +64,15 @@ public:
   using Node = TreeNode<Expression::pointer>;
 
 protected:
-  Node::pointer root_;
-  Scope::pointer scope_;
+  Node::pointer root_ { nullptr };
 
 public:
+  BinExpr() = default;
   BinExpr( Node::pointer root );
-  BinExpr( Scope::pointer scope );
-  BinExpr( Node::pointer root, Scope::pointer scope );
 
+  const token_t& getToken() const override { return root_->data->getToken(); }
   void setRoot( Node::pointer root );
   Node::pointer getRoot() const;
-  TOKEN getToken() const override;
-  Scope::pointer getScope() const;
 
   void Walk() const override;
 };
@@ -106,9 +88,10 @@ protected:
 
 public:
   CallExpr( Value::pointer val );
-  Function::pointer getFunc() override;
-  const decltype( paras_ )& getParas() { return paras_; }
+
+  const std::vector<BinExpr::pointer>& getParas() { return paras_; }
   void addPara( Node::pointer val );
+
   void Walk() const override;
 };
 

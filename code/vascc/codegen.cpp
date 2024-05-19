@@ -33,7 +33,7 @@ void Generator::doGenerate( Stmt::pointer stmt )
 {
   switch ( stmt->StmtType() ) {
     case STMTTYPE::Return: {
-      Binary( dynamic_cast<BinStmt::pointer>( stmt->getResult() ), false );
+      Binary( dynamic_cast<BinStmt::pointer>( stmt->getStmt() ), false );
       poper( x86::rax );
       // todo clean
       break;
@@ -66,7 +66,7 @@ void Generator::doGenerate( Stmt::pointer stmt )
       break;
     }
     case STMTTYPE::Compound: {
-      if(nullptr != scope_->getParent())
+      if ( nullptr != scope_->getParent() )
         scope_ = scope_->getNextChild();
     }
     case STMTTYPE::Cond:
@@ -84,26 +84,26 @@ void Generator::doGenerate( Stmt::pointer stmt )
       scope_ = scope_->getParent();
       break;
     }
-    case STMTTYPE::Binary:{
+    case STMTTYPE::Binary: {
       break;
     }
-    case STMTTYPE::Call:{
+    case STMTTYPE::Call: {
       break;
     }
     case STMTTYPE::Compound: {
-      if(nullptr != scope_->getParent())
+      if ( nullptr != scope_->getParent() )
         scope_ = scope_->getParent();
       break;
     }
-    case STMTTYPE::Vdecl:{
+    case STMTTYPE::Vdecl: {
       break;
     }
-    case STMTTYPE::If:{
+    case STMTTYPE::If: {
       IfEnd( /*dynamic_cast<IfStmt::pointer>(stmt)*/ );
       scope_ = scope_->getParent();
       break;
     }
-    case STMTTYPE::Loop:{
+    case STMTTYPE::Loop: {
       scope_ = scope_->getParent();
       break;
     }
@@ -112,20 +112,21 @@ void Generator::doGenerate( Stmt::pointer stmt )
   }
 }
 
-void Generator::IfStart( IfStmt::pointer stmt ) {
-  auto conditon { dynamic_cast<BinStmt::pointer>(stmt->getCondition()) };
-  Binary(conditon, false);
-  poper(x86::rax);
+void Generator::IfStart( IfStmt::pointer stmt )
+{
+  auto conditon { dynamic_cast<BinStmt::pointer>( stmt->getStmt() ) };
+  Binary( conditon, false );
+  poper( x86::rax );
 
-  filer_->PushBack(x86::Threer(x86::cmpq, x86::constant(0), x86::rax));
-  filer_->PushBack(x86::Twoer(x86::jne, std::format(".L{}",  counter_.jmp.current+1)));
-  filer_->PushBack(std::format(".L{}:\n",  counter_.jmp.current));
-  counter_.jmp.history.push(++counter_.jmp.current);
+  filer_->PushBack( x86::Threer( x86::cmpq, x86::constant( 0 ), x86::rax ) );
+  filer_->PushBack( x86::Twoer( x86::jne, std::format( ".L{}", counter_.jmp.current + 1 ) ) );
+  filer_->PushBack( std::format( ".L{}:\n", counter_.jmp.current ) );
+  counter_.jmp.history.push( ++counter_.jmp.current );
 }
 
-void Generator::IfEnd( ){
-  const u32 L = counter_.jmp.history.top();
-  filer_->PushBack(std::format(".L{}:\n", L));
+void Generator::IfEnd()
+{
+  filer_->PushBack( std::format( ".L{}:\n", u32 { counter_.jmp.history.top() } ) );
   counter_.jmp.history.pop();
 }
 
@@ -133,15 +134,16 @@ void Generator::LoopW( LoopStmt::pointer ) {}
 
 void Generator::FuncStart( FdeclStmt::pointer stmt )
 {
-  //static u32 func_pos {};
+  static u32 func_pos {};
 
   // it always has a parent named CompoundStmt at least
   // if ( nullptr != stmt->getParent() )
   if ( STMTTYPE::Fdecl == stmt->getParent()->StmtType() ) {
     // todo, func declared in func
   }
-  /*func_pos =*/ filer_->PushBack( x86::func_declare_start( stmt->getFunc()->getName() ) );
-  filer_->PushBack( x86::func_start( stmt->getFunc()->getName(), counter_.lf.lfbe ) );
+  const auto func_name {stmt->getFunc()->getSrcloc().name};
+  func_pos = filer_->PushBack( x86::func_declare_start( func_name ) );
+  filer_->PushBack( x86::func_start( func_name, counter_.lf.lfbe ) );
   Params( stmt->getFunc()->getParams() );
 }
 
@@ -153,47 +155,56 @@ void Generator::FuncEnd( FdeclStmt::pointer stmt )
     ParamClean( stmt->getFunc()->getParams() );
     filer_->PushBack( x86::func_end );
   }
-  filer_->PushBack( x86::func_declare_end( counter_.lf.lfbe++, stmt->getFunc()->getName() ) );
+  filer_->PushBack( x86::func_declare_end( counter_.lf.lfbe++, stmt->getFunc()->getSrcloc().name ) );
 }
 
 void Generator::Vdecl( VdeclStmt::pointer stmt )
 {
   auto var { stmt->getVar() };
-  
+
   if ( nullptr == scope_->getParent() ) {
+    // this should move to preprocess or parse
     var->ty_.isGlobal = true;
     // if is global here
-    const_str_t global_var_{"" // a temp solution
-      "\t.global\t{}\n" // var_name
-      "\t.data\n"
-      "\t.align {}\n"   // align<-->size
-      "\t.type {}, @object\n" //var_name
-      "\t.size {}, {}\n"      //var_name, size<-->align
-      "{}:\n" //var_name
-      "\t.{} {}\n" // {}->quad, long, value(doublebyte), byte ; {}->value(constant)(`global2 = 1+global1` is not supported)
-      "\t.text\n"
-    };
-    constexpr auto static global_var{
-      [](const string_view& varname, const u32 size, const string_view& type, const string_view& value){
-        return format(global_var_, varname, std::max(size,(u32)(sizeof(short))), varname, varname,
-        size, varname, type, value);
-    }};
+    const_str_t global_var_ { ""                // a temp solution
+                              "\t.global\t{}\n" // var_name
+                              "\t.data\n"
+                              "\t.align {}\n"         // align<-->size
+                              "\t.type {}, @object\n" // var_name
+                              "\t.size {}, {}\n"      // var_name, size<-->align
+                              "{}:\n"                 // var_name
+                              "\t.{} {}\n" // {}->quad, long, value(doublebyte), byte ; {}->value(constant)(`global2
+                                           // = 1+global1` is not supported)
+                              "\t.text\n" };
+    constexpr auto static global_var {
+      []( const string_view& varname, const u32 size, const string_view& type, const string_view& value ) {
+        return format( global_var_,
+                       varname,
+                       std::max( size, (u32)( sizeof( short ) ) ),
+                       varname,
+                       varname,
+                       size,
+                       varname,
+                       type,
+                       value );
+      } };
 
-    switch (var->getType()) {
-      case TOKEN::INT:{
-        if(nullptr == stmt->getIniter()) {
-          filer_->PushBack(global_var(var->getName(), 4, "long", "0"));
+    switch ( var->getType() ) {
+      case TOKEN::INT: {
+        if ( nullptr == stmt->getStmt() ) {
+          filer_->PushBack( global_var( var->getSrcloc().name, 4, "long", "0" ) );
         } else {
-          const auto expr { dynamic_cast<BinExpr::pointer>(stmt->getIniter()->getData()) };
-          filer_->PushBack(global_var(var->getName(), 4, "long", expr->getRoot()->data->getName()));
+          const auto expr { dynamic_cast<BinExpr::pointer>( stmt->getStmt()->getExpr() )->getRoot() };
+          filer_->PushBack( global_var( var->getSrcloc().name, 4, "long", expr->data->getToken().name ) );
         }
       }
-      default: break;
+      default:
+        break;
     }
 
     return;
   }
-  
+
   if ( var->ty_.isParam )
     return;
 
@@ -205,8 +216,8 @@ void Generator::Vdecl( VdeclStmt::pointer stmt )
       if ( var->ty_.isConst ) {}
       if ( var->ty_.isStatic ) {}
       if ( var->ty_.isPointer ) {}
-      if ( nullptr != stmt->getIniter() ) {
-        Binary( dynamic_cast<BinStmt::pointer>( stmt->getIniter() ), false );
+      if ( nullptr != stmt->getStmt() ) {
+        Binary( dynamic_cast<BinStmt::pointer>( stmt->getStmt() ), false );
       } else {
         pusher( x86::rax ); // random value in rax
       }
@@ -245,7 +256,7 @@ void Generator::ParamClean( const std::vector<Variable::pointer>& paras )
 
 void Generator::Callee( CallStmt::pointer stmt )
 {
-  auto callee { dynamic_cast<CallExpr::pointer>( stmt->getData() ) };
+  auto callee { dynamic_cast<CallExpr::pointer>( stmt->getExpr() ) };
 
   return doCallee( callee );
 }
@@ -253,7 +264,7 @@ void Generator::Callee( CallStmt::pointer stmt )
 void Generator::doCallee( CallExpr::pointer callee )
 {
   const auto paras { callee->getParas() };
-  const auto func { callee->getFunc() };
+  const auto func { dynamic_cast<Function::pointer>(callee->getValue()) };
 
   u32 stack_usage {};
   if ( !paras.empty() ) {
@@ -270,9 +281,9 @@ void Generator::doCallee( CallExpr::pointer callee )
     } while ( pos-- );
   }
   if ( func->ty_.isBuiltin_ )
-    filer_->PushBack( x86::call_builtin( func->getName() ) );
+    filer_->PushBack( x86::call_builtin( func->getSrcloc().name ) );
   else
-    filer_->PushBack( x86::make_call( func->getName() ) );
+    filer_->PushBack( x86::make_call( func->getSrcloc().name ) );
 
   if ( stack_usage > 0 ) {
     filer_->PushBack( x86::Threer( x86::addq, std::format( "${}", stack_usage ), x86::rsp ) );
@@ -281,7 +292,7 @@ void Generator::doCallee( CallExpr::pointer callee )
 
 void Generator::Binary( BinStmt::pointer stmt, bool pop )
 {
-  const auto data { stmt->getData()->getRoot() };
+  const auto data { stmt->getExpr()->getRoot() };
 
   doBinary( data );
   if ( pop )
@@ -306,7 +317,7 @@ void Generator::doBinary( BinExpr::Node::pointer node )
     pusher( x86::rax );
   } };
 
-  const auto tk { node->data->getToken() };
+  const auto tk { node->data->getToken().token };
   switch ( token_type( tk ) ) {
     case TOKEN_TYPE::OPERATOR: {
       switch ( tk ) {
@@ -459,8 +470,8 @@ void Generator::doBinary( BinExpr::Node::pointer node )
           doBinary( node->right );
           poper( x86::rax );
           node->left->Travel( walk_order::PREORDER, [this]( const decltype( node->data )& data_ ) {
-            if ( TOKEN::SYMBOL == data_->getToken() ) {
-              auto des { dynamic_cast<Variable::pointer>( data_->getVal() ) };
+            if ( TOKEN::SYMBOL == data_->getToken().token ) {
+              auto des { dynamic_cast<Variable::pointer>( data_->getValue() ) };
               this->writer()->PushBack( x86::Threer(
                 x86::movq, x86::rax, x86::regIndirect( std::format( "-{}", des->stack.offset ), x86::rbp ) ) );
             }
@@ -499,7 +510,7 @@ void Generator::doBinary( BinExpr::Node::pointer node )
           return nullptr == node->right ? single_op( node->left, details ) : single_op( node->right, details );
         }
         default:
-          THIS_NOT_SUPPORT( node->data->getName() );
+          THIS_NOT_SUPPORT( node->data->getToken().name );
           print( "\nbye\n" );
           exit( 0 );
       }
@@ -507,20 +518,19 @@ void Generator::doBinary( BinExpr::Node::pointer node )
     case TOKEN_TYPE::VALUE: {
       switch ( tk ) {
         case TOKEN::SYMBOL: {
-          auto var { dynamic_cast<Variable::pointer>( node->data->getVal() ) };
-          if(var->ty_.isGlobal){
-            writer()->PushBack( x86::Threer(
-              x86::movq, x86::regIndirect( var->getName(), x86::rip ), x86::rax ) );
+          auto var { dynamic_cast<Variable::pointer>( node->data->getValue() ) };
+          if ( var->ty_.isGlobal ) {
+            writer()->PushBack( x86::Threer( x86::movq, x86::regIndirect( var->getSrcloc().name, x86::rip ), x86::rax ) );
           } else {
             writer()->PushBack( x86::Threer(
-            x86::movq, x86::regIndirect( std::format( "-{}", var->stack.offset ), x86::rbp ), x86::rax ) );
+              x86::movq, x86::regIndirect( std::format( "-{}", var->stack.offset ), x86::rbp ), x86::rax ) );
           }
           return pusher( x86::rax );
         }
         case TOKEN::SYMBOLF: {
           auto callee { dynamic_cast<CallExpr::pointer>( node->data ) };
           doCallee( callee );
-          if ( !callee->getFunc()->ty_.isVoid_ ) {
+          if ( !dynamic_cast<Function::pointer>(callee->getValue())->ty_.isVoid_ ) {
             pusher( x86::rax );
             // filer_->PushBack( x86::Twoer( x86::pushq, x86::rax ) );
           }
@@ -528,43 +538,43 @@ void Generator::doBinary( BinExpr::Node::pointer node )
         }
         case TOKEN::NUMBER: {
           // todo
-          const auto val { std::stol( node->data->getName().data() ) };
+          const auto val { std::stol( node->data->getToken().name.data() ) };
           writer()->PushBack( x86::Threer( x86::movq, std::format( "${}", val ), x86::rax ) );
 
           return pusher( x86::rax );
           // return (void)writer()->PushBack( x86::Twoer( x86::pushq, x86::rax ) );
         }
         case TOKEN::STRING:
-          filer_->Insert(
-            counter_.loc.pos++,
-            x86::rodata( counter_.loc.lc++,
-                         "string",
-                         std::ranges::to<std::string>(
-                           node->data->getName() | std::views::filter( []( char c ) { return c != '\n'; } ) ) ) );
+          filer_->Insert( counter_.loc.pos++,
+                          x86::rodata( counter_.loc.lc++,
+                                       "string",
+                                       std::ranges::to<std::string>(
+                                         node->data->getToken().name
+                                         | std::views::filter( []( char c ) { return c != '\n'; } ) ) ) );
           filer_->PushBack( x86::Threer(
             x86::leaq, x86::regIndirect( std::format( ".LC{}", counter_.loc.lc - 1 ), x86::rip ), x86::rax ) );
           return pusher( x86::rax );
         case TOKEN::LCHAR: {
           // if you make two or more letters in '', it will report error before this
-          char ch = node->data->getName()[1];
-          pusher(x86::constant(ch-0));
+          char ch = node->data->getToken().name[1];
+          pusher( x86::constant( ch - 0 ) );
           break;
         }
-        case TOKEN::TRUE:{
-          return pusher(x86::constant(1));
+        case TOKEN::TRUE: {
+          return pusher( x86::constant( 1 ) );
         }
-        case TOKEN::FALSE:{
-          return pusher(x86::constant(0));
+        case TOKEN::FALSE: {
+          return pusher( x86::constant( 0 ) );
         }
         default:
-          THIS_NOT_SUPPORT( node->data->getName() );
+          THIS_NOT_SUPPORT( node->data->getToken().name );
           print( "\nbye\n" );
           std::exit( -1 );
       }
       throw 114514;
     }
     default:
-      THIS_NOT_SUPPORT( node->data->getName() );
+      THIS_NOT_SUPPORT( node->data->getToken().name );
       exit( 1 );
   }
 }
@@ -576,7 +586,7 @@ void Generator::poper( const string_view& reg )
   counter_.rsp -= 16;
 }
 
-//reg or constant
+// reg or constant
 void Generator::pusher( const string_view& reg )
 {
   filer_->PushBack( x86::Threer( x86::subq, x86::constant( 16 ), x86::rsp ) );
