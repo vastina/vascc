@@ -218,7 +218,7 @@ public:
   const_str_t constant_ { "${}" };
   static std::string constant( i64 val );
 
-  const_str_t loc_ { ".L{}\n" };
+  const_str_t loc_ { ".L{}:\n" };
   static std::string loc( u32 counter );
 
   // {} -> op, {},{} -> sth

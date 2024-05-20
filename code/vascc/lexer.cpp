@@ -339,7 +339,6 @@ lexer::STATE lexer::Next()
               while ( '"' != buffer[offset] )
               {
                 offset++;
-                std::cout << "buffer[offset] : " << buffer[offset] << '\n';
               }
             } catch ( const std::exception& e ) {
               LEAVE_MSG( e.what() );
@@ -520,26 +519,22 @@ lexer::STATE lexer::Next()
 lexer::STATE lexer::reScan()
 {
   u32 size = tokens.size();
+  if(0 == size) return STATE::NORMAL;
   if ( tokens.back().token == TOKEN::NLBRAC ) {
-    try {
       auto&& func_token = tokens.at( size - 2 );
       if ( func_token.token == TOKEN::SYMBOL && token_type( tokens.at( size - 3 ).token ) == TOKEN_TYPE::TYPE ) {
         func_token.token = TOKEN::SYMBOLF;
         current_scope->addFunc( func_token.name, new Function( func_token ) );
       }
-    } catch ( const std::exception& e ) {
-      LEAVE_MSG( e.what() );
-      std::exit( -1 );
-    }
   } else if ( TOKEN::MULTI == tokens.back().token ) {
-    try {
+    // try {
       if ( TOKEN_TYPE::TYPE == token_type( tokens.at( size - 2 ).token ) ) {
         tokens.back().token = TOKEN::POINTER;
       }
-    } catch ( const std::exception& e ) {
-      LEAVE_MSG( e.what() );
-      std::exit( -1 );
-    }
+    // } catch ( const std::exception& e ) {
+    //   LEAVE_MSG( e.what() );
+    //   std::exit( -1 );
+    // }
   }
 
   return STATE::NORMAL;
