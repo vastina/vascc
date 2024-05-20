@@ -1,5 +1,6 @@
 #include "base/x86.hpp"
 #include "base/log.hpp"
+#include <string>
 
 namespace vastina {
 
@@ -67,6 +68,11 @@ std::string x86::constant( i64 val )
   return format( constant_, val );
 }
 
+std::string x86::loc(u32 counter)
+{
+  return format(loc_, counter);
+}
+
 std::string x86::Threer( const string_view& op, const string_view& _1, const string_view& _2 )
 {
   return format( Threer_, op, _1, _2 );
@@ -92,9 +98,9 @@ std::string x86::call_builtin( const string_view& func_name )
   return Twoer( call, std::format( "{}@PLT", func_name ) );
 }
 
-std::string x86::make_jump( const string_view& op, const string_view& location )
+std::string x86::make_jump( const string_view& op, u32 loc )
 {
-  return Twoer( op, location );
+  return Twoer( op, std::format(".L{}", loc) );
 }
 
 std::string x86::regIndirect( const string_view& val, const string_view& reg )

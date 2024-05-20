@@ -14,17 +14,12 @@ struct token_t
   TOKEN token;
   string_view name;
   u32 line;
+  u32 lineoffset {};
 
-  // some were here just because I am lazy to delete them
-  // well, all of them are in use 5/14/24
-  token_t( TOKEN tk );
-  token_t( TOKEN tk, const string_view& sv );
-  token_t( TOKEN tk, string_view&& sv );
-  token_t( TOKEN tk, const string_view& sv, u32 _line );
-  token_t( TOKEN tk, string_view&& sv, u32 _line );
+  token_t( TOKEN tk, const string_view& sv, u32 _line, u32 _lineoffset );
 
-  token_t( const token_t& tk );
-  token_t( token_t&& tk );
+  // token_t( const token_t& tk );
+  // token_t( token_t&& tk );
 };
 
 typedef struct var_type

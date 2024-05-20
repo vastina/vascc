@@ -26,14 +26,13 @@ public:
     SUCCESS,
     FAIL
   };
-  // todo: this should be removed in serval commits
 
 private:
   std::vector<token_t> tokens;
   std::string buffer;
   u32 offset;
   u32 line;
-  u32 lineoffset; // todo
+  u32 lineoffset { 1 };
   STATE state;
 
   Scope::pointer current_scope;
@@ -56,7 +55,7 @@ public:
 
   STATE Next();
   void NextLine();
-  i32 reScan(); // maybe need in the futrue
+  STATE reScan();
 
   const std::vector<token_t>& getTokens();
   const string_view getBuffer();

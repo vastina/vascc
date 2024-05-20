@@ -1,4 +1,5 @@
-#include <stdlib.h>
+extern void *malloc (unsigned long __size);
+extern void free (void *__ptr);
 extern int printf(const char*, ...);
 
 int main(){

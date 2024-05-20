@@ -38,10 +38,11 @@ public:
       u32 current {};
     } jmp_;
     jmp_ jmp {};
-    typedef struct go_ {
+    typedef struct go_
+    {
       std::stack<std::pair<u32, u32>> backup {};
-      u32 goout {};   // for break
-      u32 goback{};   // for continue
+      u32 goout {};  // for break
+      u32 goback {}; // for continue
     } go_;
     go_ go {};
   } counter;
@@ -78,8 +79,8 @@ protected:
   void IfStart( IfStmt::pointer );
   void IfEnd();
   void LoopWStart( LoopStmt::pointer );
-  void LoopWEnd( );
-  void CondStart();//condition start, todo
+  void LoopWEnd();
+  void CondStart(); // condition start, todo
   void FuncStart( FdeclStmt::pointer );
   void FuncEnd( FdeclStmt::pointer );
   void doFuncEnd( FdeclStmt::pointer );

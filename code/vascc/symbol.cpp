@@ -113,8 +113,10 @@ Scope::pointer Scope::getChildat( u32 offst )
 void SymbolTable::useBuiltin()
 {
   constexpr u32 unreachable_line { 0u };
+  constexpr u32 unreachable_lineoffset { 0u };
   {
-    const static token_t printf { TOKEN::SYMBOLF, string_view( "printf" ), unreachable_line };
+    const static token_t printf {
+      TOKEN::SYMBOLF, string_view( "printf" ), unreachable_line, unreachable_lineoffset };
     auto _builtin_printf { new Function( printf, TOKEN::INT ) };
     _builtin_printf->ty_.isBuiltin_ = true;
     _builtin_printf->ty_.isUseValist_ = true;
@@ -122,7 +124,7 @@ void SymbolTable::useBuiltin()
     addFunc( printf.name, _builtin_printf );
   }
   {
-    const static token_t scanf { TOKEN::SYMBOLF, string_view( "scanf" ), unreachable_line };
+    const static token_t scanf { TOKEN::SYMBOLF, string_view( "scanf" ), unreachable_line, unreachable_lineoffset };
     auto _builtin_scanf { new Function( scanf, TOKEN::INT ) };
     _builtin_scanf->ty_.isBuiltin_ = true;
     _builtin_scanf->ty_.isUseValist_ = true;

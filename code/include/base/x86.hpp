@@ -218,6 +218,9 @@ public:
   const_str_t constant_ { "${}" };
   static std::string constant( i64 val );
 
+  const_str_t loc_ { ".L{}\n" };
+  static std::string loc( u32 counter );
+
   // {} -> op, {},{} -> sth
   const_str_t Threer_ { "\t{}\t{}, {}\n" };
   static std::string Threer( const string_view& op, const string_view& _1, const string_view& _2 );
@@ -230,7 +233,7 @@ public:
 
   static std::string make_call( const string_view& func_name );
   static std::string call_builtin( const string_view& func_name );
-  static std::string make_jump( const string_view& op, const string_view& location );
+  static std::string make_jump( const string_view& op, u32 loc );
 
   // {} -> value, {} -> register
   const_str_t regIndirect_ { "{}({})" };

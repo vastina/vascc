@@ -80,7 +80,7 @@ i32 Parser::Parse()
         EXCEPT_ZERO( Ret );
         break;
       }
-      case P_TOKEN::GOTO:{
+      case P_TOKEN::GOTO: {
         EXCEPT_ZERO( Goto );
       }
       case P_TOKEN::END: {
@@ -115,20 +115,21 @@ i32 Parser::Parse()
   return 0;
 }
 
-i32 Parser::Goto(){
+i32 Parser::Goto()
+{
   // again, use ref only, no copy
-  const auto& tk {PeekPrtat(CurrentToken().start)};
-  switch (tk.token) {
+  const auto& tk { PeekPrtat( CurrentToken().start ) };
+  switch ( tk.token ) {
     case TOKEN::BREAK:
-    case TOKEN::CONTINUE:{
-      current_stmt_->addChildren(new BcStmt(current_stmt_, new OpExpr(tk)));
+    case TOKEN::CONTINUE: {
+      current_stmt_->addChildren( new BcStmt( current_stmt_, new OpExpr( tk ) ) );
       Next();
       break;
     }
     case TOKEN::SWITCH:
     case TOKEN::CASE:
     default:
-    // leave sth?
+      // leave sth?
       break;
   }
 
@@ -196,7 +197,7 @@ i32 Parser::Ifer()
 
 i32 Parser::Loop()
 {
-  auto with_do { PeekPrtat(CurrentToken().start).token == TOKEN::DO };
+  auto with_do { PeekPrtat( CurrentToken().start ).token == TOKEN::DO };
   Next();
   auto lstmt = new LoopStmt( current_stmt_, Binary( { CurrentToken().start, CurrentToken().end } ), with_do );
   current_stmt_->addChildren( lstmt );

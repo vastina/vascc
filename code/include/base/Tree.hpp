@@ -105,17 +105,17 @@ public:
         break;
     }
   }
-  inline void Travel( walk_order order, std::function<void( const ty& data_ )> details )
+  inline void Travel( walk_order order, const std::function<void( const ty& data_ )>& details )
   {
     switch ( order ) {
       case walk_order::PREORDER:
-        PreOrder( details, this, []{}, []{} );
+        PreOrder( details, this, [] {}, [] {} );
         break;
       case walk_order::INORDER:
-        InOrder( details, this, []{}, []{} );
+        InOrder( details, this, [] {}, [] {} );
         break;
       case walk_order::POSTORDER:
-        PostOrder( details, this, []{}, []{} );
+        PostOrder( details, this, [] {}, [] {} );
         break;
       default:
         break;

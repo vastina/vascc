@@ -2,16 +2,13 @@
 #include "base/log.hpp"
 #include <fstream>
 
+#include <iostream>
+
 namespace vastina {
 
-token_t::token_t( TOKEN tk ) : token( tk ) {}
-token_t::token_t( TOKEN tk, const string_view& sv ) : token( tk ), name( sv ) {}
-token_t::token_t( TOKEN tk, string_view&& sv ) : token( tk ), name( sv ) {}
-token_t::token_t( TOKEN tk, const string_view& sv, u32 _line ) : token( tk ), name( sv ), line( _line ) {}
-token_t::token_t( TOKEN tk, string_view&& sv, u32 _line ) : token( tk ), name( sv ), line( _line ) {}
-
-token_t::token_t( const token_t& tk ) : token( tk.token ), name( tk.name ), line( tk.line ) {}
-token_t::token_t( token_t&& tk ) : token( tk.token ), name( std::move( tk.name ) ), line( tk.line ) {}
+token_t::token_t( TOKEN tk, const string_view& sv, u32 _line, u32 _lineoffset )
+  : token( tk ), name( sv ), line( _line ), lineoffset( _lineoffset )
+{}
 
 // just read file into buffer
 lexer::lexer( const char* filename )
@@ -37,11 +34,14 @@ lexer::~lexer()
 lexer::STATE lexer::ParseWhiteSpace()
 {
   while ( isWhiteSpace( buffer[offset] ) ) {
-    if ( buffer[offset] == '\n' )
+    if ( buffer[offset] == '\n' ) {
       line++;
+      lineoffset = 1;
+    }
     if ( offset == buffer.size() - 1 )
       return STATE::END;
     offset++;
+    lineoffset++;
   }
   return STATE::NORMAL;
 }
@@ -61,7 +61,7 @@ lexer::RESULT lexer::ParseKeyWord( const string_view& target,
 {
   u32 len = target.size();
   if ( Strcmp( buffer, offset, target ) && endjudge( buffer[offset + len] ) ) {
-    tokens.push_back( token_t( target_type, target, line ) );
+    tokens.push_back( token_t( target_type, target, line, lineoffset ) );
     offset += len;
     return lexer::RESULT::SUCCESS;
   } else if ( Default == TOKEN::UNKNOW )
@@ -73,9 +73,9 @@ lexer::RESULT lexer::ParseKeyWord( const string_view& target,
     }
     string_view temp = { buffer.data() + last_offset, offset - last_offset };
     if ( !current_scope->funcExist( temp ) ) {
-      tokens.push_back( token_t( Default, temp, line ) );
+      tokens.push_back( token_t( Default, temp, line, lineoffset ) );
     } else {
-      tokens.push_back( token_t( TOKEN::SYMBOLF, temp, line ) );
+      tokens.push_back( token_t( TOKEN::SYMBOLF, temp, line, lineoffset ) );
     }
     return lexer::RESULT::SUCCESS;
   }
@@ -83,7 +83,7 @@ lexer::RESULT lexer::ParseKeyWord( const string_view& target,
 
 void lexer::forSingelWord( const string_view& target, TOKEN target_type )
 {
-  tokens.push_back( token_t( target_type, target, line ) );
+  tokens.push_back( token_t( target_type, target, line, lineoffset ) );
   ++offset;
 }
 
@@ -287,7 +287,8 @@ lexer::STATE lexer::Next()
         offset++;
       }
       if ( CHARTYPE::OTHER == CharType( buffer[offset] ) ) {
-        tokens.push_back( token_t( TOKEN::NUMBER, { buffer.data() + last_offset, offset - last_offset }, line ) );
+        tokens.push_back(
+          token_t( TOKEN::NUMBER, { buffer.data() + last_offset, offset - last_offset }, line, lineoffset ) );
         return STATE::NORMAL;
       } else
         return STATE::ERROR;
@@ -336,7 +337,10 @@ lexer::STATE lexer::Next()
             offset++;
             try { // may out if range here
               while ( '"' != buffer[offset] )
+              {
                 offset++;
+                std::cout << "buffer[offset] : " << buffer[offset] << '\n';
+              }
             } catch ( const std::exception& e ) {
               LEAVE_MSG( e.what() );
               std::exit( -1 );
@@ -344,7 +348,7 @@ lexer::STATE lexer::Next()
             offset++;
           } while ( again() ); // for "sth""somestr" case
           string_view data { buffer.data() + last_offset, offset - last_offset };
-          tokens.push_back( token_t( TOKEN::STRING, data, line ) );
+          tokens.push_back( token_t( TOKEN::STRING, data, line, lineoffset ) );
           /*
           "some str"
           "some str"
@@ -359,7 +363,7 @@ lexer::STATE lexer::Next()
         case '\'':
           if ( '\'' == buffer.at( offset + 2 ) ) {
             string_view data { buffer.data() + offset, 3 };
-            tokens.push_back( token_t( TOKEN::LCHAR, data, line ) );
+            tokens.push_back( token_t( TOKEN::LCHAR, data, line, lineoffset ) );
             offset += 3;
           } else {
             LEAVE_MSG( "\'xx\' not supported(which will be warned) or you have wrong grammar" );
@@ -510,6 +514,11 @@ lexer::STATE lexer::Next()
       break;
   }
 
+  return reScan();
+}
+
+lexer::STATE lexer::reScan()
+{
   u32 size = tokens.size();
   if ( tokens.back().token == TOKEN::NLBRAC ) {
     try {
@@ -536,20 +545,6 @@ lexer::STATE lexer::Next()
   return STATE::NORMAL;
 }
 
-i32 lexer::reScan()
-{
-  // for(u32 offst{0u}; auto&& token:tokens){
-  //     if(token_type(token.token) == TOKEN_TYPE::TYPE){
-  //         if(tokens.at(offst+1).token == TOKEN::SYMBOL && tokens.at(offst+2).token == TOKEN::NLBRAC){
-  //             tokens.at(offst+1).token = TOKEN::SYMBOLF;
-
-  //         }
-  //     }
-  //     offst++;
-  // }
-  return {};
-}
-
 i32 lexer::Parse()
 {
   STATE state;
@@ -561,7 +556,7 @@ i32 lexer::Parse()
       break;
   }
 
-  return reScan();
+  return STATE::END;
 }
 
 const std::vector<token_t>& lexer::getTokens()

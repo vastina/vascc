@@ -5,7 +5,6 @@
 
 namespace vastina {
 
-// todo a log class, singlton or sth
 
 #define LEAVE_MSG( msg ) ::vastina::print( "{}, at {} {}\n", msg, __FILE__, __LINE__ );
 #define LEAVE_NOTHING ::vastina::print( "{} {}\n", __FILE__, __LINE__ );

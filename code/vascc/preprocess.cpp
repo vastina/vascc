@@ -141,7 +141,7 @@ i32 Preprocess::Process()
           // case TOKEN::SWITCH:
           // case TOKEN::CASE:  //todo
           case TOKEN::CONTINUE:
-          case TOKEN::BREAK:{
+          case TOKEN::BREAK: {
             tryNext( TOKEN::SEMICOLON, true );
             results.push_back( { P_TOKEN::GOTO, offset - 1, offset } );
             break;
@@ -150,7 +150,7 @@ i32 Preprocess::Process()
             TEMP_LOG;
             EXIT_ERROR;
         }
-        done:{}
+      done: {}
       }
     }
   }
