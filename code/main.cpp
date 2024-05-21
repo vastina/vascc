@@ -5,6 +5,7 @@
 
 #include <cstring>
 #include <queue>
+#include <filesystem>
 
 // const static before_main_t before_main = before_main_t();
 // I know using new directly is bad
@@ -15,6 +16,10 @@ int main( int argc, char* argv[] )
   if ( argc != 2 ) {
     std::cout << "Usage: " << argv[0] << " <filename>\n";
     return 1;
+  }
+  if ( !std::filesystem::exists( string_view(argv[1]) ) ) {
+    std::cout << "file not exists\n";
+    return 2;
   }
 
   lexer lx = lexer( argv[1] );
