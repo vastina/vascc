@@ -8,6 +8,10 @@ int fib(int i){
 }
 
 int main (){
+    int res; res = 
+    printf("%d %d\n", fib(9), add(114514, 1919810));
+    printf("%d %d\n", fib(9), add(114514, 1919810));
+    printf("%d\n", add(114514, 1919810));
     return fib(5) == add(114514, 1919810);
 
     fib(6);
