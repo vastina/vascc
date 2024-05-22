@@ -40,6 +40,7 @@ std::string& Buffer::_M_at( u32 __n )
 {
   if ( _M_check( __n ) )
     return buffer_queue_.at( __n );
+  // todo, something else instead of throw, this is what stl should do, not me
   throw std::out_of_range( "Buffer::_M_at: index out of range" );
 }
 
