@@ -1,9 +1,8 @@
 
 int main(){
-  int i = 0;
-  while (i<520) {
+  int i = -1;
+  while ((i = i+1)<520) {
     printf("i love you\n");
-    i = i+1;
   }
 
   return 0;

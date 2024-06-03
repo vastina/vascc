@@ -1,7 +1,7 @@
 //#include <stdio.h>
 
 int main(){
-  //extern int printf(const char*fotmat, ...);
+  // extern int printf(const char*fotmat, ...);
   printf(
 "                        _     _                 \n"
 " __   __   __ _   ___  | |_  (_)  _ __     __ _ \n"
