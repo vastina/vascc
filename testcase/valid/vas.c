@@ -1,7 +1,7 @@
 //#include <stdio.h>
 
 int main(){
-  // extern int printf(const char*fotmat, ...);
+  // extern int printf(const char*format, ...);
   printf(
 "                        _     _                 \n"
 " __   __   __ _   ___  | |_  (_)  _ __     __ _ \n"
@@ -16,8 +16,8 @@ int main(){
 	
 	printf("\n");printf("\n");printf("\n");printf("\n");
 	
-	i = 1;
-	while(i <= 3){
+	i = 1 - 1;
+	while( ( i = i+1 ) <= 3){
 		j = 1;
 		while (j <= 32-2*i){
 			printf(" ");
@@ -39,7 +39,7 @@ int main(){
 			m = m+1;
 		}
 		printf("\n");
-		i = i+1;
+		// i = i+1;
 	}
 	// for (i=1; i<=3; i++) {
 	// 	for (j=1; j<=32-2*i; j++)		printf(" ");
@@ -70,8 +70,8 @@ int main(){
 	// 	printf("\n");
 	// }
 	
-	i = 7;
-	while (i >= 1) {
+	i = 7 + 1;
+	while ( (i = i-1) >= 1) {
 		j = 1;
 		while (j <= 40-2*i) {
 			printf(" ");
@@ -83,7 +83,7 @@ int main(){
 			k = k+1;
 		}
 		printf("\n");
-		i = i-1;
+		// i = i-1;
 	}
 	// for (i=7; i>=1; i--) {
 	// 	for (j=1; j<=40-2*i; j++)		printf(" ");
